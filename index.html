@@ -23,17 +23,25 @@
             line-height: 1.6;
         }
 
-        /* NAVBAR - DESAIN PAPAN NAMA HITAM */
+                /* NAVBAR - DESAIN PAPAN NAMA HITAM */
         .navbar {
-            background-color: #000000; /* Latar Belakang Hitam */
-            color: var(--white); 
-            padding: 15px 25px; 
+            background-color: #000000 !important; 
+            color: #ffffff !important; 
+            padding: 20px 25px; 
             border-bottom: 4px solid var(--gold); 
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: flex; align-items: center; justify-content: center;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; /* INI KUNCI AGAR POSISI KE TENGAH LAYAR */
         }
-        .navbar-brand { display: flex; align-items: center; gap: 15px; }
-        
+        .navbar-brand { 
+            display: flex; 
+            flex-direction: column; /* INI BIKIN LOGO DI ATAS, TEKS DI BAWAH */
+            align-items: center; 
+            gap: 10px; 
+            text-align: center; /* INI BIKIN TEKS RATA TENGAH */
+        }
+
         /* WADAH LOGO KOTAK PUTIH */
         .nav-logo-box {
             background-color: #ffffff;
