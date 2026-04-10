@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Terminal Juma Eluk - Luxury PMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0a192f; /* Navy Mewah */
+            --gold: #c5a059;    /* Gold */
+            --bg: #f4f7f6;      /* Off White Pearl */
+            --white: #ffffff;
+            --green: #27ae60;
+            --red: #e74c3c;
+            --orange: #f39c12;
+            --text: #333;
+        }
+
+        body { 
+            background-color: var(--bg); color: var(--text); 
+            font-family: 'Montserrat', sans-serif; margin: 0; padding: 0;
+            line-height: 1.6;
+        }
+
+        /* NAVBAR - DESAIN PAPAN NAMA HITAM */
+        .navbar {
+            background-color: #000000; /* Latar Belakang Hitam */
+            color: var(--white); 
+            padding: 15px 25px; 
+            border-bottom: 4px solid var(--gold); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .navbar-brand { display: flex; align-items: center; gap: 15px; }
+        
+        /* WADAH LOGO KOTAK PUTIH */
+        .nav-logo-box {
+            background-color: #ffffff;
+            width: 55px; height: 55px;
+            padding: 5px;
+            display: flex; justify-content: center; align-items: center;
+            border-radius: 4px;
+        }
+        .nav-logo-box img { max-width: 100%; max-height: 100%; display: block; }
+        
+        .navbar h1 { font-family: 'Playfair Display', serif; margin: 0; letter-spacing: 2px; font-size: 22px; text-transform: uppercase; color: #ffffff;}
+        .navbar p { font-size: 10px; letter-spacing: 1px; margin-top: 2px; opacity: 0.8; font-weight: 600; color: #ffffff;}
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px 15px 50px; }
+
+        /* SEARCH BAR */
+        #topSearchArea { margin-bottom: 25px; }
+        .search-top {
+            width: 100%; padding: 15px 25px; border-radius: 50px; border: 1px solid #ddd;
+            font-size: 16px; outline: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); box-sizing: border-box;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--white); border-radius: 15px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05); border-top: 5px solid var(--gold);
+        }
+        .section-title {
+            font-weight: 700; color: var(--primary); margin-bottom: 15px; border-bottom: 1px solid #eee;
+            padding-bottom: 10px; display: block; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* CLICKABLE BUTTONS */
+        .btn-mewah {
+            background: #fff; color: var(--primary); border: 1px solid #eee; padding: 16px;
+            border-radius: 12px; margin-bottom: 12px; cursor: pointer; font-weight: 600;
+            display: flex; align-items: center; justify-content: space-between; transition: 0.2s;
+        }
+        .btn-mewah:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-submit {
+            background: var(--gold); color: white; border: none; padding: 16px;
+            border-radius: 12px; margin-top: 15px; cursor: pointer; font-weight: 700;
+            display: block; width: 100%; text-align: center; font-size: 16px; transition: 0.2s;
+        }
+
+        /* FORMULIR VERTIKAL */
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 5px; text-transform: uppercase; }
+        .form-control { 
+            width: 100%; padding: 14px 15px; border-radius: 8px; border: 1px solid #ddd; 
+            font-size: 15px; font-family: inherit; outline: none; box-sizing: border-box; 
+            transition: 0.3s; background: #fafafa;
+        }
+
+        /* ROOM GRID */
+        .room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .room-box { padding: 20px 0; border-radius: 10px; text-align: center; font-weight: 700; color: white; cursor: pointer; font-size: 16px; }
+        .status-green { background: var(--green); box-shadow: 0 4px 10px rgba(39,174,96,0.3); }
+        .status-red { background: var(--red); box-shadow: 0 4px 10px rgba(231,76,60,0.3); }
+        .status-orange { background: var(--orange); box-shadow: 0 4px 10px rgba(243,156,18,0.3); }
+
+        .guest-item { padding: 15px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .pay-tag { background: #e0f2f1; color: #00796b; padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-left: 5px; }
+        .btn-action { color: var(--gold); font-weight: 700; text-decoration: underline; cursor: pointer; font-size: 12px; }
+
+        #loadingBar { background: var(--gold); color: white; padding: 5px; text-align: center; font-size: 11px; display: none; }
+
+        /* ================= TAMPILAN KERTAS PRINTER (DESAIN PAPAN NAMA) ================= */
+        @media print {
+            @page { 
+                size: 20cm 8.5cm; /* Lebar 20cm, Tinggi 8.5cm memanjang ke samping */
+                margin: 0; /* Margin luar dihapus total agar tidak terbelah */
+            }
+
+            body { background-color: white; color: black; font-family: 'Arial', sans-serif; padding: 0; margin: 0; }
+            #screen, #topSearchArea, #loadingBar, .navbar, .container { display: none !important; }
+            #printArea { display: block !important; padding: 3mm; } 
+            
+            .invoice-box { 
+                border: 2px solid #000; 
+                padding: 5px 10px; 
+                max-width: 100%; 
+                margin: 0 auto; 
+                box-sizing: border-box;
+                page-break-inside: avoid; /* Memaksa masuk 1 halaman utuh */
+                break-inside: avoid;
+            }
+            
+            /* DESAIN HEADER INVOICE SEPERTI PAPAN NAMA */
+            .header-inv { 
+                background-color: #000000 !important; /* Paksa print warna hitam */
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+                padding: 5px; 
+                margin-bottom: 3px; 
+                display: flex; align-items: center; text-align: left; 
+            }
+            .print-logo-box {
+                background-color: #ffffff !important; /* Kotak logo warna putih */
+                width: 45px; height: 45px;
+                padding: 2px;
+                display: flex; justify-content: center; align-items: center;
+                margin-right: 10px;
+            }
+            .print-logo-box img { max-width: 100%; max-height: 100%; display: block; }
+            
+            .header-text h1 { margin: 0; font-size: 16px; font-weight: 900; color: #ffffff !important;} 
+            .header-text p { margin: 1px 0; font-size: 7px; font-weight: bold; color: #ffffff !important;} 
+            
+            .invoice-title { text-align: center; font-size: 11px; font-weight: bold; text-decoration: underline; margin: 4px 0 2px; }
+            .no-inv { color: red; font-weight: bold; font-size: 10px; text-align: right; margin-top: -12px; margin-bottom: 4px;}
+
+            table { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 3px;} 
+            th, td { border: 1px solid #000; padding: 2px 4px; vertical-align: middle; } 
+            th { text-align: left; background-color: #f9f9f9; width: 25%; font-size: 8px;}
+            
+            .ttd-box { display: flex; justify-content: space-between; margin-top: 5px; text-align: center; font-size: 8px; font-weight: bold;}
+            .ttd-box div { width: 30%; }
+            .ttd-line { border-bottom: 1px solid #000; margin-top: 15px; height: 5px;}
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loadingBar">>>> CONNECTING TO CLOUD...</div>
+    
+    <div class="navbar">
+        <div class="navbar-brand">
+            <div class="nav-logo-box">
+                <img src="logo.jpg" alt="Logo Hotel Juma Eluk">
+            </div>
+            <div>
+                <h1>Hotel Juma Eluk</h1>
+                <p>PREMIUM PROPERTY MANAGEMENT SYSTEM</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div id="topSearchArea">
+            <input type="text" id="topSearch" class="search-top" placeholder="🔍 Cari Kamar atau Nama Tamu..." autocomplete="off" oninput="liveSearch(this.value)">
+        </div>
+
+        <div id="screen"></div>
+    </div>
+    
+    <div id="printArea"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvCTnP9xmMYdtzbItnG9s-jzJ2LP143S8",
+      authDomain: "juma-elok.firebaseapp.com",
+      databaseURL: "https://juma-elok-default-rtdb.firebaseio.com",
+      projectId: "juma-elok",
+      storageBucket: "juma-elok.firebasestorage.app",
+      messagingSenderId: "703237300210",
+      appId: "1:703237300210:web:e21f5bdea56000359a156b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const dataRef = db.ref('hotel_data'); 
+
+    const dataHotel = [
+        {tipe: "Single", kelas: "Standard", nomor: ["2a","3a","4a","5a","6a","7a","8a","9a","10a","11a"], harga: 300000},
+        {tipe: "Twin", kelas: "Standard", nomor: ["2b","3b","4b","5b","6b","7b","8b","9b","10b"], harga: 300000},
+        {tipe: "Single", kelas: "Deluxe", nomor: ["12a","13a","14a","15a","12b","14b"], harga: 350000},
+        {tipe: "Twin", kelas: "Deluxe", nomor: ["1b","13b","15b"], harga: 350000},
+        {tipe: "Single", kelas: "Suite", nomor: ["4av","5av","6av","7av","8av","9av","10av","11av"], harga: 400000},
+        {tipe: "Twin", kelas: "Suite", nomor: ["4bv","5bv","6bv","7bv","8bv","9bv"], harga: 400000},
+        {tipe: "Single", kelas: "VIP", nomor: ["2av", "3av", "2bv"], harga: 600000},
+        {tipe: "Twin", kelas: "VIP", nomor: ["3bv"], harga: 600000}
+    ];
+
+    let tamuIn = []; let tamuOut = []; let kamarRusak = []; let lastInv = 0;
+    let bukuKas = { harian: { tgl: "", uang: 0, kamar: 0 }, bulanan: { bln: "", uang: 0, kamar: 0 } };
+    let state = "MENU"; let tempBed="", tempKelas="", tempRoom="", tempCari="";
+    let d = { nama:"", alamat:"", warga:"", ktp:"", malam:"", extrabed:"", transport:"", bayar:"", trip:"", hp:"", note:"", tgl:"", inv:"" };
+    let currentRooms = [];
+
+    const screen = document.getElementById('screen');
+    const printArea = document.getElementById('printArea');
+    const loadingBar = document.getElementById('loadingBar');
+
+    dataRef.on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        loadingBar.style.display = "none"; 
+        if (cloudData) {
+            tamuIn = cloudData.checkin || []; tamuOut = cloudData.checkout || []; kamarRusak = cloudData.maintenance || []; lastInv = cloudData.last_inv || 0;
+            bukuKas = cloudData.bukuKas || { harian: { tgl: getTanggalHarian(), uang: 0, kamar: 0 }, bulanan: { bln: getTanggalBulanan(), uang: 0, kamar: 0 } };
+        }
+        renderScreen();
+    });
+
+    function simpanKeCloud() {
+        loadingBar.style.display = "block";
+        dataRef.set({ checkin: tamuIn, checkout: tamuOut, maintenance: kamarRusak, last_inv: lastInv, bukuKas: bukuKas }).then(() => loadingBar.style.display = "none");
+    }
+
+    function getHarga(noKmr) { for (let k of dataHotel) { if (k.nomor.includes(noKmr)) return k.harga; } return 0; }
+    function getDetailKamar(noKmr) { for (let k of dataHotel) { if (k.nomor.includes(noKmr)) return {kelas: k.kelas, tipe: k.tipe}; } return {kelas: "-", tipe: "-"}; }
+    function formatRp(angka) { return new Intl.NumberFormat('id-ID').format(angka); }
+    function getTanggalSekarang() { let tgl = new Date(); return tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }); }
+    function getTanggalHarian() { let tgl = new Date(); return tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }); }
+    function getTanggalBulanan() { let tgl = new Date(); return tgl.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }); }
+
+    function pindahHalaman(newState) { state = newState; renderScreen(); }
+
+    window.prosesCheckOut = function(index) {
+        tamuOut.push(tamuIn[index]); tamuIn.splice(index, 1); simpanKeCloud(); 
+    };
+    
+    window.hapusRiwayat = function(index) {
+        tamuOut.splice(index, 1); simpanKeCloud(); 
+    };
+
+    window.liveSearch = function(val) {
+        tempCari = val.trim().toLowerCase();
+        state = tempCari !== "" ? "HASIL_CARI" : "MENU"; renderScreen();
+    };
+
+    window.siapkanInvoice = function() {
+        let hargaKamar = getHarga(tempRoom); let mlm = parseInt(d.malam) || 1; let eb = parseInt(d.extrabed) || 0;
+        let total = (hargaKamar * mlm) + (eb * 150000); 
+        printArea.innerHTML = `
+            <div class="invoice-box">
+                <div class="header-inv">
+                    <div class="print-logo-box">
+                        <img src="logo.jpg" alt="Logo Hotel Juma Eluk">
+                    </div>
+                    <div class="header-text">
+                        <h1>JUMA ELUK HOTEL</h1>
+                        <p>JL. Letjen Jamin Ginting Sumber Mufakat Kabanjahe Tanah Karo Sumatra Utara</p>
+                        <p>HP: 0821 6848 9514</p>
+                    </div>
+                </div>
+                
+                <div class="invoice-title">INVOICE FORM</div>
+                <div class="no-inv">NO : ${d.inv}</div>
+                <table>
+                    <tr><th>NAME</th><td colspan="3">${d.nama}</td></tr>
+                    <tr><th>ADDRESS</th><td colspan="3">${d.alamat}</td></tr>
+                    <tr><th>NATIONALITY</th><td>${d.warga}</td><th>ID NUMBER</th><td>${d.ktp}</td></tr>
+                    <tr><th>TYPE OF ROOM</th><td>${tempKelas} ${tempBed} (No. ${tempRoom})</td><th>EXTRA BED</th><td>${d.extrabed} Kasur</td></tr>
+                    <tr><th>PRICE</th><td colspan="3">Rp ${formatRp(hargaKamar)} / Malam (X ${mlm} Malam)</td></tr>
+                    <tr><th>CHECK IN</th><td>${d.tgl}</td><th>TOTAL</th><td><b>Rp ${formatRp(total)}</b></td></tr>
+                    <tr><th>PAYMENT</th><td>${d.bayar}</td><th>MOBILE</th><td>${d.hp}</td></tr>
+                </table>
+                <div class="ttd-box">
+                    <div>GUEST SIGNATURE<div class="ttd-line"></div>( ${d.nama} )</div>
+                    <div>RECEPTION INCHARGE<div class="ttd-line"></div>( ................. )</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderScreen() {
+        let out = ""; 
+        document.getElementById('topSearchArea').style.display = (state === "MENU" || state === "HASIL_CARI") ? "block" : "none";
+        
+        if (state === "MENU") {
+            out += `<div class="card"><span class="section-title">Reception Dashboard</span>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('PILIH_KELAS')"><span>1. Booking Kamar Baru</span><span>➔</span></div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')"><span>2. Monitoring & Check-Out</span><span>➔</span></div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('TUTUP_BUKU')"><span>3. Laporan Keuangan</span><span>➔</span></div></div>`;
+        } 
+        else if (state === "HASIL_CARI") {
+            out += `<div class="card"><span class="section-title">Hasil Cari: "${tempCari}"</span><div class="room-grid">`;
+            for (let k of dataHotel) {
+                for (let noKmr of k.nomor) {
+                    let tamu = tamuIn.find(t => t.room === noKmr);
+                    if (`${noKmr} ${k.kelas} ${k.tipe}`.toLowerCase().includes(tempCari) || (tamu && tamu.nama.toLowerCase().includes(tempCari))) {
+                        let sc = tamu ? "status-red" : (kamarRusak.includes(noKmr) ? "status-orange" : "status-green");
+                        out += `<div class="room-box ${sc}" onclick="klikMenu('ROOM_${noKmr}')">${noKmr}</div>`;
+                    }
+                }
+            }
+            out += `</div><br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali ke Menu</div></div>`;
+        }
+        else if (state === "PILIH_KELAS") {
+            out += `<div class="card"><span class="section-title">Pilih Kelas Kamar</span>`;
+            ["Standard", "Deluxe", "Suite", "VIP"].forEach((c, i) => { out += `<div class="btn-mewah" onclick="klikMenu('KLS_${i+1}')">${c}</div>`; });
+            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="color:var(--red)">Batal</div></div>`;
+        }
+        else if (state === "PILIH_BED") {
+            out += `<div class="card"><span class="section-title">Pilih Tipe Kasur</span>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('BED_1')">Single Bed</div>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('BED_2')">Twin Bed</div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('PILIH_KELAS')">Kembali</div></div>`;
+        }
+        else if (state === "PILIH_KAMAR") {
+            out += `<div class="card"><span class="section-title">Pilih Nomor Kamar</span><div class="room-grid">`;
+            for (let k of dataHotel) { if (k.tipe === tempBed && k.kelas === tempKelas) { currentRooms = k.nomor; break; } }
+            let ki = tamuIn.map(t => t.room);
+            currentRooms.forEach(no => {
+                let s = ki.includes(no) ? "status-red" : (kamarRusak.includes(no) ? "status-orange" : "status-green");
+                out += `<div class="room-box ${s}" onclick="klikMenu('ROOM_${no}')">${no}</div>`;
+            });
+            out += `</div><br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Batal</div></div>`;
+        }
+        else if (state === "OPSI_KAMAR_HIJAU") {
+            out += `<div class="card"><span class="section-title">Kamar ${tempRoom}</span>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_CHECKIN')">Lakukan Check-In Tamu</div>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')">Tandai Sedang Diperbaiki</div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Batal</div></div>`;
+        }
+        else if (state === "OPSI_KAMAR_KUNING") {
+            out += `<div class="card"><span class="section-title">Kamar ${tempRoom} (Perbaikan)</span>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('AKSI_SEHAT')">Kamar Siap Dijual</div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Batal</div></div>`;
+        }
+        else if (state === "DAFTAR_TAMU") {
+            out += `<div class="card"><span class="section-title">Monitoring Tamu Aktif</span>`;
+            if (tamuIn.length === 0) out += `<p style="text-align:center; opacity:0.5">Tidak ada tamu</p>`;
+            tamuIn.forEach((t, i) => {
+                out += `<div class="guest-item"><div><b>${t.room}</b> - ${t.nama} <span class="pay-tag">${t.bayar}</span></div>
+                        <span class="btn-action" onclick="prosesCheckOut(${i})">Check Out</span></div>`;
+            });
+            out += `<br><span class="section-title">Riwayat Check-Out</span>`;
+            tamuOut.forEach((t, i) => {
+                out += `<div class="guest-item" style="opacity:0.6"><div>${t.room} - ${t.nama}</div>
+                        <span class="btn-action" style="color:#999" onclick="hapusRiwayat(${i})">Hapus</span></div>`;
+            });
+            out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
+        }
+        else if (state === "TUTUP_BUKU") {
+            out += `<div class="card"><span class="section-title">Laporan Keuangan</span>`;
+            out += `<p>Pendapatan Harian: <br><b style="font-size:22px; color:var(--green)">Rp ${formatRp(bukuKas.harian.uang)}</b></p>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('RESET_HARIAN')" style="color:var(--orange)">Tutup Buku Harian</div>`;
+            out += `<p>Pendapatan Bulanan: <br><b style="font-size:22px; color:var(--primary)">Rp ${formatRp(bukuKas.bulanan.uang)}</b></p>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('RESET_BULANAN')">Tutup Buku Bulanan</div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
+        }
+        else if (state === "FORM_CHECKIN") {
+            out += `<div class="card">
+                <span class="section-title">Formulir Check-In - Kamar ${tempRoom}</span>
+                
+                <div class="form-group"><label class="form-label">Nama Lengkap Tamu</label>
+                <input type="text" id="f_nama" class="form-control" placeholder="Ketik nama..."></div>
+                
+                <div class="form-group"><label class="form-label">Alamat Lengkap</label>
+                <input type="text" id="f_alamat" class="form-control" placeholder="Ketik alamat..."></div>
+                
+                <div class="form-group"><label class="form-label">Kebangsaan (WNI/WNA)</label>
+                <input type="text" id="f_warga" class="form-control" placeholder="Contoh: WNI" value="WNI"></div>
+                
+                <div class="form-group"><label class="form-label">No KTP / Pasport / SIM</label>
+                <input type="tel" id="f_ktp" class="form-control" placeholder="Nomor identitas..."></div>
+                
+                <div class="form-group"><label class="form-label">Nomor Handphone</label>
+                <input type="tel" id="f_hp" class="form-control" placeholder="08xx..."></div>
+                
+                <div class="form-group"><label class="form-label">Datang Dengan Transportasi</label>
+                <input type="text" id="f_transport" class="form-control" placeholder="Mobil / Motor / dll"></div>
+                
+                <div class="form-group"><label class="form-label">Lama Menginap (Malam)</label>
+                <input type="tel" id="f_malam" class="form-control" placeholder="Angka saja..." value="1"></div>
+                
+                <div class="form-group"><label class="form-label">Extra Bed</label>
+                <select id="f_extrabed" class="form-control">
+                    <option value="0">Tidak Ada (0)</option>
+                    <option value="1">1 Kasur Tambahan</option>
+                    <option value="2">2 Kasur Tambahan</option>
+                </select></div>
+                
+                <div class="form-group"><label class="form-label">Metode Pembayaran</label>
+                <select id="f_bayar" class="form-control">
+                    <option value="CASH">CASH (Tunai)</option>
+                    <option value="TRANSFER">TRANSFER BANK / QRIS</option>
+                    <option value="KARTU KREDIT/DEBIT">KARTU KREDIT / DEBIT</option>
+                </select></div>
+                
+                <div class="form-group"><label class="form-label">Jenis Perjalanan (Trip)</label>
+                <select id="f_trip" class="form-control">
+                    <option value="Leisure">Leisure (Liburan)</option>
+                    <option value="Meeting">Meeting (Bisnis)</option>
+                    <option value="Travelling">Travelling (Perjalanan)</option>
+                    <option value="Event/Convention">Event / Convention</option>
+                </select></div>
+                
+                <div class="form-group"><label class="form-label">Catatan Tambahan</label>
+                <input type="text" id="f_note" class="form-control" placeholder="Kosongkan jika tidak ada"></div>
+                
+                <button class="btn-submit" onclick="prosesFormCheckIn()">Selesaikan Check-In</button>
+                <div class="btn-mewah" style="margin-top:10px; text-align:center; justify-content:center; color:var(--red);" onclick="pindahHalaman('MENU')">Batal</div>
+            </div>`;
+        }
+        else if (state === "PESAN_SUKSES") {
+            out += `<div class="card" style="text-align:center"><div style="font-size:50px">✅</div><h2 style="color:var(--green)">Berhasil</h2>`;
+            out += `<div class="btn-mewah" style="justify-content:center" onclick="window.siapkanInvoice(); window.print()">🖨️ Cetak Invoice Kertas</div>`;
+            out += `<div class="btn-mewah" style="justify-content:center" onclick="pindahHalaman('MENU')">Kembali ke Dashboard</div></div>`;
+        }
+        screen.innerHTML = out; 
+    }
+
+    window.klikMenu = function(val) {
+        if (val === "KLS_1") { tempKelas = "Standard"; pindahHalaman("PILIH_BED"); }
+        else if (val === "KLS_2") { tempKelas = "Deluxe"; pindahHalaman("PILIH_BED"); }
+        else if (val === "KLS_3") { tempKelas = "Suite"; pindahHalaman("PILIH_BED"); }
+        else if (val === "KLS_4") { tempKelas = "VIP"; pindahHalaman("PILIH_BED"); }
+        else if (val === "BED_1") { tempBed = "Single"; pindahHalaman("PILIH_KAMAR"); }
+        else if (val === "BED_2") { tempBed = "Twin"; pindahHalaman("PILIH_KAMAR"); }
+        else if (val.startsWith("ROOM_")) {
+            tempRoom = val.replace("ROOM_", ""); if (tamuIn.find(t => t.room === tempRoom)) return;
+            if (kamarRusak.includes(tempRoom)) pindahHalaman("OPSI_KAMAR_KUNING"); else pindahHalaman("OPSI_KAMAR_HIJAU");
+        }
+        else if (val === "AKSI_RUSAK") { kamarRusak.push(tempRoom); simpanKeCloud(); pindahHalaman("MENU"); }
+        else if (val === "AKSI_SEHAT") { kamarRusak = kamarRusak.filter(r => r !== tempRoom); simpanKeCloud(); pindahHalaman("MENU"); }
+        else if (val === "RESET_HARIAN") { if(confirm("Tutup harian?")) { bukuKas.harian = {tgl:getTanggalHarian(), uang:0, kamar:0}; simpanKeCloud(); } }
+        else if (val === "RESET_BULANAN") { if(confirm("Tutup bulanan?")) { bukuKas.bulanan = {bln:getTanggalBulanan(), uang:0, kamar:0}; simpanKeCloud(); } }
+    };
+
+    window.prosesFormCheckIn = function() {
+        d.nama = document.getElementById('f_nama').value || "-";
+        d.alamat = document.getElementById('f_alamat').value || "-";
+        d.warga = document.getElementById('f_warga').value || "-";
+        d.ktp = document.getElementById('f_ktp').value || "-";
+        d.hp = document.getElementById('f_hp').value || "-";
+        d.transport = document.getElementById('f_transport').value || "-";
+        d.malam = document.getElementById('f_malam').value || "1";
+        d.extrabed = document.getElementById('f_extrabed').value || "0";
+        d.bayar = document.getElementById('f_bayar').value || "CASH";
+        d.trip = document.getElementById('f_trip').value || "Leisure";
+        d.note = document.getElementById('f_note').value || "-";
+
+        d.tgl = getTanggalSekarang(); 
+        lastInv++; 
+        d.inv = String(lastInv).padStart(4, '0');
+        
+        let subTotal = (getHarga(tempRoom) * (parseInt(d.malam)||1)) + (parseInt(d.extrabed)*150000);
+        
+        bukuKas.harian.uang += subTotal; bukuKas.harian.kamar++; 
+        bukuKas.bulanan.uang += subTotal; bukuKas.bulanan.kamar++;
+        
+        tamuIn.push({ ...d, room: tempRoom }); 
+        simpanKeCloud(); 
+        pindahHalaman("PESAN_SUKSES");
+    }
+
+    window.onload = function() { renderScreen(); };
+</script>
+</body>
+</html>
