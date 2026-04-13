@@ -132,16 +132,17 @@
     const dataRef = db.ref('hotel_data'); 
 
     // DATA HOTEL YANG SUDAH DIPERBAIKI (HURUF KECIL 'const' & TANDA KUTIP DIBENARKAN)
-  const dataHotel = [
+     const dataHotel = [
         {tipe: "Single", kelas: "Standard", nomor: ["2a","3a","4a","5a","6a","7a","8a","9a","10a","11a","11b"], harga: 300000},
         {tipe: "Twin", kelas: "Standard", nomor: ["2b","3b","4b","5b","6b","7b","8b","9b","10b"], harga: 300000},
-        {tipe: "Single", kelas: "Deluxe", nomor: ["1a","12a","13a","14a","15a","12b","14b"], harga: 350000},
+        {tipe: "Single", kelas: "Deluxe", nomor: ["1","12a","13a","14a","15a","15","12b","14b"], harga: 350000},
         {tipe: "Twin", kelas: "Deluxe", nomor: ["1b","13b","15b"], harga: 350000},
         {tipe: "Single", kelas: "Suite", nomor: ["4av","5av","6av","7av","8av","9av","10av","11av","6bv","7bv","8bv","9bv"], harga: 400000},
         {tipe: "Twin", kelas: "Suite", nomor: ["4bv","5bv"], harga: 400000},
         {tipe: "Single", kelas: "VIP", nomor: ["2av", "3av", "2bv"], harga: 600000},
         {tipe: "Twin", kelas: "VIP", nomor: ["3bv"], harga: 600000}
     ];
+
 
     let tamuIn = []; let tamuOut = []; let kamarRusak = []; let lastInv = 0;
     let bukuKas = { harian: { tgl: "", uang: 0, kamar: 0 }, bulanan: { bln: "", uang: 0, kamar: 0 } };
@@ -313,90 +314,4 @@
                 out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_CHECKIN')">Lakukan Check-In</div>`;
                 out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')" style="color:var(--orange);">🛠️ Tandai Sedang Diperbaiki</div>`;
             }
-            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Batal</div></div>`;
-        }
-        else if (state === "FORM_CHECKIN") {
-            out += `<div class="card">
-                <span class="section-title">Formulir Check-In - Kamar ${tempRoom}</span>
-                <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" id="f_nama" class="form-control" placeholder="Nama tamu..."></div>
-                <div class="form-group"><label class="form-label">Alamat</label><input type="text" id="f_alamat" class="form-control" placeholder="Alamat..."></div>
-                <div class="form-group"><label class="form-label">Kebangsaan</label><input type="text" id="f_warga" class="form-control" value="WNI"></div>
-                <div class="form-group"><label class="form-label">No KTP/ID</label><input type="tel" id="f_ktp" class="form-control" placeholder="ID..."></div>
-                <div class="form-group"><label class="form-label">HP</label><input type="tel" id="f_hp" class="form-control" placeholder="No HP..."></div>
-                <div class="form-group"><label class="form-label">Malam</label><input type="tel" id="f_malam" class="form-control" value="1"></div>
-                <div class="form-group"><label class="form-label">Extra Bed</label><select id="f_extrabed" class="form-control"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
-                <div class="form-group"><label class="form-label">Bayar</label><select id="f_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option></select></div>
-                <button class="btn-submit" onclick="prosesFormCheckIn()">Selesaikan Check-In</button>
-            </div>`;
-        }
-        else if (state === "TUTUP_BUKU") {
-            out += `<div class="card"><span class="section-title">Laporan Keuangan</span>`;
-            out += `<p>Pendapatan Harian: <br><b style="font-size:22px; color:var(--green)">Rp ${formatRp(bukuKas.harian.uang)}</b></p>`;
-            out += `<div class="btn-mewah" onclick="klikMenu('RESET_HARIAN')" style="color:var(--orange)">🔒 Tutup Buku Harian</div>`;
-            out += `<p>Pendapatan Bulanan: <br><b style="font-size:22px; color:var(--primary)">Rp ${formatRp(bukuKas.bulanan.uang)}</b></p>`;
-            out += `<div class="btn-mewah" onclick="klikMenu('RESET_BULANAN')">🔒 Tutup Buku Bulanan</div>`;
-            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
-        }
-        else if (state === "HASIL_CARI") {
-            out += `<div class="card"><span class="section-title">Hasil Cari: "${tempCari}"</span><div class="room-grid">`;
-            dataHotel.forEach(k => k.nomor.forEach(no => {
-                let tamu = tamuIn.find(t => t.room === no);
-                if (no.includes(tempCari) || (tamu && tamu.nama.toLowerCase().includes(tempCari))) {
-                    let s = tamu ? "status-red" : (kamarRusak.includes(no) ? "status-orange" : "status-green");
-                    out += `<div class="room-box ${s}" onclick="klikMenu('ROOM_${no}')">${no}</div>`;
-                }
-            }));
-            out += `</div><br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
-        }
-        else if (state === "PESAN_SUKSES") {
-            out += `<div class="card" style="text-align:center"><div style="font-size:50px">✅</div><h2 style="color:var(--green)">Berhasil!</h2><div class="btn-mewah" style="justify-content:center" onclick="window.siapkanInvoice(); window.print()">🖨️ Cetak Invoice</div><div class="btn-mewah" style="justify-content:center" onclick="pindahHalaman('MENU')">Dashboard</div></div>`;
-        }
-        screen.innerHTML = out; 
-    }
-
-    window.klikMenu = function(val) {
-        if (val.startsWith("KLS_")) { tempKelas = (val==="KLS_1"?"Standard":val==="KLS_2"?"Deluxe":val==="KLS_3"?"Suite":"VIP"); pindahHalaman("PILIH_BED"); }
-        else if (val.startsWith("BED_")) { tempBed = (val==="BED_1"?"Single":"Twin"); pindahHalaman("PILIH_KAMAR"); }
-        else if (val.startsWith("ROOM_")) { tempRoom = val.replace("ROOM_", ""); pindahHalaman("OPSI_KAMAR_HIJAU"); }
-        else if (val === "AKSI_RUSAK") { kamarRusak.push(tempRoom); simpanKeCloud(); pindahHalaman("MENU"); }
-        else if (val === "AKSI_SELESAI_RUSAK") { kamarRusak = kamarRusak.filter(r => r !== tempRoom); simpanKeCloud(); pindahHalaman("MENU"); }
-        else if (val === "RESET_HARIAN") { 
-            let sandi = prompt("🔒 Masukkan Sandi untuk Tutup Buku Harian:");
-            if (sandi !== null && sandi.trim() === "jumaeluk1234") {
-                if(confirm("Sandi Benar! Yakin ingin me-reset Laporan Harian menjadi Rp 0?")) { 
-                    bukuKas.harian = {tgl:getTanggalHarian(), uang:0, kamar:0}; simpanKeCloud(); renderScreen();
-                } 
-            } else if (sandi !== null) { alert("❌ Sandi Salah! Anda tidak memiliki izin."); }
-        }
-        else if (val === "RESET_BULANAN") { 
-            let sandi = prompt("🔒 Masukkan Sandi untuk Tutup Buku Bulanan:");
-            if (sandi !== null && sandi.trim() === "vipjumaeluk1234") {
-                if(confirm("Sandi Benar! Yakin ingin me-reset Laporan Bulanan menjadi Rp 0?")) { 
-                    bukuKas.bulanan = {bln:getTanggalBulanan(), uang:0, kamar:0}; simpanKeCloud(); renderScreen();
-                } 
-            } else if (sandi !== null) { alert("❌ Sandi Salah! Anda tidak memiliki izin."); }
-        }
-    };
-
-    window.prosesFormCheckIn = function() {
-        d.nama = document.getElementById('f_nama').value || "-";
-        d.alamat = document.getElementById('f_alamat').value || "-";
-        d.warga = document.getElementById('f_warga').value || "-";
-        d.ktp = document.getElementById('f_ktp').value || "-";
-        d.hp = document.getElementById('f_hp').value || "-";
-        d.malam = document.getElementById('f_malam').value || "1";
-        d.extrabed = document.getElementById('f_extrabed').value || "0";
-        d.bayar = document.getElementById('f_bayar').value || "CASH";
-        let jam = new Date().getHours(); d.shift = (jam >= 7 && jam < 17) ? "Pagi" : "Malam";
-        d.tgl = getTanggalSekarang(); lastInv++; d.inv = String(lastInv).padStart(4, '0');
-        let subTotal = (getHarga(tempRoom) * parseInt(d.malam)) + (parseInt(d.extrabed)*150000);
-        bukuKas.harian.uang += subTotal; bukuKas.harian.kamar++;
-        bukuKas.bulanan.uang += subTotal; bukuKas.bulanan.kamar++;
-        tamuIn.push({ ...d, room: tempRoom }); simpanKeCloud(); pindahHalaman("PESAN_SUKSES");
-    }
-
-    window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
-    window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
-</script>
-</body>
-</html>
+            out += `<div class="btn-mewah" onclick=
