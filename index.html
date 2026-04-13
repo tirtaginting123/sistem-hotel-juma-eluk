@@ -7,14 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #0a192f; /* Navy Mewah */
-            --gold: #c5a059;    /* Gold */
-            --bg: #f4f7f6;      /* Off White Pearl */
-            --white: #ffffff;
-            --green: #27ae60;
-            --red: #e74c3c;
-            --orange: #f39c12;
-            --text: #333;
+            --primary: #0a192f; --gold: #c5a059; --bg: #f4f7f6;
+            --white: #ffffff; --green: #27ae60; --red: #e74c3c;
+            --orange: #f39c12; --text: #333;
         }
 
         body { 
@@ -23,49 +18,31 @@
             line-height: 1.6;
         }
 
-        /* NAVBAR - DESAIN PAPAN NAMA HITAM (POSISI TENGAH) */
         .navbar {
-            background-color: #000000 !important; 
-            color: #ffffff !important; 
-            padding: 20px 25px; 
-            border-bottom: 4px solid var(--gold); 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+            background-color: #000000 !important; color: #ffffff !important; 
+            padding: 20px 25px; border-bottom: 4px solid var(--gold); 
+            display: flex; align-items: center; justify-content: center; 
         }
-        .navbar-brand { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 10px; 
-            text-align: center; 
-        }
+        .navbar-brand { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
         
-        /* WADAH LOGO KOTAK PUTIH */
         .nav-logo-box {
-            background-color: #ffffff;
-            width: 70px; height: 70px;
-            padding: 5px;
-            display: flex; justify-content: center; align-items: center;
-            border-radius: 2px;
-            flex-shrink: 0;
+            background-color: #ffffff; width: 70px; height: 70px;
+            padding: 5px; display: flex; justify-content: center; align-items: center;
+            border-radius: 2px; flex-shrink: 0;
         }
-        .nav-logo-box img { max-width: 100%; max-height: 100%; display: block; }
+        .nav-logo-box img { max-width: 100%; max-height: 100%; display: block; object-fit: contain; }
         
-        .header-info h1 { font-family: 'Playfair Display', serif; margin: 0; letter-spacing: 2px; font-size: 24px; text-transform: uppercase; color: #ffffff !important;}
-        .header-info p { font-size: 10px; letter-spacing: 0.5px; margin: 2px 0 0; opacity: 0.9; font-weight: 500; color: #ffffff !important; line-height: 1.3;}
+        .header-info h1 { font-family: 'Playfair Display', serif; margin: 0; font-size: 24px; text-transform: uppercase; color: #fff !important;}
+        .header-info p { font-size: 10px; margin: 2px 0 0; color: #fff !important; line-height: 1.3;}
 
         .container { max-width: 600px; margin: 0 auto; padding: 20px 15px 50px; }
 
-        /* SEARCH BAR */
         #topSearchArea { margin-bottom: 25px; }
         .search-top {
             width: 100%; padding: 15px 25px; border-radius: 50px; border: 1px solid #ddd;
             font-size: 16px; outline: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); box-sizing: border-box;
         }
 
-        /* CARDS */
         .card {
             background: var(--white); border-radius: 15px; padding: 20px; margin-bottom: 20px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.05); border-top: 5px solid var(--gold);
@@ -75,78 +52,53 @@
             padding-bottom: 10px; display: block; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
         }
 
-        /* BUTTONS */
         .btn-mewah {
             background: #fff; color: var(--primary); border: 1px solid #eee; padding: 16px;
             border-radius: 12px; margin-bottom: 12px; cursor: pointer; font-weight: 600;
             display: flex; align-items: center; justify-content: space-between; transition: 0.2s;
         }
-        .btn-mewah:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-mewah:hover { border-color: var(--gold); }
         .btn-submit {
             background: var(--gold); color: white; border: none; padding: 16px;
             border-radius: 12px; margin-top: 15px; cursor: pointer; font-weight: 700;
-            display: block; width: 100%; text-align: center; font-size: 16px; transition: 0.2s;
+            display: block; width: 100%; text-align: center; font-size: 16px;
         }
 
-        /* FORMULIR */
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 5px; text-transform: uppercase; }
         .form-control { 
             width: 100%; padding: 14px 15px; border-radius: 8px; border: 1px solid #ddd; 
-            font-size: 15px; font-family: inherit; outline: none; box-sizing: border-box; 
-            transition: 0.3s; background: #fafafa;
+            font-size: 15px; box-sizing: border-box; background: #fafafa;
         }
 
-        /* ROOM GRID */
         .room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .room-box { padding: 20px 0; border-radius: 10px; text-align: center; font-weight: 700; color: white; cursor: pointer; font-size: 16px; }
+        .room-box { padding: 20px 0; border-radius: 10px; text-align: center; font-weight: 700; color: white; cursor: pointer; }
         .status-green { background: var(--green); }
         .status-red { background: var(--red); }
         .status-orange { background: var(--orange); }
 
         #loadingBar { background: var(--gold); color: white; padding: 5px; text-align: center; font-size: 11px; display: none; }
 
-        /* ================= TAMPILAN PRINT (ANTI-TERBELAH) ================= */
         @media print {
             @page { size: 20cm 8.5cm; margin: 0; }
-            body { background-color: white; color: black; padding: 0; margin: 0; }
+            body { background-color: white; }
             #screen, #topSearchArea, #loadingBar, .navbar, .container { display: none !important; }
             #printArea { display: block !important; padding: 3mm; } 
-            
-            .invoice-box { border: 2px solid #000; padding: 5px 10px; max-width: 100%; margin: 0 auto; box-sizing: border-box; page-break-inside: avoid; break-inside: avoid; }
-            
-            .header-inv { 
-                background-color: #000000 !important; color: #ffffff !important;
-                -webkit-print-color-adjust: exact; print-color-adjust: exact;
-                padding: 8px; margin-bottom: 4px; display: flex; align-items: center; 
-            }
-            .print-logo-box { background-color: #ffffff !important; width: 50px; height: 50px; padding: 3px; display: flex; justify-content: center; align-items: center; margin-right: 15px; flex-shrink: 0; }
-            .print-logo-box img { max-width: 100%; max-height: 100%; display: block; }
-            
-            .header-text h1 { margin: 0; font-size: 18px; font-weight: 900; color: #ffffff !important; } 
-            .header-text p { margin: 1px 0; font-size: 8px; font-weight: bold; color: #ffffff !important; } 
-            
-            .invoice-title { text-align: center; font-size: 11px; font-weight: bold; text-decoration: underline; margin: 4px 0; }
-            .no-inv { color: red; font-weight: bold; font-size: 10px; text-align: right; margin-top: -12px; }
-
-            table { width: 100%; border-collapse: collapse; font-size: 8px; } 
-            th, td { border: 1px solid #000; padding: 2px 4px; } 
-            th { text-align: left; background-color: #f9f9f9; width: 25%; }
-            
-            .ttd-box { display: flex; justify-content: space-between; margin-top: 8px; text-align: center; font-size: 8px; font-weight: bold;}
-            .ttd-line { border-bottom: 1px solid #000; margin-top: 18px; width: 100px; margin-left: auto; margin-right: auto; }
+            .invoice-box { border: 2px solid #000; padding: 5px 10px; }
+            .header-inv { background-color: #000 !important; color: #fff !important; padding: 8px; display: flex; align-items: center; -webkit-print-color-adjust: exact; }
+            .print-logo-box { background-color: #fff !important; width: 50px; height: 50px; margin-right: 15px; display: flex; align-items: center; justify-content: center; }
+            .print-logo-box img { max-width: 100%; }
+            table { width: 100%; border-collapse: collapse; font-size: 8px; margin-top: 5px; }
+            th, td { border: 1px solid #000; padding: 2px 4px; text-align: left; }
         }
     </style>
 </head>
 <body>
 
     <div id="loadingBar">>>> CONNECTING TO CLOUD...</div>
-    
     <div class="navbar">
         <div class="navbar-brand">
-            <div class="nav-logo-box">
-                <img src="logo.jpg" alt="Logo Hotel Juma Eluk">
-            </div>
+            <div class="nav-logo-box"><img src="logo.jpg" alt="Logo Hotel JE"></div>
             <div class="header-info">
                 <h1>Hotel Juma Eluk</h1>
                 <p>Jl. Letjen Jamin Ginting Sumber Mufakat Kabanjahe Tanah Karo Sumatra Utara</p>
@@ -156,12 +108,9 @@
     </div>
 
     <div class="container" id="mainContainer">
-        <div id="topSearchArea">
-            <input type="text" id="topSearch" class="search-top" placeholder="🔍 Cari Kamar atau Nama Tamu..." autocomplete="off" oninput="liveSearch(this.value)">
-        </div>
+        <div id="topSearchArea"><input type="text" id="topSearch" class="search-top" placeholder="🔍 Cari Kamar atau Nama Tamu..." autocomplete="off" oninput="liveSearch(this.value)"></div>
         <div id="screen"></div>
     </div>
-    
     <div id="printArea"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -182,13 +131,14 @@
     const db = firebase.database();
     const dataRef = db.ref('hotel_data'); 
 
-    const dataHotel = [
-        {tipe: "Single", kelas: "Standard", nomor: ["2a","3a","4a","5a","6a","7a","8a","9a","10a","11a"], harga: 300000},
+    // DATA HOTEL YANG SUDAH DIPERBAIKI (HURUF KECIL 'const' & TANDA KUTIP DIBENARKAN)
+  const dataHotel = [
+        {tipe: "Single", kelas: "Standard", nomor: ["2a","3a","4a","5a","6a","7a","8a","9a","10a","11a","11b"], harga: 300000},
         {tipe: "Twin", kelas: "Standard", nomor: ["2b","3b","4b","5b","6b","7b","8b","9b","10b"], harga: 300000},
-        {tipe: "Single", kelas: "Deluxe", nomor: ["12a","13a","14a","15a","12b","14b"], harga: 350000},
+        {tipe: "Single", kelas: "Deluxe", nomor: ["1a","12a","13a","14a","15a","12b","14b"], harga: 350000},
         {tipe: "Twin", kelas: "Deluxe", nomor: ["1b","13b","15b"], harga: 350000},
-        {tipe: "Single", kelas: "Suite", nomor: ["4av","5av","6av","7av","8av","9av","10av","11av"], harga: 400000},
-        {tipe: "Twin", kelas: "Suite", nomor: ["4bv","5bv","6bv","7bv","8bv","9bv"], harga: 400000},
+        {tipe: "Single", kelas: "Suite", nomor: ["4av","5av","6av","7av","8av","9av","10av","11av","6bv","7bv","8bv","9bv"], harga: 400000},
+        {tipe: "Twin", kelas: "Suite", nomor: ["4bv","5bv"], harga: 400000},
         {tipe: "Single", kelas: "VIP", nomor: ["2av", "3av", "2bv"], harga: 600000},
         {tipe: "Twin", kelas: "VIP", nomor: ["3bv"], harga: 600000}
     ];
@@ -196,12 +146,11 @@
     let tamuIn = []; let tamuOut = []; let kamarRusak = []; let lastInv = 0;
     let bukuKas = { harian: { tgl: "", uang: 0, kamar: 0 }, bulanan: { bln: "", uang: 0, kamar: 0 } };
     let state = "MENU"; let tempBed="", tempKelas="", tempRoom="", tempCari="";
-    let d = { nama:"", alamat:"", warga:"", ktp:"", malam:"", extrabed:"", transport:"", bayar:"", trip:"", hp:"", note:"", tgl:"", inv:"" };
-    let currentRooms = [];
+    let d = { nama:"", alamat:"", warga:"", ktp:"", hp:"", malam:"", extrabed:"", bayar:"", tgl:"", inv:"", shift:"" };
 
     const screen = document.getElementById('screen');
-    const printArea = document.getElementById('printArea');
     const loadingBar = document.getElementById('loadingBar');
+    const printArea = document.getElementById('printArea');
 
     dataRef.on('value', (snapshot) => {
         const cloudData = snapshot.val();
@@ -224,11 +173,27 @@
     function getTanggalHarian() { let tgl = new Date(); return tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }); }
     function getTanggalBulanan() { let tgl = new Date(); return tgl.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }); }
 
-    function pindahHalaman(newState) { state = newState; renderScreen(); }
+    function pindahHalaman(newState) { 
+        state = newState; 
+        history.pushState({ page: newState }, "", ""); 
+        renderScreen(); 
+    }
 
-    window.prosesCheckOut = function(index) { tamuOut.push(tamuIn[index]); tamuIn.splice(index, 1); simpanKeCloud(); };
-    window.hapusRiwayat = function(index) { tamuOut.splice(index, 1); simpanKeCloud(); };
+    window.prosesCheckOut = function(index) { tamuOut.push(tamuIn[index]); tamuIn.splice(index, 1); simpanKeCloud(); renderScreen(); };
+    window.hapusRiwayat = function(index) { tamuOut.splice(index, 1); simpanKeCloud(); renderScreen(); };
     window.liveSearch = function(val) { tempCari = val.trim().toLowerCase(); state = tempCari !== "" ? "HASIL_CARI" : "MENU"; renderScreen(); };
+
+    window.tandaiDeposit = function(index) {
+        if(confirm("Tandai deposit Rp 100.000 sudah dikembalikan ke tamu?")) {
+            tamuIn[index].deposit_kembali = true; simpanKeCloud(); renderScreen();
+        }
+    };
+    
+    window.tandaiDepositOut = function(index) {
+        if(confirm("Tandai deposit Rp 100.000 sudah dikembalikan ke tamu riwayat ini?")) {
+            tamuOut[index].deposit_kembali = true; simpanKeCloud(); renderScreen();
+        }
+    };
 
     window.siapkanInvoice = function() {
         let hargaKamar = getHarga(tempRoom); let mlm = parseInt(d.malam) || 1; let eb = parseInt(d.extrabed) || 0;
@@ -270,69 +235,85 @@
             out += `<div class="card"><span class="section-title">Reception Dashboard</span>`;
             out += `<div class="btn-mewah" onclick="pindahHalaman('PILIH_KELAS')"><span>1. Booking Kamar Baru</span><span>➔</span></div>`;
             out += `<div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')"><span>2. Monitoring & Check-Out</span><span>➔</span></div>`;
-            out += `<div class="btn-mewah" onclick="pindahHalaman('TUTUP_BUKU')"><span>3. Laporan Keuangan</span><span>➔</span></div></div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('TUTUP_BUKU')"><span>3. Laporan Keuangan</span><span>➔</span></div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('RINGKASAN_KAMAR')" style="border-left: 4px solid var(--green);"><span>4. Status & Ringkasan Kamar</span><span>➔</span></div></div>`;
         } 
-        else if (state === "HASIL_CARI") {
-            out += `<div class="card"><span class="section-title">Hasil Cari: "${tempCari}"</span><div class="room-grid">`;
-            for (let k of dataHotel) {
-                for (let noKmr of k.nomor) {
-                    let tamu = tamuIn.find(t => t.room === noKmr);
-                    if (`${noKmr} ${k.kelas} ${k.tipe}`.toLowerCase().includes(tempCari) || (tamu && tamu.nama.toLowerCase().includes(tempCari))) {
-                        let sc = tamu ? "status-red" : (kamarRusak.includes(noKmr) ? "status-orange" : "status-green");
-                        out += `<div class="room-box ${sc}" onclick="klikMenu('ROOM_${noKmr}')">${noKmr}</div>`;
-                    }
-                }
-            }
-            out += `</div><br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali ke Menu</div></div>`;
+        else if (state === "DAFTAR_TAMU") {
+            out += `<div class="card"><span class="section-title">Monitoring Tamu Aktif & Deposit</span>`;
+            if (tamuIn.length === 0) out += `<p style="text-align:center; opacity:0.5">Tidak ada tamu</p>`;
+            tamuIn.forEach((t, i) => {
+                let kls = "-", bed = "-"; for(let k of dataHotel) { if(k.nomor.includes(t.room)) { kls = k.kelas; bed = k.tipe; break; } }
+                let isSelesai = t.deposit_kembali === true; let depoColor = isSelesai ? "var(--green)" : "var(--red)";
+                let infoShift = t.shift ? `[Shift ${t.shift}]` : "";
+                out += `<div style="border-bottom: 1px solid #eee; padding-bottom:12px; margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div><b>${t.room}</b> - ${t.nama} <span style="font-size:10px; font-weight:700; color:var(--primary)">${infoShift}</span></div>
+                                <span style="cursor:pointer; font-weight:700; font-size:12px; border:1px solid #ddd; padding:5px 10px; border-radius:5px;" onclick="prosesCheckOut(${i})">Check Out</span>
+                            </div>
+                            <div onclick="tandaiDeposit(${i})" style="margin-top:8px; font-size:11px; cursor:pointer; color:${depoColor}; font-weight:700;">
+                                (${kls}/${bed}-${t.room}, ${t.bayar}: Deposit 100.000 ${isSelesai ? '✓' : '⬜'})
+                            </div>
+                        </div>`;
+            });
+            out += `<br><span class="section-title">Riwayat Check-Out</span>`;
+            if (tamuOut.length === 0) out += `<p style="text-align:center; opacity:0.5; font-size:12px;">Belum ada riwayat</p>`;
+            tamuOut.forEach((t, i) => {
+                let kls = "-", bed = "-"; for(let k of dataHotel) { if(k.nomor.includes(t.room)) { kls = k.kelas; bed = k.tipe; break; } }
+                let isSelesai = t.deposit_kembali === true; let depoColor = isSelesai ? "var(--green)" : "var(--red)";
+                let infoShift = t.shift ? `[Shift ${t.shift}]` : "";
+                out += `<div style="border-bottom: 1px solid #eee; padding-bottom:12px; margin-bottom:12px; opacity:0.8">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div><b style="color:#888">${t.room}</b> - ${t.nama} <span style="font-size:9px;">${infoShift}</span></div>
+                                <span style="color:#999; cursor:pointer; font-size:11px; border:1px solid #ddd; padding:3px 8px; border-radius:3px;" onclick="hapusRiwayat(${i})">Hapus</span>
+                            </div>
+                            <div onclick="tandaiDepositOut(${i})" style="margin-top:5px; font-size:10px; cursor:pointer; color:${depoColor}; font-weight:700;">
+                                (${kls}/${bed}-${t.room}, ${t.bayar}: Deposit 100.000 ${isSelesai ? '✓' : '⬜'})
+                            </div>
+                        </div>`;
+            });
+            out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
+        }
+        else if (state === "RINGKASAN_KAMAR") {
+            out += `<div class="card"><span class="section-title">Ringkasan Status Kamar</span><table style="width:100%; border-collapse:collapse; text-align:center; font-size:12px;">`;
+            out += `<tr style="background:var(--primary); color:white;"><th style="padding:8px;">Kelas/Bed</th><th>🟩</th><th>🟥</th><th>🟧</th></tr>`;
+            let tk=0, ti=0, tr=0;
+            dataHotel.forEach(k => {
+                let isi = k.nomor.filter(no => tamuIn.some(t => t.room === no)).length;
+                let rusak = k.nomor.filter(no => kamarRusak.includes(no)).length;
+                let ksg = k.nomor.length - isi - rusak; tk+=ksg; ti+=isi; tr+=rusak;
+                out += `<tr><td style="padding:8px; border:1px solid #eee; text-align:left;">${k.kelas} ${k.tipe}</td><td style="border:1px solid #eee;">${ksg}</td><td style="border:1px solid #eee;">${isi}</td><td style="border:1px solid #eee;">${rusak}</td></tr>`;
+            });
+            out += `<tr style="font-weight:700; background:#eee;"><td>TOTAL</td><td>${tk}</td><td>${ti}</td><td>${tr}</td></tr></table>`;
+            out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
         }
         else if (state === "PILIH_KELAS") {
-            out += `<div class="card"><span class="section-title">Pilih Kelas Kamar</span>`;
+            out += `<div class="card"><span class="section-title">Pilih Kelas</span>`;
             ["Standard", "Deluxe", "Suite", "VIP"].forEach((c, i) => { out += `<div class="btn-mewah" onclick="klikMenu('KLS_${i+1}')">${c}</div>`; });
             out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="color:var(--red)">Batal</div></div>`;
         }
         else if (state === "PILIH_BED") {
-            out += `<div class="card"><span class="section-title">Pilih Tipe Kasur</span>`;
-            out += `<div class="btn-mewah" onclick="klikMenu('BED_1')">Single Bed</div>`;
-            out += `<div class="btn-mewah" onclick="klikMenu('BED_2')">Twin Bed</div>`;
+            out += `<div class="card"><span class="section-title">Tipe Kasur</span>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('BED_1')">Single Bed</div><div class="btn-mewah" onclick="klikMenu('BED_2')">Twin Bed</div>`;
             out += `<div class="btn-mewah" onclick="pindahHalaman('PILIH_KELAS')">Kembali</div></div>`;
         }
         else if (state === "PILIH_KAMAR") {
             out += `<div class="card"><span class="section-title">Pilih Nomor Kamar</span><div class="room-grid">`;
-            for (let k of dataHotel) { if (k.tipe === tempBed && k.kelas === tempKelas) { currentRooms = k.nomor; break; } }
-            let ki = tamuIn.map(t => t.room);
-            currentRooms.forEach(no => {
-                let s = ki.includes(no) ? "status-red" : (kamarRusak.includes(no) ? "status-orange" : "status-green");
+            let cur = []; for (let k of dataHotel) { if (k.tipe === tempBed && k.kelas === tempKelas) { cur = k.nomor; break; } }
+            cur.forEach(no => {
+                let s = tamuIn.some(t => t.room === no) ? "status-red" : (kamarRusak.includes(no) ? "status-orange" : "status-green");
                 out += `<div class="room-box ${s}" onclick="klikMenu('ROOM_${no}')">${no}</div>`;
             });
             out += `</div><br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Batal</div></div>`;
         }
         else if (state === "OPSI_KAMAR_HIJAU") {
-            out += `<div class="card"><span class="section-title">Kamar ${tempRoom}</span>`;
-            out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_CHECKIN')">Lakukan Check-In Tamu</div>`;
-            out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')">Tandai Sedang Diperbaiki</div>`;
+            out += `<div class="card"><span class="section-title">Opsi Kamar ${tempRoom}</span>`;
+            if (kamarRusak.includes(tempRoom)) {
+                out += `<div class="btn-mewah" onclick="klikMenu('AKSI_SELESAI_RUSAK')" style="color:var(--green);">✔️ Selesai Diperbaiki</div>`;
+            } else {
+                out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_CHECKIN')">Lakukan Check-In</div>`;
+                out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')" style="color:var(--orange);">🛠️ Tandai Sedang Diperbaiki</div>`;
+            }
             out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Batal</div></div>`;
-        }
-        else if (state === "DAFTAR_TAMU") {
-            out += `<div class="card"><span class="section-title">Monitoring Tamu Aktif</span>`;
-            if (tamuIn.length === 0) out += `<p style="text-align:center; opacity:0.5">Tidak ada tamu</p>`;
-            tamuIn.forEach((t, i) => {
-                out += `<div class="guest-item"><div><b>${t.room}</b> - ${t.nama} <span class="pay-tag">${t.bayar}</span></div>
-                        <span class="btn-action" onclick="prosesCheckOut(${i})">Check Out</span></div>`;
-            });
-            out += `<br><span class="section-title">Riwayat Check-Out</span>`;
-            tamuOut.forEach((t, i) => {
-                out += `<div class="guest-item" style="opacity:0.6"><div>${t.room} - ${t.nama}</div>
-                        <span class="btn-action" style="color:#999" onclick="hapusRiwayat(${i})">Hapus</span></div>`;
-            });
-            out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
-        }
-        else if (state === "TUTUP_BUKU") {
-            out += `<div class="card"><span class="section-title">Laporan Keuangan</span>`;
-            out += `<p>Pendapatan Harian: <br><b style="font-size:22px; color:var(--green)">Rp ${formatRp(bukuKas.harian.uang)}</b></p>`;
-            out += `<div class="btn-mewah" onclick="klikMenu('RESET_HARIAN')" style="color:var(--orange)">Tutup Buku Harian</div>`;
-            out += `<p>Pendapatan Bulanan: <br><b style="font-size:22px; color:var(--primary)">Rp ${formatRp(bukuKas.bulanan.uang)}</b></p>`;
-            out += `<div class="btn-mewah" onclick="klikMenu('RESET_BULANAN')">Tutup Buku Bulanan</div>`;
-            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
         }
         else if (state === "FORM_CHECKIN") {
             out += `<div class="card">
@@ -348,6 +329,25 @@
                 <button class="btn-submit" onclick="prosesFormCheckIn()">Selesaikan Check-In</button>
             </div>`;
         }
+        else if (state === "TUTUP_BUKU") {
+            out += `<div class="card"><span class="section-title">Laporan Keuangan</span>`;
+            out += `<p>Pendapatan Harian: <br><b style="font-size:22px; color:var(--green)">Rp ${formatRp(bukuKas.harian.uang)}</b></p>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('RESET_HARIAN')" style="color:var(--orange)">🔒 Tutup Buku Harian</div>`;
+            out += `<p>Pendapatan Bulanan: <br><b style="font-size:22px; color:var(--primary)">Rp ${formatRp(bukuKas.bulanan.uang)}</b></p>`;
+            out += `<div class="btn-mewah" onclick="klikMenu('RESET_BULANAN')">🔒 Tutup Buku Bulanan</div>`;
+            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
+        }
+        else if (state === "HASIL_CARI") {
+            out += `<div class="card"><span class="section-title">Hasil Cari: "${tempCari}"</span><div class="room-grid">`;
+            dataHotel.forEach(k => k.nomor.forEach(no => {
+                let tamu = tamuIn.find(t => t.room === no);
+                if (no.includes(tempCari) || (tamu && tamu.nama.toLowerCase().includes(tempCari))) {
+                    let s = tamu ? "status-red" : (kamarRusak.includes(no) ? "status-orange" : "status-green");
+                    out += `<div class="room-box ${s}" onclick="klikMenu('ROOM_${no}')">${no}</div>`;
+                }
+            }));
+            out += `</div><br><div class="btn-mewah" onclick="pindahHalaman('MENU')">Kembali</div></div>`;
+        }
         else if (state === "PESAN_SUKSES") {
             out += `<div class="card" style="text-align:center"><div style="font-size:50px">✅</div><h2 style="color:var(--green)">Berhasil!</h2><div class="btn-mewah" style="justify-content:center" onclick="window.siapkanInvoice(); window.print()">🖨️ Cetak Invoice</div><div class="btn-mewah" style="justify-content:center" onclick="pindahHalaman('MENU')">Dashboard</div></div>`;
         }
@@ -355,16 +355,27 @@
     }
 
     window.klikMenu = function(val) {
-        if (val === "KLS_1") { tempKelas = "Standard"; pindahHalaman("PILIH_BED"); }
-        else if (val === "KLS_2") { tempKelas = "Deluxe"; pindahHalaman("PILIH_BED"); }
-        else if (val === "KLS_3") { tempKelas = "Suite"; pindahHalaman("PILIH_BED"); }
-        else if (val === "KLS_4") { tempKelas = "VIP"; pindahHalaman("PILIH_BED"); }
-        else if (val === "BED_1") { tempBed = "Single"; pindahHalaman("PILIH_KAMAR"); }
-        else if (val === "BED_2") { tempBed = "Twin"; pindahHalaman("PILIH_KAMAR"); }
+        if (val.startsWith("KLS_")) { tempKelas = (val==="KLS_1"?"Standard":val==="KLS_2"?"Deluxe":val==="KLS_3"?"Suite":"VIP"); pindahHalaman("PILIH_BED"); }
+        else if (val.startsWith("BED_")) { tempBed = (val==="BED_1"?"Single":"Twin"); pindahHalaman("PILIH_KAMAR"); }
         else if (val.startsWith("ROOM_")) { tempRoom = val.replace("ROOM_", ""); pindahHalaman("OPSI_KAMAR_HIJAU"); }
         else if (val === "AKSI_RUSAK") { kamarRusak.push(tempRoom); simpanKeCloud(); pindahHalaman("MENU"); }
-        else if (val === "RESET_HARIAN") { if(confirm("Tutup harian?")) { bukuKas.harian = {tgl:getTanggalHarian(), uang:0, kamar:0}; simpanKeCloud(); } }
-        else if (val === "RESET_BULANAN") { if(confirm("Tutup bulanan?")) { bukuKas.bulanan = {bln:getTanggalBulanan(), uang:0, kamar:0}; simpanKeCloud(); } }
+        else if (val === "AKSI_SELESAI_RUSAK") { kamarRusak = kamarRusak.filter(r => r !== tempRoom); simpanKeCloud(); pindahHalaman("MENU"); }
+        else if (val === "RESET_HARIAN") { 
+            let sandi = prompt("🔒 Masukkan Sandi untuk Tutup Buku Harian:");
+            if (sandi !== null && sandi.trim() === "jumaeluk1234") {
+                if(confirm("Sandi Benar! Yakin ingin me-reset Laporan Harian menjadi Rp 0?")) { 
+                    bukuKas.harian = {tgl:getTanggalHarian(), uang:0, kamar:0}; simpanKeCloud(); renderScreen();
+                } 
+            } else if (sandi !== null) { alert("❌ Sandi Salah! Anda tidak memiliki izin."); }
+        }
+        else if (val === "RESET_BULANAN") { 
+            let sandi = prompt("🔒 Masukkan Sandi untuk Tutup Buku Bulanan:");
+            if (sandi !== null && sandi.trim() === "vipjumaeluk1234") {
+                if(confirm("Sandi Benar! Yakin ingin me-reset Laporan Bulanan menjadi Rp 0?")) { 
+                    bukuKas.bulanan = {bln:getTanggalBulanan(), uang:0, kamar:0}; simpanKeCloud(); renderScreen();
+                } 
+            } else if (sandi !== null) { alert("❌ Sandi Salah! Anda tidak memiliki izin."); }
+        }
     };
 
     window.prosesFormCheckIn = function() {
@@ -376,6 +387,7 @@
         d.malam = document.getElementById('f_malam').value || "1";
         d.extrabed = document.getElementById('f_extrabed').value || "0";
         d.bayar = document.getElementById('f_bayar').value || "CASH";
+        let jam = new Date().getHours(); d.shift = (jam >= 7 && jam < 17) ? "Pagi" : "Malam";
         d.tgl = getTanggalSekarang(); lastInv++; d.inv = String(lastInv).padStart(4, '0');
         let subTotal = (getHarga(tempRoom) * parseInt(d.malam)) + (parseInt(d.extrabed)*150000);
         bukuKas.harian.uang += subTotal; bukuKas.harian.kamar++;
@@ -383,7 +395,8 @@
         tamuIn.push({ ...d, room: tempRoom }); simpanKeCloud(); pindahHalaman("PESAN_SUKSES");
     }
 
-    window.onload = function() { renderScreen(); };
+    window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
+    window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
 </script>
 </body>
 </html>
