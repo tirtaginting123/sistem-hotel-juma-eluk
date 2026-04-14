@@ -149,7 +149,22 @@
 
     function pindahHalaman(newState) { state = newState; history.pushState({ page: newState }, "", ""); renderScreen(); }
 
-    window.prosesCheckOut = function(index) { tamuOut.push(tamuIn[index]); tamuIn.splice(index, 1); simpanKeCloud(); renderScreen(); };
+    window.prosesCheckOut = function(index) {
+        let sisaVit = prompt("Berapa sisa botol air Vit di kamar saat tamu keluar?\n- Ketik 2 (Utuh/Tidak diminum)\n- Ketik 1 (Sisa 1 botol)\n- Ketik 0 (Habis diminum semua)", "0");
+        if(sisaVit !== null) {
+            sisaVit = sisaVit.trim();
+            if(sisaVit === "0" || sisaVit === "1" || sisaVit === "2") {
+                tamuIn[index].vit = "vit " + sisaVit; // Menyimpan status vit, contoh: "vit 0"
+                tamuOut.push(tamuIn[index]); 
+                tamuIn.splice(index, 1); 
+                simpanKeCloud(); 
+                renderScreen();
+            } else {
+                alert("❌ Gagal: Masukkan angka 2, 1, atau 0 saja untuk sisa Vit.");
+            }
+        }
+    };
+
     window.hapusRiwayat = function(index) { tamuOut.splice(index, 1); simpanKeCloud(); renderScreen(); };
     window.liveSearch = function(val) { tempCari = val.trim().toLowerCase(); state = tempCari !== "" ? "HASIL_CARI" : "MENU"; renderScreen(); };
 
@@ -363,11 +378,13 @@
                     });
                 }
 
-                out += `<br><span class="section-title">🕒 Riwayat Check-Out</span>`;
+                out += `<br><span class="section-title">🕒 Riwayat Check-Out & Laporan Vit</span>`;
                 tamuOut.forEach((t, i) => {
                     let isSelesai = t.deposit_kembali === true;
+                    // Menampilkan format seperti "8a co vit 0"
+                    let infoVit = t.vit ? t.vit : "vit ?"; 
                     out += `<div style="border-bottom: 1px solid #eee; padding-bottom:12px; margin-bottom:12px; opacity:0.8; display:flex; justify-content:space-between; align-items:center;">
-                                <div><b>🚪 ${t.room}</b> - 👤 ${t.nama} <span style="font-size:9px; color:#555;">[#${t.inv}]</span><div onclick="tandaiDepositOut(${i})" style="font-size:10px; cursor:pointer; color:${isSelesai ? 'var(--green)' : 'var(--red)'}; font-weight:700;">Deposit 100k ${isSelesai ? '✓' : '⬜'}</div></div>
+                                <div><b style="color:var(--primary); font-size:14px;">🚪 ${t.room} co ${infoVit}</b><br><span style="font-size:11px;">👤 ${t.nama} <span style="font-size:9px; color:#555;">[#${t.inv}]</span></span><div onclick="tandaiDepositOut(${i})" style="font-size:10px; cursor:pointer; color:${isSelesai ? 'var(--green)' : 'var(--red)'}; font-weight:700; margin-top:4px;">Deposit 100k ${isSelesai ? '✓' : '⬜'}</div></div>
                                 <span style="color:#999; cursor:pointer; font-size:11px; border:1px solid #ddd; padding:3px 8px; border-radius:3px;" onclick="hapusRiwayat(${i})">🗑️ Hapus</span>
                             </div>`;
                 });
