@@ -39,12 +39,20 @@
         /* SEMBUNYIKAN STRUK DI LAYAR HP/LAPTOP */
         #printArea { display: none; }
         
-        /* DESAIN CETAK KHUSUS DOT MATRIX 20x8 CM (LANDSCAPE) - HANYA MUNCUL SAAT DI-PRINT */
+        /* DESAIN CETAK KHUSUS DOT MATRIX 24x14 CM (LANDSCAPE) */
         @media print {
-            @page { margin: 0; size: 200mm 140mm; } /* Panjang 20cm, Tinggi 8cm */
+            @page { margin: 0; size: 240mm 140mm; } /* Panjang 24cm, Tinggi 14cm */
             body { background: white; color: black; font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; }
             #screen, #topSearchArea, #loadingBar, .navbar, .container { display: none !important; }
-            #printArea { display: block !important; width: 200mm; height: 140mm; box-sizing: border-box; overflow: hidden; page-break-after: avoid; }
+            #printArea { 
+                display: block !important; 
+                width: 240mm; 
+                height: 140mm; 
+                box-sizing: border-box; 
+                overflow: hidden; 
+                page-break-after: avoid; 
+                padding: 5mm; /* Jarak aman supaya tidak terpotong mesin */
+            }
             table { border-collapse: collapse; }
         }
     </style>
@@ -204,55 +212,55 @@
         let hargaKamar = getHarga(tempRoom); let mlm = parseInt(d.malam) || 1; let eb = parseInt(d.extrabed) || 0;
         let total = (hargaKamar * mlm) + (eb * 150000); 
         printArea.innerHTML = `
-            <div style="width:100%; height:100%; box-sizing:border-box; padding: 2mm;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
+            <div style="width:100%; height:100%; box-sizing:border-box;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px;">
                     <div style="display:flex; align-items:center;">
-                        <div style="border: 1px solid #000; border-radius: 50%; width: 28px; height: 28px; display:flex; justify-content:center; align-items:center; margin-right:5px; font-weight:bold; font-size:12px;">JE</div>
+                        <div style="border: 2px solid #000; border-radius: 50%; width: 45px; height: 45px; display:flex; justify-content:center; align-items:center; margin-right:10px; font-weight:bold; font-size:18px;">JE</div>
                         <div>
-                            <div style="font-size:9px; font-weight:bold;">JUMA ELUK HOTEL</div>
-                            <div style="font-size:7px;">JL. LETJEND JAMIN GINTING, KABANJAHE<br>TANAH KARO - SUMATERA UTARA<br>HP. 0821 6848 9514</div>
+                            <div style="font-size:16px; font-weight:bold;">JUMA ELUK HOTEL</div>
+                            <div style="font-size:11px; line-height:1.2; margin-top:3px;">JL. LETJEND JAMIN GINTING, KABANJAHE<br>TANAH KARO - SUMATERA UTARA<br>HP. 0821 6848 9514</div>
                         </div>
                     </div>
-                    <div style="font-weight:bold; font-size:10px; margin-top:5px;">INVOICE FORM</div>
+                    <div style="font-weight:bold; font-size:16px; margin-top:8px;">INVOICE FORM</div>
                 </div>
-                <div style="font-size:9px; font-weight:bold; margin-bottom: 3px;">NO : ${d.inv}</div>
+                <div style="font-size:14px; font-weight:bold; margin-bottom: 8px;">NO : ${d.inv}</div>
                 
-                <table style="width:100%; border-collapse:collapse; font-size:8px; border:1px solid #000;">
+                <table style="width:100%; border-collapse:collapse; font-size:12px; border:2px solid #000;">
                     <tr>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>NAME</b><br>${d.nama}</td>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>ADDRESS</b><br>${d.alamat}</td>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>NATIONALITY</b><br>${d.warga}</td>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>ID NUMBER</b><br>${d.ktp}</td>
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>NAME</b><br>${d.nama}</td>
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>ADDRESS</b><br>${d.alamat}</td>
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>NATIONALITY</b><br>${d.warga}</td>
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>ID NUMBER</b><br>${d.ktp}</td>
                     </tr>
                     <tr>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>TYPE OF ROOM :</b><br>${tempKelas} ${tempBed} (${tempRoom})</td>
-                        <td colspan="2" style="border:1px solid #000; padding:1px 3px;"><b>EXTRA BED :</b><br>${d.extrabed} Kasur</td>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>PRICE :</b><br>Rp ${formatRp(hargaKamar)}</td>
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF ROOM :</b><br>${tempKelas} ${tempBed} (${tempRoom})</td>
+                        <td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>EXTRA BED :</b><br>${d.extrabed} Kasur</td>
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>PRICE :</b><br>Rp ${formatRp(hargaKamar)}</td>
                     </tr>
                     <tr>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>CHECK IN DATE :</b><br>${d.tgl}</td>
-                        <td colspan="2" style="border:1px solid #000; padding:1px 3px;"><b>CHECK OUT DATE :</b><br></td>
-                        <td rowspan="3" style="border:1px solid #000; padding:1px 3px; vertical-align:top;">
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>CHECK IN DATE :</b><br>${d.tgl}</td>
+                        <td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>CHECK OUT DATE :</b><br></td>
+                        <td rowspan="3" style="border:2px solid #000; padding:6px 8px; vertical-align:top;">
                             <b>TYPE OF TRIP</b><br>
-                            <div style="display:flex; justify-content:space-between; margin-top:1px; font-size:7px;">
+                            <div style="display:flex; justify-content:space-between; margin-top:3px; font-size:10px; line-height:1.5;">
                                 <div>&#9634; Meeting<br>&#9634; Invitation<br>&#9634; Exhibition</div>
                                 <div>&#9634; Leisure<br>&#9634; Convention<br>&#9634; Travelling</div>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="border:1px solid #000; padding:1px 3px;"><b>TRANFORTATION BY :</b><br>-</td>
-                        <td colspan="2" style="border:1px solid #000; padding:1px 3px;"><b>TYPE OF PAYMENT :</b><br>${d.bayar}</td>
+                        <td style="border:2px solid #000; padding:6px 8px;"><b>TRANFORTATION BY :</b><br>-</td>
+                        <td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF PAYMENT :</b><br>${d.bayar}</td>
                     </tr>
                     <tr>
-                        <td colspan="3" style="border:1px solid #000; padding:1px 3px;"><b>MOBILE NUMBER :</b><br>${d.hp}</td>
+                        <td colspan="3" style="border:2px solid #000; padding:6px 8px;"><b>MOBILE NUMBER :</b><br>${d.hp}</td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="border:1px solid #000; padding:1px 3px; height:20px; vertical-align:bottom; text-align:center;"><b>GUEST SIGNATURE</b></td>
-                        <td colspan="2" style="border:1px solid #000; padding:1px 3px; vertical-align:top;">
+                        <td colspan="2" style="border:2px solid #000; padding:6px 8px; height:45px; vertical-align:bottom; text-align:center;"><b>GUEST SIGNATURE</b></td>
+                        <td colspan="2" style="border:2px solid #000; padding:6px 8px; vertical-align:top;">
                             <div style="display:flex; justify-content:space-between; width:100%;">
-                                <div><b>TOTAL ACCOUNT :</b><br><b style="font-size:10px;">Rp ${formatRp(total)}</b></div>
-                                <div style="text-align:right; margin-top:8px;">..................................<br>RECEPTION INCHARGE</div>
+                                <div><b>TOTAL ACCOUNT :</b><br><b style="font-size:16px;">Rp ${formatRp(total)}</b></div>
+                                <div style="text-align:right; margin-top:15px;">..................................<br>RECEPTION INCHARGE</div>
                             </div>
                         </td>
                     </tr>
