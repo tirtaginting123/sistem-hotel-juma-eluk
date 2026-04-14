@@ -36,24 +36,16 @@
         .status-blue { background: var(--blue); }
         #loadingBar { background: var(--gold); color: white; padding: 5px; text-align: center; font-size: 11px; display: none; }
         
-        /* DESAIN CETAK KHUSUS THERMAL PRINTER 80mm */
+        /* SEMBUNYIKAN STRUK DI LAYAR HP/LAPTOP */
+        #printArea { display: none; }
+        
+        /* DESAIN CETAK KHUSUS DOT MATRIX 20x8 CM (LANDSCAPE) - HANYA MUNCUL SAAT DI-PRINT */
         @media print {
-            @page { margin: 0; size: 80mm auto; } 
-            body { background: white; color: black; font-size: 11px; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+            @page { margin: 0; size: 200mm 80mm; } /* Panjang 20cm, Tinggi 8cm */
+            body { background: white; color: black; font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; }
             #screen, #topSearchArea, #loadingBar, .navbar, .container { display: none !important; }
-            #printArea { display: block !important; width: 80mm; padding: 4mm; box-sizing: border-box; }
-            .invoice-box { width: 100%; border: none; padding: 0; }
-            .header-inv { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; display: block; }
-            .print-logo-box { display: flex; justify-content: center; margin-bottom: 5px; }
-            .print-logo-box img { width: 45px; height: 45px; filter: grayscale(100%); }
-            .header-text h1 { margin: 0; font-size: 15px; font-weight: bold; }
-            .header-text p { margin: 2px 0 0; font-size: 9px; }
-            .invoice-title { text-align: center; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
-            .no-inv { text-align: center; font-size: 10px; margin-bottom: 10px; }
-            .struk-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 10px; }
-            .struk-row.bold { font-weight: bold; font-size: 12px; margin-top: 5px; border-top: 1px dashed #000; padding-top: 5px; }
-            .ttd-box { text-align: center; margin-top: 20px; font-size: 10px; }
-            .ttd-line { border-bottom: 1px dashed #000; width: 60%; margin: 25px auto 5px; }
+            #printArea { display: block !important; width: 200mm; height: 80mm; box-sizing: border-box; overflow: hidden; page-break-after: avoid; }
+            table { border-collapse: collapse; }
         }
     </style>
 </head>
@@ -154,7 +146,7 @@
         if(sisaVit !== null) {
             sisaVit = sisaVit.trim();
             if(sisaVit === "0" || sisaVit === "1" || sisaVit === "2") {
-                tamuIn[index].vit = "vit " + sisaVit; // Menyimpan status vit, contoh: "vit 0"
+                tamuIn[index].vit = "vit " + sisaVit; 
                 tamuOut.push(tamuIn[index]); 
                 tamuIn.splice(index, 1); 
                 simpanKeCloud(); 
@@ -212,36 +204,59 @@
         let hargaKamar = getHarga(tempRoom); let mlm = parseInt(d.malam) || 1; let eb = parseInt(d.extrabed) || 0;
         let total = (hargaKamar * mlm) + (eb * 150000); 
         printArea.innerHTML = `
-            <div class="invoice-box">
-                <div class="header-inv">
-                    <div class="print-logo-box"><img src="logo.jpg"></div>
-                    <div class="header-text">
-                        <h1>HOTEL JUMA ELUK</h1>
-                        <p>Jl. Letjen Jamin Ginting Sumber Mufakat</p>
-                        <p>Kabanjahe - HP: 082168489514</p>
+            <div style="width:100%; height:100%; box-sizing:border-box; padding: 2mm;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
+                    <div style="display:flex; align-items:center;">
+                        <div style="border: 1px solid #000; border-radius: 50%; width: 28px; height: 28px; display:flex; justify-content:center; align-items:center; margin-right:5px; font-weight:bold; font-size:12px;">JE</div>
+                        <div>
+                            <div style="font-size:9px; font-weight:bold;">JUMA ELUK HOTEL</div>
+                            <div style="font-size:7px;">JL. LETJEND JAMIN GINTING, KABANJAHE<br>TANAH KARO - SUMATERA UTARA<br>HP. 0821 6848 9514</div>
+                        </div>
                     </div>
+                    <div style="font-weight:bold; font-size:10px; margin-top:5px;">INVOICE FORM</div>
                 </div>
-                <div class="invoice-title">INVOICE CHECK-IN</div>
-                <div class="no-inv">NO: ${d.inv}</div>
+                <div style="font-size:9px; font-weight:bold; margin-bottom: 3px;">NO : ${d.inv}</div>
                 
-                <div style="border-bottom: 1px dashed #000; padding-bottom:5px; margin-bottom:5px;">
-                    <div class="struk-row"><span>Nama:</span><span>${d.nama}</span></div>
-                    <div class="struk-row"><span>Kamar:</span><span>${tempRoom} (${tempKelas})</span></div>
-                    <div class="struk-row"><span>Cek-In:</span><span>${d.tgl}</span></div>
-                    <div class="struk-row"><span>Durasi:</span><span>${mlm} Malam</span></div>
-                    <div class="struk-row"><span>Extra Bed:</span><span>${d.extrabed}</span></div>
-                    <div class="struk-row"><span>Bayar:</span><span>${d.bayar}</span></div>
-                </div>
-                
-                <div class="struk-row"><span>Tarif Kamar:</span><span>Rp ${formatRp(hargaKamar)}</span></div>
-                <div class="struk-row"><span>Tarif E.Bed:</span><span>Rp ${formatRp(eb * 150000)}</span></div>
-                <div class="struk-row bold"><span>TOTAL:</span><span>Rp ${formatRp(total)}</span></div>
-                
-                <div class="ttd-box">
-                    <div>RECEPTIONIST</div>
-                    <div class="ttd-line"></div>
-                </div>
-                <div style="text-align:center; font-size:8px; margin-top:10px;">Terima Kasih Atas Kunjungan Anda</div>
+                <table style="width:100%; border-collapse:collapse; font-size:8px; border:1px solid #000;">
+                    <tr>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>NAME</b><br>${d.nama}</td>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>ADDRESS</b><br>${d.alamat}</td>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>NATIONALITY</b><br>${d.warga}</td>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>ID NUMBER</b><br>${d.ktp}</td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>TYPE OF ROOM :</b><br>${tempKelas} ${tempBed} (${tempRoom})</td>
+                        <td colspan="2" style="border:1px solid #000; padding:1px 3px;"><b>EXTRA BED :</b><br>${d.extrabed} Kasur</td>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>PRICE :</b><br>Rp ${formatRp(hargaKamar)}</td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>CHECK IN DATE :</b><br>${d.tgl}</td>
+                        <td colspan="2" style="border:1px solid #000; padding:1px 3px;"><b>CHECK OUT DATE :</b><br></td>
+                        <td rowspan="3" style="border:1px solid #000; padding:1px 3px; vertical-align:top;">
+                            <b>TYPE OF TRIP</b><br>
+                            <div style="display:flex; justify-content:space-between; margin-top:1px; font-size:7px;">
+                                <div>&#9634; Meeting<br>&#9634; Invitation<br>&#9634; Exhibition</div>
+                                <div>&#9634; Leisure<br>&#9634; Convention<br>&#9634; Travelling</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; padding:1px 3px;"><b>TRANFORTATION BY :</b><br>-</td>
+                        <td colspan="2" style="border:1px solid #000; padding:1px 3px;"><b>TYPE OF PAYMENT :</b><br>${d.bayar}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="border:1px solid #000; padding:1px 3px;"><b>MOBILE NUMBER :</b><br>${d.hp}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="border:1px solid #000; padding:1px 3px; height:20px; vertical-align:bottom; text-align:center;"><b>GUEST SIGNATURE</b></td>
+                        <td colspan="2" style="border:1px solid #000; padding:1px 3px; vertical-align:top;">
+                            <div style="display:flex; justify-content:space-between; width:100%;">
+                                <div><b>TOTAL ACCOUNT :</b><br><b style="font-size:10px;">Rp ${formatRp(total)}</b></div>
+                                <div style="text-align:right; margin-top:8px;">..................................<br>RECEPTION INCHARGE</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </div>
         `;
     }
@@ -381,7 +396,6 @@
                 out += `<br><span class="section-title">🕒 Riwayat Check-Out & Laporan Vit</span>`;
                 tamuOut.forEach((t, i) => {
                     let isSelesai = t.deposit_kembali === true;
-                    // Menampilkan format seperti "8a co vit 0"
                     let infoVit = t.vit ? t.vit : "vit ?"; 
                     out += `<div style="border-bottom: 1px solid #eee; padding-bottom:12px; margin-bottom:12px; opacity:0.8; display:flex; justify-content:space-between; align-items:center;">
                                 <div><b style="color:var(--primary); font-size:14px;">🚪 ${t.room} co ${infoVit}</b><br><span style="font-size:11px;">👤 ${t.nama} <span style="font-size:9px; color:#555;">[#${t.inv}]</span></span><div onclick="tandaiDepositOut(${i})" style="font-size:10px; cursor:pointer; color:${isSelesai ? 'var(--green)' : 'var(--red)'}; font-weight:700; margin-top:4px;">Deposit 100k ${isSelesai ? '✓' : '⬜'}</div></div>
@@ -487,7 +501,7 @@
             }
             else if (state === "PESAN_SUKSES") {
                 out += `<div class="card" style="text-align:center"><h2>✅ Check-In Berhasil!</h2>
-                    <div class="btn-mewah" style="justify-content:center" onclick="window.siapkanInvoice(); setTimeout(() => { window.print(); }, 500);">🖨️ Cetak Invoice Kasir</div>
+                    <div class="btn-mewah" style="justify-content:center" onclick="window.siapkanInvoice(); setTimeout(() => { window.print(); }, 500);">🖨️ Cetak Invoice (Dot Matrix)</div>
                     <div class="btn-mewah" style="justify-content:center" onclick="pindahHalaman('MENU')">🏠 Ke Dashboard</div></div>`;
             }
         }
