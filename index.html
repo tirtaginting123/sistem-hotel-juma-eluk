@@ -721,9 +721,19 @@
         let jam = new Date().getHours(); d.shift = (jam >= 7 && jam < 17) ? "Pagi" : "Malam";
         d.tgl = getTanggalSekarang(); lastInv++; d.inv = String(lastInv).padStart(4, '0');
         
+        // --- LOGIKA BARU: HITUNG TGL KELUAR BERDASARKAN SHIFT 07:00 Pagi ---
         let dateOut = new Date();
+        
+        // Jika tamu masuk antara jam 00:00 s/d 06:59 pagi, hitungannya dia masuk di "hari kemarin"
+        if (jam >= 0 && jam < 7) {
+            dateOut.setDate(dateOut.getDate() - 1);
+        }
+        
+        // Tambahkan jumlah malam yang di-booking
         dateOut.setDate(dateOut.getDate() + parseInt(d.malam));
+        
         d.tgl_out = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        // -------------------------------------------------------------------
         
         if(d.shift === "Pagi") {
             if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = d.inv;
