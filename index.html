@@ -113,11 +113,15 @@
     let isPendingMode = false;
     let isJualBillMode = false; 
     let bukuKas = { 
-        harian: { tgl: "", uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, rincianKeluar: [], kamar: 0, billPagi: {awal:null, akhir:null, count:0}, billMalam: {awal:null, akhir:null, count:0}, jualBill: [], last_reset: 0 }, 
+        harian: { 
+            tgl: "", uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, rincianKeluar: [], kamar: 0,
+            pagi: { cash:0, tf:0, db:0, keluar:0 }, malam: { cash:0, tf:0, db:0, keluar:0 },
+            billPagi: {awal:null, akhir:null, count:0}, billMalam: {awal:null, akhir:null, count:0}, jualBill: [], last_reset: 0 
+        }, 
         bulanan: { bln: "", uang: 0, kamar: 0, keluar: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0 } 
     };
     let state = "MENU", tempBed="", tempKelas="", tempRoom="", tempCari="";
-    let d = { nama:"", alamat:"", warga:"", ktp:"", hp:"", malam:"", extrabed:"", bayar:"", tgl:"", tgl_out:"", inv:"", shift:"" };
+    let d = { nama:"", alamat:"", warga:"", ktp:"", hp:"", malam:"", extrabed:"", bayar:"", tgl:"", tgl_out:"", inv:"", shift:"", timestamp: 0 };
     let cryptoChart;
 
     const screen = document.getElementById('screen');
@@ -140,6 +144,8 @@
                     tgl: getTanggalHarian(), uang: dbKas.harian?.uang || 0, uangCash: dbKas.harian?.uangCash || 0, 
                     uangTransfer: dbKas.harian?.uangTransfer || 0, uangDebit: dbKas.harian?.uangDebit || 0,
                     keluar: dbKas.harian?.keluar || 0, rincianKeluar: dbKas.harian?.rincianKeluar || [], kamar: dbKas.harian?.kamar || 0,
+                    pagi: dbKas.harian?.pagi || { cash:0, tf:0, db:0, keluar:0 },
+                    malam: dbKas.harian?.malam || { cash:0, tf:0, db:0, keluar:0 },
                     billPagi: dbKas.harian?.billPagi || {awal:null, akhir:null, count:0},
                     billMalam: dbKas.harian?.billMalam || {awal:null, akhir:null, count:0},
                     jualBill: dbKas.harian?.jualBill || [],
@@ -171,6 +177,82 @@
 
     function pindahHalaman(newState) { state = newState; history.pushState({ page: newState }, "", ""); renderScreen(); }
 
+    window.sinkronHariIni = function() {
+        if(!confirm("Fitur ini akan menyapu bersih dan menghitung ulang seluruh uang & kamar berdasarkan SIKLUS HARI HOTEL (Pagi + Malam ini).\n\nLanjutkan?")) return;
+        
+        let now = new Date();
+        let startOfHotelDay = new Date(now);
+        
+        // Logika Siklus Hotel: Jika jam saat ini masih di bawah jam 07:00 pagi,
+        // berarti kita masih berada di siklus operasional HARI KEMARIN.
+        if (now.getHours() < 7) {
+            startOfHotelDay.setDate(startOfHotelDay.getDate() - 1);
+        }
+        // Kunci di jam 07:00:00 pagi sebagai garis start
+        startOfHotelDay.setHours(7, 0, 0, 0); 
+        let cutoffTime = startOfHotelDay.getTime();
+        
+        let c = 0, t = 0, db = 0, k = 0;
+        let pc = 0, pt = 0, pdb = 0, pkeluar = 0;
+        let mc = 0, mt = 0, mdb = 0, mkeluar = 0;
+        
+        let allTamu = tamuIn.concat(tamuOut);
+        allTamu.forEach(x => {
+            let isToday = false;
+            
+            if(x.timestamp && x.timestamp >= cutoffTime) { 
+                isToday = true; 
+            } else if(x.tgl) {
+                let tglStr = x.tgl.replace(/\./g, ':');
+                let parts = tglStr.match(/(\d+)\s+([a-zA-Z]+)\s+(\d+)[,\s]+(\d+):(\d+)/);
+                if(parts) {
+                    let months = {"Jan":0,"Feb":1,"Mar":2,"Apr":3,"Mei":4,"Jun":5,"Jul":6,"Agu":7,"Sep":8,"Okt":9,"Nov":10,"Des":11, "May":4, "Oct":9, "Dec":11};
+                    let ms = new Date(parseInt(parts[3]), months[parts[2]]||0, parseInt(parts[1]), parseInt(parts[4]), parseInt(parts[5])).getTime();
+                    if(ms >= cutoffTime) isToday = true;
+                }
+            }
+            
+            if(isToday) {
+                let sub = (getHarga(x.room)*(parseInt(x.malam)||1)) + ((parseInt(x.extrabed)||0)*150000);
+                let isMalam = (x.shift && x.shift.toLowerCase() === "malam");
+                
+                if(x.bayar === "CASH") { c += sub; if(isMalam) mc += sub; else pc += sub; }
+                else if(x.bayar === "TRANSFER") { t += sub; if(isMalam) mt += sub; else pt += sub; }
+                else if(x.bayar === "DEBIT") { db += sub; if(isMalam) mdb += sub; else pdb += sub; }
+                k++;
+            }
+        });
+        
+        if(bukuKas.harian.jualBill) {
+            bukuKas.harian.jualBill.forEach(jb => { 
+                c += 100000; 
+                let curHour = now.getHours();
+                if(curHour >= 7 && curHour < 17) pc += 100000; else mc += 100000;
+            });
+        }
+
+        let totalKeluar = 0;
+        if(bukuKas.harian.rincianKeluar) {
+            bukuKas.harian.rincianKeluar.forEach(r => {
+                totalKeluar += r.nominal;
+                if(r.shift && r.shift.toLowerCase() === "malam") { mkeluar += r.nominal; }
+                else { pkeluar += r.nominal; } 
+            });
+        }
+        
+        bukuKas.harian.uangCash = c; bukuKas.harian.uangTransfer = t; bukuKas.harian.uangDebit = db;
+        bukuKas.harian.uang = c + t + db;
+        bukuKas.harian.kamar = k;
+        bukuKas.harian.keluar = totalKeluar;
+        
+        bukuKas.harian.pagi.cash = pc; bukuKas.harian.pagi.tf = pt; bukuKas.harian.pagi.db = pdb; bukuKas.harian.pagi.keluar = pkeluar;
+        bukuKas.harian.malam.cash = mc; bukuKas.harian.malam.tf = mt; bukuKas.harian.malam.db = mdb; bukuKas.harian.malam.keluar = mkeluar;
+        
+        simpanKeCloud();
+        alert("✅ Sinkronisasi 1 Siklus Hari Berhasil!\nSistem telah menghitung ulang dari jam 07.00 pagi kemarin sampai dengan detik ini (Siklus Pagi-Malam).");
+        renderScreen();
+    };
+
     window.prosesCheckOut = function(index) {
         let cItemBox = document.getElementById('charge_item_' + index);
         let cHargaBox = document.getElementById('charge_harga_' + index);
@@ -186,10 +268,14 @@
             if(sisaVit === "0" || sisaVit === "1" || sisaVit === "2") {
                 
                 if (cHarga > 0) {
+                    let jamOut = new Date().getHours();
+                    let shiftOut = (jamOut >= 7 && jamOut < 17) ? "pagi" : "malam";
+                    
                     bukuKas.harian.uang += cHarga; bukuKas.bulanan.uang += cHarga;
-                    if (cBayar === "CASH") { bukuKas.harian.uangCash += cHarga; bukuKas.bulanan.uangCash += cHarga; }
-                    else if (cBayar === "TRANSFER") { bukuKas.harian.uangTransfer += cHarga; bukuKas.bulanan.uangTransfer += cHarga; }
-                    else if (cBayar === "DEBIT") { bukuKas.harian.uangDebit += cHarga; bukuKas.bulanan.uangDebit += cHarga; }
+                    if (cBayar === "CASH") { bukuKas.harian.uangCash += cHarga; bukuKas.bulanan.uangCash += cHarga; bukuKas.harian[shiftOut].cash += cHarga; }
+                    else if (cBayar === "TRANSFER") { bukuKas.harian.uangTransfer += cHarga; bukuKas.bulanan.uangTransfer += cHarga; bukuKas.harian[shiftOut].tf += cHarga; }
+                    else if (cBayar === "DEBIT") { bukuKas.harian.uangDebit += cHarga; bukuKas.bulanan.uangDebit += cHarga; bukuKas.harian[shiftOut].db += cHarga; }
+                    
                     tamuIn[index].charge = `${cItem} (Rp ${formatRp(cHarga)} via ${cBayar})`;
                 } else if (cItem !== "") { tamuIn[index].charge = cItem; } 
                 else { tamuIn[index].charge = "-"; }
@@ -227,14 +313,15 @@
             if (opsiBaru === "CASH" || opsiBaru === "TRANSFER" || opsiBaru === "DEBIT") {
                 if (opsiBaru !== t.bayar) {
                     let sub = (getHarga(t.room) * (parseInt(t.malam)||1)) + ((parseInt(t.extrabed)||0)*150000);
+                    let ts = t.shift ? t.shift.toLowerCase() : "pagi";
                     
-                    if (t.bayar === "CASH") { bukuKas.harian.uangCash -= sub; bukuKas.bulanan.uangCash -= sub; }
-                    else if (t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer -= sub; bukuKas.bulanan.uangTransfer -= sub; }
-                    else if (t.bayar === "DEBIT") { bukuKas.harian.uangDebit -= sub; bukuKas.bulanan.uangDebit -= sub; }
+                    if (t.bayar === "CASH") { bukuKas.harian.uangCash -= sub; bukuKas.bulanan.uangCash -= sub; bukuKas.harian[ts].cash -= sub; }
+                    else if (t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer -= sub; bukuKas.bulanan.uangTransfer -= sub; bukuKas.harian[ts].tf -= sub; }
+                    else if (t.bayar === "DEBIT") { bukuKas.harian.uangDebit -= sub; bukuKas.bulanan.uangDebit -= sub; bukuKas.harian[ts].db -= sub; }
                     
-                    if (opsiBaru === "CASH") { bukuKas.harian.uangCash += sub; bukuKas.bulanan.uangCash += sub; }
-                    else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += sub; bukuKas.bulanan.uangTransfer += sub; }
-                    else if (opsiBaru === "DEBIT") { bukuKas.harian.uangDebit += sub; bukuKas.bulanan.uangDebit += sub; }
+                    if (opsiBaru === "CASH") { bukuKas.harian.uangCash += sub; bukuKas.bulanan.uangCash += sub; bukuKas.harian[ts].cash += sub; }
+                    else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += sub; bukuKas.bulanan.uangTransfer += sub; bukuKas.harian[ts].tf += sub; }
+                    else if (opsiBaru === "DEBIT") { bukuKas.harian.uangDebit += sub; bukuKas.bulanan.uangDebit += sub; bukuKas.harian[ts].db += sub; }
                     
                     tamuIn[index].bayar = opsiBaru; simpanKeCloud(); renderScreen();
                 }
@@ -246,9 +333,40 @@
         let deskripsi = document.getElementById('p_item').value || "Lain-lain";
         let harga = parseInt(document.getElementById('p_harga').value) || 0;
         if(harga > 0) {
+            let jam = new Date().getHours();
+            let shiftNow = (jam >= 7 && jam < 17) ? "Pagi" : "Malam";
+            
             bukuKas.harian.keluar += harga; bukuKas.bulanan.keluar += harga;
-            bukuKas.harian.rincianKeluar.push({ ket: deskripsi, nominal: harga });
+            bukuKas.harian[shiftNow.toLowerCase()].keluar += harga;
+            
+            bukuKas.harian.rincianKeluar.push({ ket: deskripsi, nominal: harga, shift: shiftNow });
             simpanKeCloud(); alert("✅ Pengeluaran dicatat!"); pindahHalaman("TUTUP_BUKU");
+        }
+    };
+
+    window.editPengeluaran = function(idx) {
+        let item = bukuKas.harian.rincianKeluar[idx];
+        let newNom = prompt(`Edit nominal pengeluaran untuk: ${item.ket}\n(Ketik 0 jika ingin MENGHAPUS pengeluaran ini sepenuhnya)`, item.nominal);
+        
+        if(newNom !== null && newNom !== "") {
+            let n = parseInt(newNom);
+            if(!isNaN(n)) {
+                let selisih = n - item.nominal; 
+                bukuKas.harian.keluar += selisih;
+                bukuKas.bulanan.keluar += selisih;
+                
+                let sBucket = item.shift ? item.shift.toLowerCase() : "pagi";
+                bukuKas.harian[sBucket].keluar += selisih;
+                
+                if(n === 0) {
+                    bukuKas.harian.rincianKeluar.splice(idx, 1);
+                    alert("🗑️ Pengeluaran berhasil dihapus dan uang kas telah dikembalikan.");
+                } else {
+                    bukuKas.harian.rincianKeluar[idx].nominal = n;
+                    alert("✅ Pengeluaran berhasil diupdate!");
+                }
+                simpanKeCloud(); renderScreen();
+            } else { alert("❌ Masukkan angka yang benar!"); }
         }
     };
 
@@ -351,6 +469,7 @@
                 <p style="font-size:10px; margin-top:0;">Ketik pesan atau informasi penting untuk penjaga shift selanjutnya di sini.</p>
                 <textarea id="txt_catatan" class="form-control" style="height:250px; resize:vertical; font-family:inherit; white-space:pre-wrap;" placeholder="Ketik catatan di sini...">${catatanHotel}</textarea>
                 <button class="btn-submit" style="background:#f39c12; color:#fff;" onclick="simpanCatatan()">💾 Simpan Catatan</button>
+                <div class="btn-mewah" onclick="sinkronHariIni()" style="background:var(--blue); color:white; justify-content:center; margin-top:20px; border:none;">🔄 Sesuaikan Uang & Kamar Hari Ini</div>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Kembali</div></div>`;
         }
         else if (state === "ALL_INFO") {
@@ -358,11 +477,16 @@
             let h_masuk = bukuKas.harian.uang || 0; let h_keluar = bukuKas.harian.keluar || 0; let h_total = h_masuk - h_keluar;
             let h_cash = bukuKas.harian.uangCash || 0; let h_trans = bukuKas.harian.uangTransfer || 0; let h_debit = bukuKas.harian.uangDebit || 0;
             let b_uang = bukuKas.bulanan.uang || 0; let b_keluar = bukuKas.bulanan.keluar || 0;
-            let b_cash = bukuKas.bulanan.uangCash || 0; let b_trans = bukuKas.bulanan.uangTransfer || 0; let b_debit = bukuKas.bulanan.uangDebit || 0;
-
+            
             let rincianHTML = "";
             if(bukuKas.harian.rincianKeluar && bukuKas.harian.rincianKeluar.length > 0) {
-                bukuKas.harian.rincianKeluar.forEach(r => { rincianHTML += `<div style="font-size:13px; font-weight:600; color:#555; padding:3px 0;">• ${r.ket}: Rp ${formatRp(r.nominal)}</div>`; });
+                bukuKas.harian.rincianKeluar.forEach((r, idx) => { 
+                    let sIcon = (r.shift === "Pagi") ? "☀️" : "🌙";
+                    rincianHTML += `<div style="font-size:13px; font-weight:600; color:#555; padding:5px 0; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;">
+                                        <span>${sIcon} ${r.ket}: Rp ${formatRp(r.nominal)}</span>
+                                        <span style="color:var(--blue); cursor:pointer; font-size:11px; border:1px solid var(--blue); padding:3px 6px; border-radius:4px; font-weight:700;" onclick="editPengeluaran(${idx})">✏️ Edit</span>
+                                    </div>`; 
+                });
             } else { rincianHTML = `<div style="font-size:12px; font-style:italic; color:#999;">Belum ada pengeluaran hari ini.</div>`; }
 
             let jualBillHTML = "";
@@ -372,24 +496,40 @@
 
             out += `<div class="card"><span class="section-title" style="color:#1abc9c;">🌐 ALL INFO - Ringkasan Total</span>
                     <div class="form-group"><label class="form-label">Total Kamar Laku (Bulan Ini)</label><input type="text" class="form-control" value="${b_kamar} Kamar" readonly style="background:#eee; font-weight:700;"></div>
-                    <div class="form-group"><label class="form-label">Kamar Terisi Saat Ini</label><input type="text" class="form-control" value="${isi} Kamar" readonly style="background:#eee; font-weight:700; color:var(--red);"></div>
-                    <div class="form-group"><label class="form-label">Kamar Status PENDING (Booking)</label><input type="text" class="form-control" value="${pendingCount} Kamar" readonly style="background:#eaf2f8; font-weight:700; color:var(--blue); border-color:var(--blue);"></div>
+                    <div class="form-group"><label class="form-label">Total Kamar Terjual HARI INI</label><input type="text" class="form-control" value="${bukuKas.harian.kamar || 0} Kamar" readonly style="background:#eee; font-weight:700; color:var(--primary);"></div>
+                    
                     <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
+                    
+                    <div style="background:#eafaf1; padding:12px; border-radius:8px; border:1px solid #27ae60; margin-bottom:10px;">
+                        <b style="color:#27ae60; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px;">☀️ SHIFT PAGI (07:00 - 17:00)</b>
+                        <div style="font-size:12px; margin-top:5px; font-weight:600;">💵 Cash: Rp ${formatRp(bukuKas.harian.pagi.cash)}</div>
+                        <div style="font-size:12px; margin-top:3px;">📱 TF: Rp ${formatRp(bukuKas.harian.pagi.tf)} | 💳 DB: Rp ${formatRp(bukuKas.harian.pagi.db)}</div>
+                        <div style="font-size:12px; color:var(--red); font-weight:700; margin-top:5px;">📉 Keluar: Rp ${formatRp(bukuKas.harian.pagi.keluar)}</div>
+                    </div>
+                    
+                    <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #34495e; margin-bottom:15px;">
+                        <b style="color:#34495e; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px;">🌙 SHIFT MALAM (17:00 - 07:00)</b>
+                        <div style="font-size:12px; margin-top:5px; font-weight:600;">💵 Cash: Rp ${formatRp(bukuKas.harian.malam.cash)}</div>
+                        <div style="font-size:12px; margin-top:3px;">📱 TF: Rp ${formatRp(bukuKas.harian.malam.tf)} | 💳 DB: Rp ${formatRp(bukuKas.harian.malam.db)}</div>
+                        <div style="font-size:12px; color:var(--red); font-weight:700; margin-top:5px;">📉 Keluar: Rp ${formatRp(bukuKas.harian.malam.keluar)}</div>
+                    </div>
+
                     <div class="form-group" style="background:#fff9e6; border:1px solid #f1c40f; padding:12px; border-radius:8px;">
                         <label class="form-label" style="border-bottom:1px solid #f1c40f; padding-bottom:5px; margin-bottom:5px; color:#d35400;">Transaksi Jual Bill (Rp 100.000):</label>
                         ${jualBillHTML}
                     </div>
-                    <div class="form-group"><label class="form-label">Uang Hari Ini (Laba Kotor)</label><input type="text" class="form-control" value="Rp ${formatRp(h_masuk)}" readonly style="background:#eee; font-weight:700; color:var(--green);"></div>
-                    <div class="form-group"><label class="form-label">Total Cash (Hari Ini)</label><input type="text" class="form-control" value="Rp ${formatRp(h_cash)}" readonly style="background:#fafafa; font-weight:600; font-size:14px; color:var(--green);"></div>
-                    <div class="form-group"><label class="form-label">Total Transfer (Hari Ini)</label><input type="text" class="form-control" value="Rp ${formatRp(h_trans)}" readonly style="background:#fafafa; font-weight:600; font-size:14px; color:#2980b9;"></div>
-                    <div class="form-group"><label class="form-label">Total Debit (Hari Ini)</label><input type="text" class="form-control" value="Rp ${formatRp(h_debit)}" readonly style="background:#fafafa; font-weight:600; font-size:14px; color:#8e44ad;"></div>
-                    <div class="form-group"><label class="form-label">Pengeluaran Hari Ini</label><input type="text" class="form-control" value="Rp ${formatRp(h_keluar)}" readonly style="background:#eee; font-weight:700; color:var(--red);"></div>
-                    <div class="form-group"><label class="form-label">Total Pengeluaran Bulanan</label><input type="text" class="form-control" value="Rp ${formatRp(b_keluar)}" readonly style="background:#fcebe9; border:1px solid var(--red); font-weight:700; color:var(--red);"></div>
+                    
+                    <div class="form-group"><label class="form-label">Total Uang Kotor (Global Hari Ini)</label><input type="text" class="form-control" value="Rp ${formatRp(h_masuk)}" readonly style="background:#eee; font-weight:700; color:var(--green);"></div>
+                    <div class="form-group"><label class="form-label">Total Cash Keseluruhan</label><input type="text" class="form-control" value="Rp ${formatRp(h_cash)}" readonly style="background:#fafafa; font-weight:600; font-size:14px; color:var(--green);"></div>
+                    <div class="form-group"><label class="form-label">Total Pengeluaran Global</label><input type="text" class="form-control" value="Rp ${formatRp(h_keluar)}" readonly style="background:#eee; font-weight:700; color:var(--red);"></div>
+                    
                     <div class="form-group" style="background:#fff; border:1px solid #ddd; padding:12px; border-radius:8px;">
                         <label class="form-label" style="border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:5px;">Rincian Pengeluaran Harian:</label>
                         ${rincianHTML}
                     </div>
-                    <div class="form-group"><label class="form-label">Laba Bersih Hari Ini</label><input type="text" class="form-control" value="Rp ${formatRp(h_total)}" readonly style="background:#eafaf1; border-color:var(--green); font-weight:700; color:var(--primary); font-size:18px;"></div>
+                    
+                    <div class="form-group"><label class="form-label">Laba Bersih Hari Ini (Cash+TF+DB - Keluar)</label><input type="text" class="form-control" value="Rp ${formatRp(h_total)}" readonly style="background:#eafaf1; border-color:var(--green); font-weight:700; color:var(--primary); font-size:18px;"></div>
+                    
                     <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
                     <div class="form-group"><label class="form-label">Total Uang Bulanan</label><input type="text" class="form-control" value="Rp ${formatRp(b_uang)}" readonly style="background:#fef5e7; border-color:var(--orange); font-weight:700; color:var(--orange); font-size:16px;"></div>
                     <div class="btn-mewah" onclick="klikMenu('RESET_ALL_INFO')" style="color:var(--red); font-weight:700; justify-content:center; border: 1px solid var(--red); margin-top:20px;">⚠️ Reset All Info (Harian & Bulanan)</div>
@@ -404,12 +544,21 @@
         }
         else if (state === "TOTAL_KAMAR") {
             let totalBulanIni = bukuKas.bulanan.kamar || 0;
+            let totalHariIni = bukuKas.harian.kamar || 0;
             out += `<div class="card"><span class="section-title">🧮 Rekap Total Kamar Terjual</span>
-                    <div style="text-align:center; padding: 25px 0; background:#fafafa; border-radius:10px; border:1px solid #eee; margin-bottom:20px;">
-                        <p style="font-size:12px; font-weight:700; color:#666; margin-top:0;">TOTAL KAMAR TERJUAL BULAN INI:</p>
-                        <b style="font-size:55px; color:var(--primary); line-height:1;">${totalBulanIni}</b>
-                        <div style="font-size:14px; font-weight:700; color:var(--gold);">KAMAR</div>
+                    
+                    <div style="text-align:center; padding: 20px 0; background:#eafaf1; border-radius:10px; border:2px solid #27ae60; margin-bottom:15px;">
+                        <p style="font-size:12px; font-weight:700; color:#27ae60; margin-top:0;">LAKU HARI INI (Shift Pagi + Malam):</p>
+                        <b style="font-size:45px; color:#1abc9c; line-height:1;">${totalHariIni}</b>
+                        <div style="font-size:12px; font-weight:700; color:#27ae60;">KAMAR</div>
                     </div>
+
+                    <div style="text-align:center; padding: 20px 0; background:#fafafa; border-radius:10px; border:1px solid #eee; margin-bottom:20px;">
+                        <p style="font-size:12px; font-weight:700; color:#666; margin-top:0;">TOTAL LAKU BULAN INI:</p>
+                        <b style="font-size:45px; color:var(--primary); line-height:1;">${totalBulanIni}</b>
+                        <div style="font-size:12px; font-weight:700; color:var(--gold);">KAMAR</div>
+                    </div>
+                    
                     <div class="btn-mewah" onclick="klikMenu('RESET_KAMAR')" style="color:var(--orange)">🔒 Tutup Buku Total Kamar (Tgl 1)</div>
                     <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
@@ -418,27 +567,52 @@
             let h_cash_kotor = bukuKas.harian.uangCash || 0; let h_cash_bersih = h_cash_kotor - h_keluar;
             let h_trans = bukuKas.harian.uangTransfer || 0; let h_debit = bukuKas.harian.uangDebit || 0;
 
-            out += `<div class="card"><span class="section-title">💰 Laporan Keuangan Harian</span>
-                    <div style="margin-bottom:15px;">
-                        <p style="margin:5px 0;">Pemasukan Kotor: <b style="color:var(--green)">+ Rp ${formatRp(h_masuk)}</b></p>
-                        <p style="margin:5px 0;">Pengeluaran Kas: <b style="color:var(--red)">- Rp ${formatRp(h_keluar)}</b></p>
-                        <div style="font-size:10px; color:#777; margin-left:15px; margin-bottom:10px;">`;
+            let rincianHTML = "";
             if(bukuKas.harian.rincianKeluar && bukuKas.harian.rincianKeluar.length > 0) {
-                bukuKas.harian.rincianKeluar.forEach(r => { out += `<div>• ${r.ket}: Rp ${formatRp(r.nominal)}</div>`; });
-            } else { out += `<i>Belum ada catatan pengeluaran hari ini.</i>`; }
-            out += `    </div><hr>
-                        <p>Total Bersih (Laba): <br><b style="font-size:24px; color:var(--primary)">Rp ${formatRp(h_total)}</b></p>
+                bukuKas.harian.rincianKeluar.forEach((r, idx) => { 
+                    let sIcon = (r.shift === "Pagi") ? "☀️" : "🌙";
+                    rincianHTML += `<div style="font-size:13px; font-weight:600; color:#555; padding:5px 0; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee;">
+                                        <span>${sIcon} ${r.ket}: Rp ${formatRp(r.nominal)}</span>
+                                        <span style="color:var(--blue); cursor:pointer; font-size:11px; border:1px solid var(--blue); padding:3px 6px; border-radius:4px; font-weight:700;" onclick="editPengeluaran(${idx})">✏️ Edit</span>
+                                    </div>`; 
+                });
+            } else { rincianHTML = `<i>Belum ada catatan pengeluaran hari ini.</i>`; }
+
+            out += `<div class="card"><span class="section-title">💰 Laporan Keuangan Harian</span>
+                    
+                    <div style="background:#eafaf1; padding:12px; border-radius:8px; border:1px solid #27ae60; margin-bottom:10px;">
+                        <b style="color:#27ae60; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px;">☀️ SHIFT PAGI (07:00 - 17:00)</b>
+                        <div style="font-size:12px; margin-top:5px; font-weight:600;">💵 Cash: Rp ${formatRp(bukuKas.harian.pagi.cash)}</div>
+                        <div style="font-size:12px; margin-top:3px;">📱 TF: Rp ${formatRp(bukuKas.harian.pagi.tf)} | 💳 DB: Rp ${formatRp(bukuKas.harian.pagi.db)}</div>
+                        <div style="font-size:12px; color:var(--red); font-weight:700; margin-top:5px;">📉 Keluar: Rp ${formatRp(bukuKas.harian.pagi.keluar)}</div>
+                    </div>
+                    
+                    <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #34495e; margin-bottom:15px;">
+                        <b style="color:#34495e; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px;">🌙 SHIFT MALAM (17:00 - 07:00)</b>
+                        <div style="font-size:12px; margin-top:5px; font-weight:600;">💵 Cash: Rp ${formatRp(bukuKas.harian.malam.cash)}</div>
+                        <div style="font-size:12px; margin-top:3px;">📱 TF: Rp ${formatRp(bukuKas.harian.malam.tf)} | 💳 DB: Rp ${formatRp(bukuKas.harian.malam.db)}</div>
+                        <div style="font-size:12px; color:var(--red); font-weight:700; margin-top:5px;">📉 Keluar: Rp ${formatRp(bukuKas.harian.malam.keluar)}</div>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <p style="margin:5px 0;">Total Kotor Global: <b style="color:var(--green)">+ Rp ${formatRp(h_masuk)}</b></p>
+                        <p style="margin:5px 0;">Total Pengeluaran Kas: <b style="color:var(--red)">- Rp ${formatRp(h_keluar)}</b></p>
+                        <div style="font-size:10px; color:#777; margin-bottom:10px;">
+                            ${rincianHTML}
+                        </div>
+                        <hr>
+                        <p>Total Laba Bersih: <br><b style="font-size:24px; color:var(--primary)">Rp ${formatRp(h_total)}</b></p>
                         <div style="background:#fafafa; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:15px;">
-                            <div style="font-size:11px; font-weight:700; margin-bottom:5px; color:var(--primary);">📦 RINCIAN ISI LACI KASIR:</div>
+                            <div style="font-size:11px; font-weight:700; margin-bottom:5px; color:var(--primary);">📦 RINCIAN ISI LACI KASIR FISIK SAAT INI:</div>
                             <div style="font-size:13px; color:var(--green); font-weight:700; margin-bottom:3px;">💵 Sisa Cash Fisik: Rp ${formatRp(h_cash_bersih)}</div>
-                            <div style="font-size:11px; color:#666;">📱 Transfer Bank: Rp ${formatRp(h_trans)} | 💳 Debit: Rp ${formatRp(h_debit)}</div>
+                            <div style="font-size:11px; color:#666;">(Didapat dari Total Cash Kotor Rp ${formatRp(h_cash_kotor)} - Pengeluaran Rp ${formatRp(h_keluar)})</div>
                         </div>
                     </div>
+                    
                     <div class="btn-mewah" onclick="klikMenu('RESET_HARIAN')" style="color:var(--orange)">🔒 Tutup Buku Harian</div>
                     <br><span class="section-title">📅 Laporan Bulanan</span>
                     <p>Total Pendapatan: <br><b style="font-size:22px;">Rp ${formatRp(bukuKas.bulanan.uang)}</b></p>
                     <div class="btn-mewah" onclick="klikMenu('RESET_BULANAN')">🔒 Tutup Buku Keuangan (Tgl 1)</div>
-                    <div class="btn-mewah" onclick="klikMenu('SINKRON_UANG')" style="background:var(--primary); color:white;">⚙️ Sinkronkan Data Lama</div>
                     <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
         else if (state === "DAFTAR_TAMU" || state === "RINGKASAN_KAMAR" || state === "GRAFIK" || state === "PILIH_KELAS" || state === "PILIH_BED" || state === "PILIH_KAMAR" || state === "OPSI_KAMAR_HIJAU" || state === "FORM_CHECKIN" || state === "FORM_PENDING" || state === "HASIL_CARI" || state === "PESAN_SUKSES") {
@@ -658,6 +832,7 @@
                 if(bukuKas.harian.uang > 0) { riwayatHarian.push({ tgl: bukuKas.harian.tgl, uang: bukuKas.harian.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
                 bukuKas.harian = {
                     tgl: getTanggalHarian(), uang:0, uangCash:0, uangTransfer:0, uangDebit:0, keluar:0, rincianKeluar: [], kamar:0,
+                    pagi: { cash:0, tf:0, db:0, keluar:0 }, malam: { cash:0, tf:0, db:0, keluar:0 },
                     billPagi: {awal:null, akhir:null, count:0}, billMalam: {awal:null, akhir:null, count:0}, jualBill: [], last_reset: new Date().getTime()
                 }; 
                 simpanKeCloud(); renderScreen(); 
@@ -676,20 +851,10 @@
         else if (val === "RESET_ALL_INFO") { 
             let s = prompt("⚠️ SANDI MASTER: Masukkan sandi untuk me-reset SEMUA data (Harian & Bulanan):"); 
             if(s && s.trim() === "vipjumaeluk1234") { 
-                bukuKas.harian = {tgl:getTanggalHarian(), uang:0, uangCash:0, uangTransfer:0, uangDebit:0, keluar:0, rincianKeluar: [], kamar:0, billPagi: {awal:null, akhir:null, count:0}, billMalam: {awal:null, akhir:null, count:0}, jualBill: [], last_reset: new Date().getTime()}; 
+                bukuKas.harian = {tgl:getTanggalHarian(), uang:0, uangCash:0, uangTransfer:0, uangDebit:0, keluar:0, rincianKeluar: [], kamar:0, pagi: { cash:0, tf:0, db:0, keluar:0 }, malam: { cash:0, tf:0, db:0, keluar:0 }, billPagi: {awal:null, akhir:null, count:0}, billMalam: {awal:null, akhir:null, count:0}, jualBill: [], last_reset: new Date().getTime()}; 
                 bukuKas.bulanan = {bln:getTanggalBulanan(), uang:0, kamar:0, keluar:0, uangCash:0, uangTransfer:0, uangDebit:0};
                 simpanKeCloud(); renderScreen(); alert("✅ BOOM! Seluruh Laporan Kasir telah dibersihkan menjadi Nol!"); 
             } else if(s !== null) { alert("❌ Sandi Salah! Akses Ditolak."); }
-        }
-        else if (val === "SINKRON_UANG") {
-            let c = 0, t = 0, db = 0; 
-            tamuIn.concat(tamuOut).forEach(x => { 
-                let sub = (getHarga(x.room)*(parseInt(x.malam)||1)) + ((parseInt(x.extrabed)||0)*150000); 
-                if(x.bayar === "CASH") c += sub; else if(x.bayar === "TRANSFER") t += sub; else if(x.bayar === "DEBIT") db += sub; 
-            });
-            bukuKas.harian.uangCash = c; bukuKas.harian.uangTransfer = t; bukuKas.harian.uangDebit = db; 
-            bukuKas.bulanan.uangCash = c; bukuKas.bulanan.uangTransfer = t; bukuKas.bulanan.uangDebit = db; 
-            simpanKeCloud(); alert("✅ Sinkronisasi Selesai!"); renderScreen();
         }
     };
 
@@ -704,10 +869,13 @@
         };
         
         if(dpValue > 0) {
+            let jam = new Date().getHours();
+            let shiftNow = (jam >= 7 && jam < 17) ? "pagi" : "malam";
+            
             bukuKas.harian.uang += dpValue; bukuKas.bulanan.uang += dpValue;
-            if(byr === "CASH") { bukuKas.harian.uangCash += dpValue; bukuKas.bulanan.uangCash += dpValue; }
-            else if(byr === "TRANSFER") { bukuKas.harian.uangTransfer += dpValue; bukuKas.bulanan.uangTransfer += dpValue; }
-            else if(byr === "DEBIT") { bukuKas.harian.uangDebit += dpValue; bukuKas.bulanan.uangDebit += dpValue; }
+            if(byr === "CASH") { bukuKas.harian.uangCash += dpValue; bukuKas.bulanan.uangCash += dpValue; bukuKas.harian[shiftNow].cash += dpValue; }
+            else if(byr === "TRANSFER") { bukuKas.harian.uangTransfer += dpValue; bukuKas.bulanan.uangTransfer += dpValue; bukuKas.harian[shiftNow].tf += dpValue; }
+            else if(byr === "DEBIT") { bukuKas.harian.uangDebit += dpValue; bukuKas.bulanan.uangDebit += dpValue; bukuKas.harian[shiftNow].db += dpValue; }
         }
         tamuPending.push(p); simpanKeCloud(); alert("✅ Kamar berhasil di-Booking (Pending)!"); pindahHalaman("MENU");
     };
@@ -719,21 +887,15 @@
         d.malam = document.getElementById('f_malam').value || "1"; d.extrabed = document.getElementById('f_extrabed').value || "0"; d.bayar = document.getElementById('f_bayar').value || "CASH";
         
         let jam = new Date().getHours(); d.shift = (jam >= 7 && jam < 17) ? "Pagi" : "Malam";
+        let bucketShift = d.shift.toLowerCase();
+        
         d.tgl = getTanggalSekarang(); lastInv++; d.inv = String(lastInv).padStart(4, '0');
+        d.timestamp = new Date().getTime(); 
         
-        // --- LOGIKA BARU: HITUNG TGL KELUAR BERDASARKAN SHIFT 07:00 Pagi ---
         let dateOut = new Date();
-        
-        // Jika tamu masuk antara jam 00:00 s/d 06:59 pagi, hitungannya dia masuk di "hari kemarin"
-        if (jam >= 0 && jam < 7) {
-            dateOut.setDate(dateOut.getDate() - 1);
-        }
-        
-        // Tambahkan jumlah malam yang di-booking
+        if (jam >= 0 && jam < 7) { dateOut.setDate(dateOut.getDate() - 1); }
         dateOut.setDate(dateOut.getDate() + parseInt(d.malam));
-        
         d.tgl_out = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-        // -------------------------------------------------------------------
         
         if(d.shift === "Pagi") {
             if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = d.inv;
@@ -758,14 +920,15 @@
 
         if(setoranLaporanKas > 0) {
             bukuKas.harian.uang += setoranLaporanKas; bukuKas.bulanan.uang += setoranLaporanKas;
-            if(d.bayar === "CASH") { bukuKas.harian.uangCash += setoranLaporanKas; bukuKas.bulanan.uangCash += setoranLaporanKas; }
-            else if(d.bayar === "TRANSFER") { bukuKas.harian.uangTransfer += setoranLaporanKas; bukuKas.bulanan.uangTransfer += setoranLaporanKas; }
-            else if(d.bayar === "DEBIT") { bukuKas.harian.uangDebit += setoranLaporanKas; bukuKas.bulanan.uangDebit += setoranLaporanKas; }
+            if(d.bayar === "CASH") { bukuKas.harian.uangCash += setoranLaporanKas; bukuKas.bulanan.uangCash += setoranLaporanKas; bukuKas.harian[bucketShift].cash += setoranLaporanKas; }
+            else if(d.bayar === "TRANSFER") { bukuKas.harian.uangTransfer += setoranLaporanKas; bukuKas.bulanan.uangTransfer += setoranLaporanKas; bukuKas.harian[bucketShift].tf += setoranLaporanKas; }
+            else if(d.bayar === "DEBIT") { bukuKas.harian.uangDebit += setoranLaporanKas; bukuKas.bulanan.uangDebit += setoranLaporanKas; bukuKas.harian[bucketShift].db += setoranLaporanKas; }
         }
         
         bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar || 0) + 1;
-        tamuIn.push({ ...d, room: tempRoom }); 
+        bukuKas.harian.kamar = (bukuKas.harian.kamar || 0) + 1; 
         
+        tamuIn.push({ ...d, room: tempRoom }); 
         if(pdg) { tamuPending = tamuPending.filter(t => t.room !== tempRoom); }
         
         isJualBillMode = false; 
