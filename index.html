@@ -513,16 +513,28 @@
         `;
     };
 
-    function generateLaporanShift(shiftLabel, bucketObj) {
+        function generateLaporanShift(shiftLabel, bucketObj) {
         var s = shiftLabel.toLowerCase();
-
+        
+        // MENGGUNAKAN METERAN ABSOLUT
         var chkIn = bucketObj.kamar_in || 0;
         var extrabeds = bucketObj.extrabed_in || 0;
-
+        
         var outThisShift = tamuOut.filter(function(t) { return t.shift_out && t.shift_out.toLowerCase() === s; });
         var vd = [], vr = [];
-        outThisShift.forEach(function(t) { if(kamarKotor.indexOf(t.room) !== -1) vd.push(t.room); else vr.push(t.room); });
-
+        var depositHangusCount = 0; // TAMBAHAN: Menghitung deposit yg ditinggal
+        
+        outThisShift.forEach(function(t) { 
+            if(kamarKotor.indexOf(t.room) !== -1) vd.push(t.room); else vr.push(t.room); 
+            
+            // CEK JIKA TAMU OUT TAPI DEPOSIT UANG 100k BELUM DICENTANG
+            if (!t.deposit_kembali && (!t.jenis_deposit || t.jenis_deposit === 'Uang 100k')) {
+                depositHangusCount++;
+            }
+        });
+        
+        var depositHangusUang = depositHangusCount * 100000;
+        
         var blmBayarRooms = [], blmBayarTotal = 0, depositPendingCount = 0;
         tamuIn.forEach(function(t) {
             if (!t.dilaporkan) {
@@ -531,7 +543,7 @@
                 if(t.shift && t.shift.toLowerCase() === s && !t.deposit_kembali && (!t.jenis_deposit || t.jenis_deposit === 'Uang 100k')) { depositPendingCount++; }
             }
         });
-
+        
         var depositPendingUang = depositPendingCount * 100000;
         var keluarHtml = "", uangKeluarShift = 0;
         bukuKas.harian.rincianKeluar.forEach(function(r) { if(r.shift && r.shift.toLowerCase() === s) { uangKeluarShift += r.nominal; keluarHtml += "- " + r.ket + " (Rp " + formatRp(r.nominal) + ")<br>"; } });
@@ -554,6 +566,7 @@
 "ttl uang jual bill 👉🏽 Rp " + formatRp(jbTotal) + "<br>" +
 "ttl uang charge 👉🏽 Rp " + formatRp((bucketObj.charge_cash||0) + (bucketObj.charge_tf||0) + (bucketObj.charge_db||0)) + "<br>" +
 "ttl uang jaminan ditahan 👉🏽 Rp " + formatRp(depositPendingUang) + "<br>" +
+"deposit out tidak diambil 👉🏽 Rp " + formatRp(depositHangusUang) + "<br>" + 
 "ttl uang panjar 👉🏽 Rp " + formatRp((bucketObj.panjar_cash||0) + (bucketObj.panjar_tf||0) + (bucketObj.panjar_db||0)) + "<br>" +
 "ttl pembayaran blm lunas 👉🏽 Rp " + formatRp(blmBayarTotal) + "<br><br>" +
 "<b>- *TOTAL UANG CASH :* Rp " + formatRp(bucketObj.cash) + "</b><br><br>" +
@@ -816,53 +829,54 @@
             if (state === "PILIH_KAMAR") {
                 for (var i=0; i<dataHotel.length; i++) { if (dataHotel[i].tipe === tempBed && dataHotel[i].kelas === tempKelas) { dataHotel[i].nomor.forEach(function(n) { roomsToDisplay.push({no: n, kls: dataHotel[i].kelas, tip: dataHotel[i].tipe}); }); } }
             } else { dataHotel.forEach(function(k) { k.nomor.forEach(function(n) { roomsToDisplay.push({no: n, kls: k.kelas, tip: k.tipe}); }); }); }
-                        roomsToDisplay.forEach(function(rm) {
+                                    roomsToDisplay.forEach(function(rm) {
                 var isIsi = tamuIn.find(function(t) { return t.room === rm.no; });
                 var isKotor = kamarKotor.indexOf(rm.no) !== -1;
                 var isRusak = kamarRusak.indexOf(rm.no) !== -1;
-                var isPending = tamuPending.find(function(t) { return t.room === rm.no; });
                 
+                // LOGIKA TANGGAL PENDING CERDAS
+                var todayObj = new Date(); var todayYMD = todayObj.getFullYear() + "-" + String(todayObj.getMonth()+1).padStart(2, '0') + "-" + String(todayObj.getDate()).padStart(2, '0');
+                var cekPending = tamuPending.find(function(t) { return t.room === rm.no; });
+                var isPendingToday = false;
+                if (cekPending) { if (!cekPending.rencana_in || cekPending.rencana_in === "-" || cekPending.rencana_in <= todayYMD) { isPendingToday = true; } }
+
                 var sClass = "status-green"; 
                 var action = `onclick="tempRoom='${rm.no}'; pindahHalaman('OPSI_KAMAR_HIJAU')"`;
                 var labelStatus = rm.kls; 
                 
                 if (isIsi) { 
-                    if(isIsi.minta_bersih) {
-                        sClass = "status-gray"; 
-                        labelStatus = "MINTA DIBERSIHKAN!"; 
-                    } else {
-                        sClass = "status-red"; 
-                    }
-                } else if (isKotor) { 
-                    sClass = "status-gray"; 
-                    labelStatus = "KOTOR (VD)"; 
-                } else if (isRusak) { 
-                    sClass = "status-orange"; 
-                } else if (isPending) { 
-                    sClass = "status-blue"; 
-                }
+                    if(isIsi.minta_bersih) { sClass = "status-gray"; labelStatus = "BERSIHKAN!"; } 
+                    else { sClass = "status-red"; }
+                } else if (isKotor) { sClass = "status-gray"; labelStatus = "KOTOR (VD)"; } 
+                else if (isRusak) { sClass = "status-orange"; } 
+                else if (isPendingToday) { sClass = "status-blue"; } // HANYA BIRU JIKA HARI INI ATAU LEWAT
 
-                out += `<div class="room-box ${sClass}" ${action}><div style="font-size:16px; margin-bottom:2px;">${rm.no}</div><div style="font-size:9px; font-weight:800; opacity:0.9; line-height:1;">${labelStatus}</div><div style="font-size:9px; font-weight:400; opacity:0.9; line-height:1;">${rm.tip}</div></div>`;
+                var innerContent = "";
+                if (sClass === "status-gray" && labelStatus === "BERSIHKAN!") {
+                    innerContent = `<div style="font-size:18px; font-weight:900; line-height:1;">${rm.no}</div><div style="font-size:13px; font-weight:800; line-height:1; margin-top:5px;">${labelStatus}</div>`;
+                } else {
+                    innerContent = `<div style="font-size:16px; margin-bottom:2px;">${rm.no}</div><div style="font-size:9px; font-weight:800; opacity:0.9; line-height:1;">${labelStatus}</div><div style="font-size:9px; font-weight:400; opacity:0.9; line-height:1;">${rm.tip}</div>`;
+                }
+                out += `<div class="room-box ${sClass}" ${action}>${innerContent}</div>`;
             });
             out += `</div><br><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
         else if (state === "OPSI_KAMAR_HIJAU") {
-            var adaPending = tamuPending.find(function(t) { return t.room === tempRoom; });
+                        var cekPending = tamuPending.find(function(t) { return t.room === tempRoom; });
             var tamuIsi = tamuIn.find(function(t) { return t.room === tempRoom; });
             var isKotor = kamarKotor.indexOf(tempRoom) !== -1;
 
-            out += `<div class="card"><span class="section-title">⚙️ Menu Tindakan Kamar ${tempRoom}</span>`;
+            var todayObj = new Date(); var todayYMD = todayObj.getFullYear() + "-" + String(todayObj.getMonth()+1).padStart(2, '0') + "-" + String(todayObj.getDate()).padStart(2, '0');
+            var isPendingToday = false; var isPendingFuture = false;
+            if (cekPending) { if (!cekPending.rencana_in || cekPending.rencana_in === "-" || cekPending.rencana_in <= todayYMD) { isPendingToday = true; } else { isPendingFuture = true; } }
 
-                        if (tamuIsi) {
+            out += `<div class="card"><span class="section-title">⚙️ Menu Tindakan Kamar ${tempRoom}</span>`;
+            
+            if (tamuIsi) {
                 out += `<div style="background:#eafaf1; padding:12px; border-radius:8px; margin-bottom:15px; font-size:12px; border:1px solid var(--green);"><b>Kamar Sedang Terisi:</b><br>👤 ${tamuIsi.nama} (${tamuIsi.hp})<br>💰 Total Tagihan: Rp ${formatRp(tamuIsi.total_tagihan)}</div>`;
                 out += `<div class="btn-mewah" onclick="tampilkanInfoTamu('${tempRoom}')">ℹ️ Lihat Detail Lengkap</div>`;
-                
-                if(tamuIsi.minta_bersih) {
-                    out += `<div class="btn-mewah" onclick="setMintaBersih('${tempRoom}', false)" style="color:white; background:var(--green); border-color:var(--green); justify-content:center;">✨ Selesai Dibersihkan</div>`;
-                } else {
-                    out += `<div class="btn-mewah" onclick="setMintaBersih('${tempRoom}', true)" style="color:white; background:var(--gray); border-color:var(--gray); justify-content:center;">🧹 Kamar Minta Dibersihkan</div>`;
-                }
-
+                if(tamuIsi.minta_bersih) { out += `<div class="btn-mewah" onclick="setMintaBersih('${tempRoom}', false)" style="color:white; background:var(--green); border-color:var(--green); justify-content:center;">✨ Selesai Dibersihkan</div>`; } 
+                else { out += `<div class="btn-mewah" onclick="setMintaBersih('${tempRoom}', true)" style="color:white; background:var(--gray); border-color:var(--gray); justify-content:center;">🧹 Kamar Minta Dibersihkan</div>`; }
                 out += `<div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')">🏃 Pergi Ke Menu Check-Out</div>`;
             }
             else if (isKotor) {
@@ -870,19 +884,30 @@
                 out += `<div class="btn-mewah" onclick="kamarBersih('${tempRoom}')" style="color:var(--green);">✨ Tandai Kamar Sudah Bersih (VR)</div>`;
             }
             else if (kamarRusak.indexOf(tempRoom) !== -1) { out += `<div class="btn-mewah" onclick="klikMenu('AKSI_SELESAI_RUSAK')" style="color:var(--green);">✔️ Selesai Diperbaiki</div>`; } 
-            else if (adaPending) {
-                var infoLengkap = adaPending.isLengkap ? `<br>📄 (Data Reservasi Lengkap Tersimpan)` : ``;
-                out += `<div style="background:#eaf2f8; padding:12px; border-radius:8px; margin-bottom:15px; font-size:12px; border:1px solid var(--blue);"><b>Kamar ini sedang PENDING (Booked):</b><br>👤 ${adaPending.nama} (${adaPending.hp})<br>💰 Status: Bayar DP via ${adaPending.bayar} (Rp ${formatRp(adaPending.dp)})${infoLengkap}</div>`;
-                out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_CHECKIN')">📝 Check-In Tamu Pending Ini</div>`;
+            else if (cekPending && isPendingToday) {
+                var infoLengkap = cekPending.isLengkap ? `<br>📄 (Data Reservasi Lengkap Tersimpan)` : ``;
+                out += `<div style="background:#eaf2f8; padding:12px; border-radius:8px; margin-bottom:15px; font-size:12px; border:1px solid var(--blue);"><b>Kamar ini sedang PENDING (Booked HARI INI):</b><br>👤 ${cekPending.nama} (${cekPending.hp})<br>💰 Status: Bayar DP via ${cekPending.bayar} (Rp ${formatRp(cekPending.dp)})${infoLengkap}</div>`;
+                out += `<div class="btn-mewah" onclick="window.isCheckInNormal=false; pindahHalaman('FORM_CHECKIN')">📝 Check-In Tamu Pending Ini</div>`;
                 out += `<div class="btn-mewah" onclick="klikMenu('BATAL_PENDING')" style="color:var(--red);">❌ Batalkan Bookingan</div>`;
-            } else { 
-                if(isPendingMode) { 
-                    out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING')">⏳ 1. Form Pending Singkat (DP Saja)</div>`; 
-                    out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING_LENGKAP')" style="border-left: 4px solid var(--blue);">📝 2. Form Reservasi Lengkap</div>`; 
-                } else { 
-                    out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_CHECKIN')">📝 Lakukan Check-In Normal</div>`; 
+            } 
+            else { 
+                if (cekPending && isPendingFuture) {
+                    // MUNCULKAN PERINGATAN ORANYE
+                    out += `<div style="background:#fef9e7; padding:12px; border-radius:8px; margin-bottom:15px; font-size:11px; border:1px solid #f39c12; color:#d35400;"><b>⚠️ PERHATIAN: KAMAR SUDAH DI-BOOKING TANGGAL ${cekPending.rencana_in}</b><br>Oleh: ${cekPending.nama}.<br>Bosku MASIH BISA menjual kamar ini sekarang, tapi pastikan tamu yang masuk hari ini sudah <b>Check-Out SEBELUM tanggal ${cekPending.rencana_in}</b> ya!</div>`;
+                    
+                    // TOMBOL UNTUK JUAL KE TAMU LAIN TANPA MENGHAPUS BOOKINGAN
+                    out += `<div class="btn-mewah" onclick="window.isCheckInNormal=true; pindahHalaman('FORM_CHECKIN')" style="border-left: 4px solid var(--green);">📝 Jual Kamar (Check-In Tamu Lain)</div>`;
+                    out += `<div class="btn-mewah" onclick="window.isCheckInNormal=false; pindahHalaman('FORM_CHECKIN')" style="border-left: 4px solid var(--blue);">📝 Check-In Tamu Pending (Maju Jadwal)</div>`;
+                    out += `<div class="btn-mewah" onclick="klikMenu('BATAL_PENDING')" style="color:var(--red);">❌ Batalkan Bookingan</div>`;
+                } else {
+                    if(isPendingMode) { 
+                        out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING')">⏳ 1. Form Pending Singkat (DP Saja)</div>`; 
+                        out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING_LENGKAP')" style="border-left: 4px solid var(--blue);">📝 2. Form Reservasi Lengkap</div>`; 
+                    } else { 
+                        out += `<div class="btn-mewah" onclick="window.isCheckInNormal=true; pindahHalaman('FORM_CHECKIN')">📝 Lakukan Check-In Normal</div>`; 
+                    }
+                    out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')" style="color:var(--orange);">🛠️ Tandai Sedang Diperbaiki</div>`; 
                 }
-                out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')" style="color:var(--orange);">🛠️ Tandai Sedang Diperbaiki</div>`; 
             }
             out += `<div class="btn-mewah" onclick="history.back()" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
@@ -918,7 +943,8 @@
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }
                 else if (state === "FORM_CHECKIN") {
-            var pdg = tamuPending.find(function(t) { return t.room === tempRoom; });
+                    var pdg = window.isCheckInNormal ? null : tamuPending.find(function(t) { return t.room === tempRoom; });
+
             var defNama = pdg ? pdg.nama : ""; var defHp = pdg ? pdg.hp : "";
             var defAlamat = (pdg && pdg.isLengkap) ? pdg.alamat : "";
             var defWarga = (pdg && pdg.isLengkap) ? pdg.warga : "Indonesia";
@@ -1144,8 +1170,9 @@
         if(d.shift === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = d.inv; bukuKas.harian.billPagi.akhir = d.inv; bukuKas.harian.billPagi.count++; } 
         else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = d.inv; bukuKas.harian.billMalam.akhir = d.inv; bukuKas.harian.billMalam.count++; }
 
-        var pdg = tamuPending.find(function(t) { return t.room === tempRoom; });
-        var dpPending = pdg ? (pdg.dp || 0) : 0;
+            var pdg = window.isCheckInNormal ? null : tamuPending.find(function(t) { return t.room === tempRoom; });
+
+    var dpPending = pdg ? (pdg.dp || 0) : 0;
         var baseHarga = getHarga(tempRoom);
         var sub = (baseHarga * parseInt(d.malam)) + (parseInt(d.extrabed)*150000);
         var e_chk = document.getElementById('f_early'); if(e_chk && e_chk.checked) sub += 100000;
