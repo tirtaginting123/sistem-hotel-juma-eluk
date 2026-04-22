@@ -94,7 +94,7 @@
     const dataHotel = [
         {tipe: "Single", kelas: "Standard", nomor: ["2a","3a","4a","5a","6a","7a","8a","9a","10a","11a","11b"], harga: 300000},
         {tipe: "Twin", kelas: "Standard", nomor: ["2b","3b","4b","5b","6b","7b","8b","9b","10b"], harga: 300000},
-        {tipe: "Single", kelas: "Deluxe", nomor: ["1a","12a","13a","14a","15a","12b","14b"], harga: 350000},
+        {tipe: "Single", kelas: "Deluxe", nomor: ["1","12a","13a","14a","15a","15","12b","14b"], harga: 350000},
         {tipe: "Twin", kelas: "Deluxe", nomor: ["1b","13b","15b"], harga: 350000},
         {tipe: "Single", kelas: "Suite", nomor: ["4av","5av","6av","7av","8av","9av","10av","11av","6bv","7bv","8bv","9bv"], harga: 400000},
         {tipe: "Twin", kelas: "Suite", nomor: ["4bv","5bv"], harga: 400000},
@@ -174,7 +174,12 @@
     function getHarga(noKmr) { for (var i=0; i<dataHotel.length; i++) { if (dataHotel[i].nomor.indexOf(noKmr) !== -1) return dataHotel[i].harga; } return 0; }
     function formatRp(angka) { return new Intl.NumberFormat('id-ID').format(angka); }
     function getTanggalSekarang() { return new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }); }
-    function getTanggalHarian() { return new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); }
+        function getTanggalHarian() { 
+        var d = new Date(); 
+        if (d.getHours() < 7) { d.setDate(d.getDate() - 1); } // Kunci hari hotel sampai jam 07.00 pagi
+        return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); 
+    }
+
     function getTanggalBulanan() { return new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }); }
     function pindahHalaman(newState) { state = newState; history.pushState({ page: newState }, "", ""); renderScreen(); }
 
@@ -512,68 +517,64 @@
         `;
     };
 
-    function generateLaporanShift(shiftLabel, bucketObj) {
+        function generateLaporanShift(shiftLabel, bucketObj) {
         var s = shiftLabel.toLowerCase();
+        var tStr = getTanggalHarian();
+        var dCek = new Date(); if (dCek.getHours() < 7) { dCek.setDate(dCek.getDate() - 1); }
+        var tglPad = String(dCek.getDate()).padStart(2, '0');
         
-        var chkIn = bucketObj.kamar_in || 0;
-        var extrabeds = bucketObj.extrabed_in || 0;
-        
-        var outThisShift = tamuOut.filter(function(t) { return t.shift_out && t.shift_out.toLowerCase() === s; });
-        var vd = [], vr = [];
-        var depositHangusCount = 0;
-        
-        outThisShift.forEach(function(t) { 
-            if(kamarKotor.indexOf(t.room) !== -1) vd.push(t.room); else vr.push(t.room); 
-            if (!t.deposit_kembali && (!t.jenis_deposit || t.jenis_deposit === 'Uang 100k')) { depositHangusCount++; }
-        });
-        
-        var depositHangusUang = depositHangusCount * 100000;
-        
-        var blmBayarRooms = [], blmBayarTotal = 0, depositPendingCount = 0;
+        function cekHariIni(tglStr) {
+            if(!tglStr) return false;
+            return tglStr.includes(tglPad + " ");
+        }
+
+        var daftarKamar = []; var kamarAktif = []; var kamarBB = []; var outVD = [];       
+
+        // Hitung Tamu Stay & Check-out
         tamuIn.forEach(function(t) {
-            if (!t.dilaporkan) {
-                var sisa = (t.total_tagihan||0) - (t.sudah_dibayar||0);
-                if(sisa > 0 && t.shift && t.shift.toLowerCase() === s) { blmBayarRooms.push(t.room); blmBayarTotal += sisa; }
-                if(t.shift && t.shift.toLowerCase() === s && !t.deposit_kembali && (!t.jenis_deposit || t.jenis_deposit === 'Uang 100k')) { depositPendingCount++; }
+            var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
+            if (s === "pagi" ? (!isBaru || t.shift === "Pagi") : (isBaru && t.shift === "Malam")) {
+                daftarKamar.push(t.room + (!isBaru ? "🤝🌞" : (s==="pagi"?"🌞":"🌙")));
+                kamarAktif.push(t.room);
+                if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") kamarBB.push(t.room);
             }
         });
-        
-        var depositPendingUang = depositPendingCount * 100000;
-        var keluarHtml = "", uangKeluarShift = 0;
-        bukuKas.harian.rincianKeluar.forEach(function(r) { if(r.shift && r.shift.toLowerCase() === s) { uangKeluarShift += r.nominal; keluarHtml += "- " + r.ket + " (Rp " + formatRp(r.nominal) + ")<br>"; } });
 
-        var noBillLast = s === "pagi" ? (bukuKas.harian.billPagi ? bukuKas.harian.billPagi.akhir : null) : (bukuKas.harian.billMalam ? bukuKas.harian.billMalam.akhir : null);
-        var noBillRestoLast = ""; var restoThisShift = bukuKas.harian.transaksiResto.filter(function(r) { return r.shift && r.shift.toLowerCase() === s; });
-        if(restoThisShift.length > 0) noBillRestoLast = restoThisShift[restoThisShift.length-1].inv;
-        var jbTotal = bukuKas.harian.jualBill.filter(function(jb) { return jb.shift && jb.shift.toLowerCase() === s; }).length * 100000;
+        tamuOut.forEach(function(t) {
+            if (cekHariIni(t.jam_out_aktual)) {
+                var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
+                if (s === "pagi" ? (!isBaru || t.shift === "Pagi") : (isBaru && t.shift === "Malam")) {
+                    daftarKamar.push(t.room + (s==="pagi"?"🌞":"🌙") + "(OUT)"); outVD.push(t.room);
+                }
+            }
+        });
 
-        var textBlock = "<b>laporan " + getTanggalHarian() + " shf " + s + "</b><br><br>" +
-"total room check in 👉🏽 " + chkIn + "<br>" +
-"room check out yg vd 👉🏽 " + (vd.length > 0 ? vd.join(", ") : "-") + "<br>" +
-"room check out yg vr 👉🏽 " + (vr.length > 0 ? vr.join(", ") : "-") + "<br>" +
-"total extrabed 👉🏽 " + extrabeds + "<br>" +
-"room yg belum bayar 👉🏽 " + (blmBayarRooms.length > 0 ? blmBayarRooms.join(", ") : "-") + "<br>" +
-"total uang room cash 👉🏽 Rp " + formatRp(bucketObj.room_cash||0) + "<br>" +
-"ttl uang room tf 👉🏽 Rp " + formatRp(bucketObj.room_tf||0) + "<br>" +
-"ttl uang room debit 👉🏽 Rp " + formatRp(bucketObj.room_db||0) + "<br>" +
-"ttl uang resto 👉🏽 Rp " + formatRp((bucketObj.resto_cash||0) + (bucketObj.resto_tf||0) + (bucketObj.resto_db||0)) + "<br>" +
-"ttl uang jual bill 👉🏽 Rp " + formatRp(jbTotal) + "<br>" +
-"ttl uang charge 👉🏽 Rp " + formatRp((bucketObj.charge_cash||0) + (bucketObj.charge_tf||0) + (bucketObj.charge_db||0)) + "<br>" +
-"ttl uang jaminan ditahan 👉🏽 Rp " + formatRp(depositPendingUang) + "<br>" +
-"deposit out tidak diambil 👉🏽 Rp " + formatRp(depositHangusUang) + "<br>" + 
-"ttl uang panjar 👉🏽 Rp " + formatRp((bucketObj.panjar_cash||0) + (bucketObj.panjar_tf||0) + (bucketObj.panjar_db||0)) + "<br>" +
-"ttl pembayaran blm lunas 👉🏽 Rp " + formatRp(blmBayarTotal) + "<br><br>" +
-"<b>- *TOTAL UANG CASH :* Rp " + formatRp(bucketObj.cash) + "</b><br><br>" +
-"ttl uang keluar 👉🏽 Rp " + formatRp(uangKeluarShift) + "<br>" +
-"Jenis uang keluar :<br>" + (keluarHtml || "-") + "<br>" +
-"sisa stor uang cash 👉🏽 Rp " + formatRp((bucketObj.cash||0) - uangKeluarShift) + "<br>" +
-"no bill terakhir 👉🏽 " + (noBillLast || "-") + "<br>" +
-"no bill resto terakhir 👉🏽 " + (noBillRestoLast || "-");
+        // Sedot Data Keuangan
+        var uangExtBed = (bucketObj.extrabed_in || 0) * 150000;
+        var rCash = bucketObj.room_cash || 0; var rTf = bucketObj.room_tf || 0; var rDb = bucketObj.room_db || 0;
+        var resto = (bucketObj.resto_cash || 0) + (bucketObj.resto_tf || 0) + (bucketObj.resto_db || 0);
+        var jBill = bucketObj.jual_bill_cash || 0;
+        var charge = (bucketObj.charge_cash || 0) + (bucketObj.charge_tf || 0) + (bucketObj.charge_db || 0);
+        var pnjr = (bucketObj.panjar_cash || 0) + (bucketObj.panjar_tf || 0) + (bucketObj.panjar_db || 0);
+        var bBB = bucketObj.bayar_bb_cash || bucketObj.bayar_bb || 0;
+        var totalCash = bucketObj.cash || 0; var uKeluar = bucketObj.keluar || 0;
 
-        return `<div style="background:#fef9e7; color:#000000; padding:15px; border-radius:8px; border:1px solid #f1c40f; margin-bottom:15px; font-family:monospace; font-size:11px; line-height:1.6; white-space:nowrap; overflow-x:auto;">
-            <button onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); alert('✅ Laporan di-copy!')" style="background:#f39c12; color:#ffffff; border:none; padding:6px 12px; border-radius:5px; margin-bottom:10px; cursor:pointer; font-size:11px; font-weight:bold;">📋 Copy Text Laporan WA</button>
-            <div style="user-select:all;">${textBlock}</div></div>`;
+        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + s + "<br><br>" +
+            "LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>" +
+            "Kamar Terjual/Dijaga: " + (daftarKamar.join(", ") || "-") + "<br><br>" +
+            "total room c in 👉🏽" + kamarAktif.length + "<br>room c out yg vd 👉🏽" + outVD.length + "<br>" +
+            "total uang extrabat 👉🏽Rp " + formatRp(uangExtBed) + "<br>room yg bb👉🏽" + (kamarBB.join(",") || "-") + "<br>" +
+            "total uang room cash👉🏽Rp " + formatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + formatRp(rTf) + "<br>" +
+            "ttl uang resto👉🏽Rp " + formatRp(resto) + "<br>ttl uang jual bill👉🏽Rp " + formatRp(jBill) + "<br>" +
+            "ttl uang panjar👉🏽Rp " + formatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp " + formatRp(bBB) + "<br><br>" +
+            "- *TOTAL UANG CASH :* Rp " + formatRp(totalCash) + "<br><br>" +
+            "ttl uang keluar👉🏽Rp " + formatRp(uKeluar) + "<br>sisa stor uang cash 👉🏽Rp " + formatRp(totalCash - uKeluar);
+
+        return `<div style="background:#fef9e7; padding:15px; border-radius:10px; border:2px solid #27ae60; font-family:monospace; font-size:12px; line-height:1.6;">
+                <button onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText.replace(/<br>/g, '\\n')); alert('✅ Copy Berhasil!')" style="width:100%; padding:10px; background:#25D366; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">📋 COPY WA</button>
+                <div style="user-select:all; margin-top:10px;">${textBlock}</div></div>`;
     }
+
 
     function renderScreen() {
         var out = ""; document.getElementById('topSearchArea').style.display = (state === "MENU" || state === "HASIL_CARI") ? "block" : "none";
@@ -1123,26 +1124,39 @@
                 simpanKeCloud(); if(state === "DAFTAR_TAMU" || state === "RINGKASAN_KAMAR" || state === "HASIL_CARI") { renderScreen(); } else { pindahHalaman("MENU"); }
             }
         }
-        else if (val === "RESET_HARIAN") { 
-            var s = prompt("Sandi Tutup Buku Global (jumaeluk1234):\n\nIni akan menyimpan Laporan Pagi & Malam ke Arsip Permanen, lalu mereset angkanya jadi 0!"); 
-            if(s && s.trim() === "jumaeluk1234") { 
-                var divPagi = document.createElement("div"); divPagi.innerHTML = generateLaporanShift("Pagi", bukuKas.harian.pagi);
-                var teksPagi = divPagi.innerText.replace("📋 Copy Text Laporan WA", "").trim();
-                
-                var divMalam = document.createElement("div"); divMalam.innerHTML = generateLaporanShift("Malam", bukuKas.harian.malam);
-                var teksMalam = divMalam.innerText.replace("📋 Copy Text Laporan WA", "").trim();
+            else if (val === "RESET_HARIAN") { 
+        var s = prompt("Sandi Tutup Buku Global (jumaeluk1234):"); 
+        if(s && s.trim() === "jumaeluk1234") { 
+            // 1. Simpan Teks ke Arsip Permanen (Menu 9)
+            var lapPagi = generateLaporanShift("Pagi", bukuKas.harian.pagi);
+            var lapMalam = generateLaporanShift("Malam", bukuKas.harian.malam);
+            var divP = document.createElement("div"); divP.innerHTML = lapPagi;
+            var divM = document.createElement("div"); divM.innerHTML = lapMalam;
+            
+            if(!arsipLaporanHarian) arsipLaporanHarian = [];
+            arsipLaporanHarian.push({ 
+                tgl: bukuKas.harian.tgl, 
+                lapPagi: divP.innerText.replace("📋 COPY WA", "").trim().replace(/\n/g, "<br>"), 
+                lapMalam: divM.innerText.replace("📋 COPY WA", "").trim().replace(/\n/g, "<br>") 
+            });
 
-                if(!arsipLaporanHarian) arsipLaporanHarian = [];
-                arsipLaporanHarian.push({ tgl: bukuKas.harian.tgl, lapPagi: teksPagi.replace(/\n/g, "<br>"), lapMalam: teksMalam.replace(/\n/g, "<br>") });
+            // 2. Akumulasi ke Laporan Bulanan (Lengkap!)
+            var h = bukuKas.harian; var b = bukuKas.bulanan;
+            var fields = ["uang", "uangCash", "uangTransfer", "uangDebit", "keluar", "kamar", "room_cash", "room_tf", "room_db", "resto_cash", "resto_tf", "resto_db", "charge_cash", "charge_tf", "charge_db", "panjar_cash", "panjar_tf", "panjar_db", "jual_bill_cash"];
+            fields.forEach(f => { b[f] = (b[f] || 0) + (h[f] || 0); });
 
-                if(bukuKas.harian.uang > 0) { riwayatHarian.push({ tgl: bukuKas.harian.tgl, uang: bukuKas.harian.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
-                var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
-                bukuKas.harian = {tgl:getTanggalHarian(), uang:0, uangCash:0, uangTransfer:0, uangDebit:0, keluar:0, rincianKeluar: [], kamar:0, transaksiResto: [], pagi: Object.assign({}, defShift), malam: Object.assign({}, defShift), billPagi: {awal:null, akhir:null, count:0}, billMalam: {awal:null, akhir:null, count:0}, jualBill: [], last_reset: new Date().getTime()}; 
-                
-                simpanKeCloud(); renderScreen(); 
-                alert("✅ TUTUP BUKU SUKSES!\nLaporan shift kemarin telah disalin ke Arsip Permanen dan laci sekarang kembali 0.");
-            } else if(s !== null) { alert("❌ Sandi Salah!"); }
+            // 3. Simpan ke Grafik
+            if(h.uang > 0) { riwayatHarian.push({ tgl: h.tgl, uang: h.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
+
+            // 4. RESET SEMUA KE 0
+            var def = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
+            bukuKas.harian = { tgl:getTanggalHarian(), uang:0, uangCash:0, uangTransfer:0, uangDebit:0, keluar:0, rincianKeluar:[], kamar:0, transaksiResto:[], pagi:Object.assign({}, def), malam:Object.assign({}, def), billPagi:{awal:null, akhir:null, count:0}, billMalam:{awal:null, akhir:null, count:0}, jualBill:[], last_reset:new Date().getTime() }; 
+            
+            simpanKeCloud(); renderScreen(); 
+            alert("✅ TUTUP BUKU BERHASIL!\nSemua data telah aman dipindahkan ke Arsip Permanen (Menu 9) dan Laporan Bulanan.");
         }
+    }
+
         else if (val === "RESET_BULANAN") { var s2 = prompt("Sandi Keuangan:"); if(s2 && s2.trim() === "vipjumaeluk1234") { bukuKas.bulanan = { bln: getTanggalBulanan(), uang: 0, kamar: 0, keluar: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0 }; simpanKeCloud(); renderScreen(); alert("✅ Laporan Bulanan di-reset!"); } }
         else if (val === "RESET_KAMAR") { var s3 = prompt("Sandi Kamar:"); if(s3 && s3.trim() === "vipjumaeluk1234") { bukuKas.bulanan.kamar = 0; simpanKeCloud(); renderScreen(); alert("✅ Rekap Nol!"); } }
     };
@@ -1258,7 +1272,7 @@
             }
         }
 
-        if(metodeSetoran !== "LUNAS LAMA" && isJualBillMode === false) {
+        if(metodeSetoran !== "LUNAS LAMA") {
             bukuKas.harian[bucketShift].kamar_in = (bukuKas.harian[bucketShift].kamar_in || 0) + 1;
             bukuKas.harian[bucketShift].extrabed_in = (bukuKas.harian[bucketShift].extrabed_in || 0) + parseInt(d.extrabed || 0);
         }
@@ -1266,15 +1280,13 @@
         kamarKotor = kamarKotor.filter(function(k) { return k !== tempRoom; }); 
         d.jenis_deposit = "Uang 100k"; d.dilaporkan = false;
         
-        if (isJualBillMode === false) {             tamuIn.push(Object.assign({}, d, { room: tempRoom }));          }
+        tamuIn.push(Object.assign({}, d, { room: tempRoom })); 
         if(pdg) { tamuPending = tamuPending.filter(function(t) { return t.room !== tempRoom; }); }
         
-        // Kamar hanya dihitung laku jika BUKAN Jual Bill dan BUKAN Lunas Lama
-if(metodeSetoran !== "LUNAS LAMA" && !isJualBillMode) {
-    bukuKas.harian[bucketShift].kamar_in = (bukuKas.harian[bucketShift].kamar_in || 0) + 1;
-    bukuKas.harian[bucketShift].extrabed_in = (bukuKas.harian[bucketShift].extrabed_in || 0) + parseInt(d.extrabed || 0);
-}
-
+        if(metodeSetoran !== "LUNAS LAMA") {
+            bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1;
+            bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1;
+        }
 
         isJualBillMode = false; window.isCheckInNormal = true; simpanKeCloud(); pindahHalaman("PESAN_SUKSES");
     }
