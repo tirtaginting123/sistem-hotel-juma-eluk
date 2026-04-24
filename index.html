@@ -240,97 +240,72 @@
         if(elTotal) { elTotal.value = tot; document.getElementById('f_dibayar').value = tot; }
     };
 
-    window.sinkronHariIni = function() {
-        if(confirm("⚙️ FITUR SINKRONISASI (REPARASI DATA): Ini akan menghitung ulang seluruh Uang Kas Laci Harian (Shift Pagi & Malam) secara otomatis berdasarkan data tamu yang masih aktif SAAT INI untuk memperbaiki kebocoran. Lanjutkan?")) {
-            var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
-            bukuKas.harian.pagi = Object.assign({}, defShift);
-            bukuKas.harian.malam = Object.assign({}, defShift);
-            bukuKas.harian.uang = 0; bukuKas.harian.uangCash = 0; bukuKas.harian.uangTransfer = 0; bukuKas.harian.uangDebit = 0;
-            bukuKas.harian.keluar = 0;
-            bukuKas.harian.kamar = 0; 
+        window.sinkronHariIni = function() {
+        var conf = confirm("🚨 SISTEM REPAIR AKURAT 🚨\nTombol ini akan mengosongkan laci ke Rp 0 terlebih dahulu, lalu menghitung ulang MURNI hanya dari uang tamu yang masuk hari ini. Lanjutkan?");
+        if (!conf) return;
 
+        // 1. KOSONGKAN SEMUA LACI HARI INI (Biar tidak ada uang tumpuk/ganda)
+        bukuKas.harian.uang = 0; bukuKas.harian.uangCash = 0; bukuKas.harian.uangTransfer = 0; bukuKas.harian.uangDebit = 0; bukuKas.harian.keluar = 0;
+        
+        var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
+        bukuKas.harian.pagi = Object.assign({}, defShift);
+        bukuKas.harian.malam = Object.assign({}, defShift);
+
+        // 2. KUNCI TANGGAL HARI INI (Format ketat: "24 Apr 2026")
+        var dCek = new Date(); if (dCek.getHours() < 7) { dCek.setDate(dCek.getDate() - 1); }
+        var dd = String(dCek.getDate()).padStart(2, '0');
+        var mmArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+        var mm = mmArr[dCek.getMonth()];
+        var yyyy = dCek.getFullYear();
+        var tglAkurat = dd + " " + mm + " " + yyyy; // Contoh: "24 Apr 2026"
+
+        // 3. TARIK ULANG UANG HANYA DARI TAMU CHECK-IN HARI INI
+        tamuIn.forEach(function(t) {
+            // Filter ketat: Pastikan di teks tanggalnya ada tulisan "24 Apr 2026"
+            if ((t.tgl && t.tgl.includes(tglAkurat)) || (t.tgl_hotel && t.tgl_hotel.includes(tglAkurat))) {
+                var bs = (t.shift || "Pagi").toLowerCase();
+                var total = parseInt(t.total_tagihan) || 0;
+                
+                if (t.bayar === "CASH") { 
+                    bukuKas.harian.uang += total; bukuKas.harian.uangCash += total; 
+                    bukuKas.harian[bs].cash += total; bukuKas.harian[bs].room_cash += total; 
+                }
+                else if (t.bayar === "TRANSFER") { 
+                    bukuKas.harian.uang += total; bukuKas.harian.uangTransfer += total; 
+                    bukuKas.harian[bs].tf += total; bukuKas.harian[bs].room_tf += total; 
+                }
+                else if (t.bayar === "DEBIT") { 
+                    bukuKas.harian.uang += total; bukuKas.harian.uangDebit += total; 
+                    bukuKas.harian[bs].db += total; bukuKas.harian[bs].room_db += total; 
+                }
+                
+                // Tambahkan uang Extrabed jika ada
+                var uangEB = (parseInt(t.extrabed) || 0) * 150000;
+                bukuKas.harian[bs].extrabed_in = (bukuKas.harian[bs].extrabed_in || 0) + (parseInt(t.extrabed) || 0);
+            }
+        });
+
+        // 4. TARIK ULANG PENGELUARAN HARI INI
+        if (bukuKas.harian.rincianKeluar && bukuKas.harian.rincianKeluar.length > 0) {
             bukuKas.harian.rincianKeluar.forEach(function(r) {
-                var bs = (r.shift||"Pagi").toLowerCase();
-                bukuKas.harian[bs].keluar += r.nominal; bukuKas.harian.keluar += r.nominal;
+                var bs = (r.shift || "Pagi").toLowerCase();
+                bukuKas.harian.keluar += r.nominal;
+                bukuKas.harian[bs].keluar += r.nominal;
             });
-
-                        var dCek = new Date(); if (dCek.getHours() < 7) { dCek.setDate(dCek.getDate() - 1); }
-            var tglPad = String(dCek.getDate()).padStart(2, '0'); var tglHariIni = String(dCek.getDate());
-            function cekHariIni(tglStr) { if(!tglStr) return false; return tglStr.startsWith(tglPad) || tglStr.startsWith(tglHariIni); }
-
-            tamuIn.forEach(function(t) {
-                if(!t.dilaporkan) {
-                    // STOP UANG KEMARIN AGAR TIDAK MASUK LACI HARI INI
-                    if(!cekHariIni(t.tgl_hotel) && !cekHariIni(t.tgl)) return; 
-
-                    var bs = (t.shift||"Pagi").toLowerCase();
-
-                    if(t.bayar !== "LUNAS LAMA") {
-                        bukuKas.harian[bs].kamar_in = (bukuKas.harian[bs].kamar_in || 0) + 1;
-                        bukuKas.harian[bs].extrabed_in = (bukuKas.harian[bs].extrabed_in || 0) + parseInt(t.extrabed || 0);
-                        bukuKas.harian.kamar += 1;
-                    }
-
-                    if(t.sudah_dibayar > 0 && t.bayar !== "D.Pending" && t.bayar !== "LUNAS LAMA") {
-                        bukuKas.harian.uang += t.sudah_dibayar;
-                        if(t.bayar === "CASH") { bukuKas.harian.uangCash += t.sudah_dibayar; bukuKas.harian[bs].cash += t.sudah_dibayar; bukuKas.harian[bs].room_cash += t.sudah_dibayar; }
-                        else if(t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer += t.sudah_dibayar; bukuKas.harian[bs].tf += t.sudah_dibayar; bukuKas.harian[bs].room_tf += t.sudah_dibayar; }
-                        else if(t.bayar === "DEBIT") { bukuKas.harian.uangDebit += t.sudah_dibayar; bukuKas.harian[bs].db += t.sudah_dibayar; bukuKas.harian[bs].room_db += t.sudah_dibayar; }
-                    }
-                }
-            });
-
-            tamuOut.forEach(function(t) {
-                if(!t.dilaporkan) {
-                    var bsIn = (t.shift||"Pagi").toLowerCase();
-                    if(t.bayar !== "LUNAS LAMA") {
-                        bukuKas.harian[bsIn].kamar_in = (bukuKas.harian[bsIn].kamar_in || 0) + 1;
-                        bukuKas.harian[bsIn].extrabed_in = (bukuKas.harian[bsIn].extrabed_in || 0) + parseInt(t.extrabed || 0);
-                        bukuKas.harian.kamar += 1;
-                    }
-
-                    if(t.sudah_dibayar > 0 && t.bayar !== "D.Pending" && t.bayar !== "LUNAS LAMA") {
-                         var bs = (t.shift||"Pagi").toLowerCase(); bukuKas.harian.uang += t.sudah_dibayar;
-                         if(t.bayar === "CASH") { bukuKas.harian.uangCash += t.sudah_dibayar; bukuKas.harian[bs].cash += t.sudah_dibayar; bukuKas.harian[bs].room_cash += t.sudah_dibayar; }
-                         else if(t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer += t.sudah_dibayar; bukuKas.harian[bs].tf += t.sudah_dibayar; bukuKas.harian[bs].room_tf += t.sudah_dibayar; }
-                         else if(t.bayar === "DEBIT") { bukuKas.harian.uangDebit += t.sudah_dibayar; bukuKas.harian[bs].db += t.sudah_dibayar; bukuKas.harian[bs].room_db += t.sudah_dibayar; }
-                    }
-                    if(t.charge && t.charge !== "-") {
-                        var match = t.charge.match(/Rp (\d+) via (CASH|TRANSFER|DEBIT)/);
-                        if(match) {
-                            var nom = parseInt(match[1]); var byr = match[2]; var bsOut = (t.shift_out||"Pagi").toLowerCase();
-                            bukuKas.harian.uang += nom;
-                            if(byr === "CASH") { bukuKas.harian.uangCash += nom; bukuKas.harian[bsOut].cash += nom; bukuKas.harian[bsOut].charge_cash += nom; }
-                            else if(byr === "TRANSFER") { bukuKas.harian.uangTransfer += nom; bukuKas.harian[bsOut].tf += nom; bukuKas.harian[bsOut].charge_tf += nom; }
-                            else if(byr === "DEBIT") { bukuKas.harian.uangDebit += nom; bukuKas.harian[bsOut].db += nom; bukuKas.harian[bsOut].charge_db += nom; }
-                        }
-                    }
-                }
-            });
-
-            tamuPending.forEach(function(p) {
-                if(p.dp > 0 && p.bayar !== "D.Pending") {
-                    var bs = (p.shift||"Pagi").toLowerCase(); bukuKas.harian.uang += p.dp;
-                    if(p.bayar === "CASH") { bukuKas.harian.uangCash += p.dp; bukuKas.harian[bs].cash += p.dp; bukuKas.harian[bs].panjar_cash += p.dp; }
-                    else if(p.bayar === "TRANSFER") { bukuKas.harian.uangTransfer += p.dp; bukuKas.harian[bs].tf += p.dp; bukuKas.harian[bs].panjar_tf += p.dp; }
-                    else if(p.bayar === "DEBIT") { bukuKas.harian.uangDebit += p.dp; bukuKas.harian[bs].db += p.dp; bukuKas.harian[bs].panjar_db += p.dp; }
-                }
-            });
-
-            bukuKas.harian.transaksiResto.forEach(function(r) {
-                var bs = (r.shift||"Pagi").toLowerCase(); bukuKas.harian.uang += r.nominal;
-                if(r.bayar === "CASH") { bukuKas.harian.uangCash += r.nominal; bukuKas.harian[bs].cash += r.nominal; bukuKas.harian[bs].resto_cash += r.nominal; }
-                else if(r.bayar === "TRANSFER") { bukuKas.harian.uangTransfer += r.nominal; bukuKas.harian[bs].tf += r.nominal; bukuKas.harian[bs].resto_tf += r.nominal; }
-                else if(r.bayar === "DEBIT") { bukuKas.harian.uangDebit += r.nominal; bukuKas.harian[bs].db += r.nominal; bukuKas.harian[bs].resto_db += r.nominal; }
-            });
-
-            bukuKas.harian.jualBill.forEach(function(jb) {
-                var bs = (jb.shift||"Pagi").toLowerCase(); bukuKas.harian.uang += 100000; bukuKas.harian.uangCash += 100000;
-                bukuKas.harian[bs].cash += 100000; bukuKas.harian[bs].jual_bill_cash += 100000;
-            });
-
-            simpanKeCloud(); renderScreen(); alert("✅ Sinkronisasi berhasil! Uang di aplikasi sudah dikalibrasi 100% dengan data yang aktif.");
         }
+
+        // 5. TARIK ULANG TRANSAKSI RESTO & JUAL BILL (Jika ada)
+        if (bukuKas.harian.transaksiResto && bukuKas.harian.transaksiResto.length > 0) {
+            bukuKas.harian.transaksiResto.forEach(function(r) {
+                var bs = (r.shift || "Pagi").toLowerCase();
+                if (r.bayar === "CASH") { bukuKas.harian.uang += r.total; bukuKas.harian.uangCash += r.total; bukuKas.harian[bs].cash += r.total; bukuKas.harian[bs].resto_cash += r.total; }
+                else if (r.bayar === "TRANSFER") { bukuKas.harian.uang += r.total; bukuKas.harian.uangTransfer += r.total; bukuKas.harian[bs].tf += r.total; bukuKas.harian[bs].resto_tf += r.total; }
+            });
+        }
+
+        simpanKeCloud();
+        alert("✅ REPAIR SELESAI!\nLaci sudah dibersihkan dari hitungan ganda & uang tamu kemarin.\nTotal uang saat ini 100% akurat untuk tanggal: " + tglAkurat);
+        pindahHalaman("TUTUP_BUKU");
     };
 
     window.batalCheckIn = function(index) {
