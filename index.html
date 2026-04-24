@@ -1404,7 +1404,7 @@
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
     window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
 
-        function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
+            function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
         var s = shiftLabel.toLowerCase();
         var tStr = getTanggalHarian(); 
         
@@ -1421,29 +1421,37 @@
         var daftarKamar = []; var kamarAktif = []; var kamarBB = []; var outVD = [];       
         var sudahDihitung = new Set(); var sudahDihitungOut = new Set();
 
-        // 1. HANYA HITUNG KAMAR YANG CHECK-IN HARI INI (Supaya jam 7 pagi = 0)
+        // 1. HITUNG SEMUA TAMU (BARU & LAMA)
         tamuIn.forEach(function(t) {
-            if (cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl)) {
-                var sIn = (t.shift || "pagi").toLowerCase();
-                if (sIn === s) {
-                    kamarAktif.push(t.room); sudahDihitung.add(t.room);
-                    daftarKamar.push(t.room + (s === "pagi" ? "🌞" : "🌙"));
-                    if (t.bayar === "BELUM BAYAR" || t.bayar === "BB" || t.bayar === "D.Pending") kamarBB.push(t.room);
-                }
+            var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
+            var sIn = (t.shift || "pagi").toLowerCase();
+            
+            // JIKA TAMU LAMA / NYAMBUNG -> PAKSA MASUK LAPORAN SHIFT PAGI
+            if (!isBaru) { sIn = "pagi"; }
+
+            if (sIn === s) {
+                kamarAktif.push(t.room); sudahDihitung.add(t.room);
+                var ikon = isBaru ? (s === "pagi" ? "🌞" : "🌙") : "🤝🌞"; // Simbol nyambung
+                daftarKamar.push(t.room + ikon);
+                if (t.bayar === "BELUM BAYAR" || t.bayar === "BB" || t.bayar === "D.Pending") kamarBB.push(t.room);
             }
         });
 
-        // 2. HANYA HITUNG KAMAR YANG CHECK-OUT HARI INI
+        // 2. HITUNG KAMAR CHECK-OUT HARI INI
         tamuOut.forEach(function(t) {
             if (cekHariIni(t.jam_out_aktual)) {
+                var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
                 var sIn = (t.shift || "pagi").toLowerCase();
+                
+                // JIKA TAMU LAMA CHECK-OUT HARI INI -> PAKSA MASUK PAGI
+                if (!isBaru) { sIn = "pagi"; }
+
                 if (sIn === s) {
                     if (!sudahDihitungOut.has(t.room)) { outVD.push(t.room); sudahDihitungOut.add(t.room); }
-                    // Jika check-out hari ini & check-in hari ini, tetap masukkan ke Total Room C.IN (Anti berkurang)
-                    var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
-                    if (isBaru && !sudahDihitung.has(t.room)) {
+                    if (!sudahDihitung.has(t.room)) {
                         kamarAktif.push(t.room); sudahDihitung.add(t.room);
-                        daftarKamar.push(t.room + (s === "pagi" ? "🌞(OUT)" : "🌙(OUT)"));
+                        var ikonOut = isBaru ? (s === "pagi" ? "🌞(OUT)" : "🌙(OUT)") : "🤝🌞(OUT)";
+                        daftarKamar.push(t.room + ikonOut);
                         if (t.bayar === "BELUM BAYAR" || t.bayar === "BB" || t.bayar === "D.Pending") kamarBB.push(t.room);
                     }
                 }
@@ -1471,10 +1479,9 @@
         var noBillRestoLast = restoThisShift.length > 0 ? restoThisShift[restoThisShift.length-1].inv : "-";
         var kamarStr = daftarKamar.length > 0 ? daftarKamar.join(", ") : "-"; var bbStr = kamarBB.length > 0 ? kamarBB.join(", ") : "-";
 
-        // TEKS MURNI UNTUK DISIMPAN KE ARSIP & WA
         var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga: " + kamarStr + "<br><br>total room c in 👉🏽" + kamarAktif.length + "<br>room c out yg vd 👉🏽" + outVD.length + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + formatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + formatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + formatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + formatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + formatRp(resto) + "<br>ttl uang jual bill👉🏽Rp " + formatRp(jBill) + "<br>ttl uang charge👉🏽Rp " + formatRp(charge) + "<br>ttl uang deposit/jaminan👉🏽Rp 0<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp 0<br>ttl uang panjar👉🏽Rp " + formatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp " + formatRp(bBB) + "<br><br>- *TOTAL UANG CASH :* Rp " + formatRp(totalUangCash) + "<br><br>ttl uang keluar👉🏽Rp " + formatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + formatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
         
-        if(isForArsip) return textBlock; // Kembalikan teks murni tanpa tombol HTML
+        if(isForArsip) return textBlock;
 
         return `<div style="background:#fef9e7; padding:15px; border-radius:10px; border:2px solid #27ae60; font-family:monospace; font-size:13px; line-height: 1.6; margin-bottom:20px;"><button onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText.replace(/<br>/g, '\\n')); alert('✅ Laporan berhasil di-copy! Silakan Paste di WhatsApp.')" style="margin-bottom:15px; padding:12px; background:#25D366; color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer; width:100%;">📋 COPY KE WHATSAPP</button><div style="user-select:all; word-wrap:break-word;">${textBlock}</div></div>`;
     }
