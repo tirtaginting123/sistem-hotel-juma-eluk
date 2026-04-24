@@ -59,7 +59,7 @@
     <div id="loadingBar">>>> CONNECTING TO CLOUD...</div>
     <div class="navbar">
         <div class="navbar-brand">
-            <div class="nav-logo-box"><img src="logo.jpg" alt="Logo JE"></div>
+            <div class="nav-logo-box" onclick="klikRahasia()"><img src="logo.jpg" alt="Logo JE"></div>
             <div class="header-info">
                 <h1>Hotel Juma Eluk</h1>
                 <p>Jl. Letjen Jamin Ginting Sumber Mufakat Kabanjahe Tanah Karo</p>
@@ -1350,7 +1350,60 @@
     };
 
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
+        // --- FITUR RAHASIA BOSKU ---
+    let rahasiaCounter = 0;
+    window.klikRahasia = function() {
+        rahasiaCounter++;
+        if (rahasiaCounter >= 5) { // Harus klik 5 kali cepat
+            rahasiaCounter = 0;
+            bukaKoreksiLaci();
+        }
+        // Reset hitungan klik kalau tidak lanjut klik dalam 2 detik
+        setTimeout(() => { rahasiaCounter = 0; }, 2000);
+    };
+
+    window.bukaKoreksiLaci = function() {
+        var pC = bukuKas.harian.pagi.cash || 0; var pT = bukuKas.harian.pagi.tf || 0;
+        var mC = bukuKas.harian.malam.cash || 0; var mT = bukuKas.harian.malam.tf || 0;
+
+        var out = `<div class="card"><span class="section-title">⚖️ KOREKSI SALDO FISIK (RAHASIA)</span>
+            <p style="font-size:11px; color:#e74c3c; margin-bottom:15px;">*Ketik jumlah uang fisik aktual di laci sekarang. Transaksi setelah ini akan otomatis menambah dari angka ini.</p>
+            <div style="background:#eafaf1; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #27ae60;">
+                <b style="color:#27ae60;">☀️ SHIFT PAGI</b>
+                <div class="form-group"><label>Cash Fisik</label><input type="number" id="kor_pagi_cash" class="form-control" value="${pC}"></div>
+                <div class="form-group"><label>Transfer</label><input type="number" id="kor_pagi_tf" class="form-control" value="${pT}"></div>
+            </div>
+            <div style="background:#fdf2e9; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #e67e22;">
+                <b style="color:#e67e22;">🌙 SHIFT MALAM</b>
+                <div class="form-group"><label>Cash Fisik</label><input type="number" id="kor_malam_cash" class="form-control" value="${mC}"></div>
+                <div class="form-group"><label>Transfer</label><input type="number" id="kor_malam_tf" class="form-control" value="${mT}"></div>
+            </div>
+            <button onclick="simpanKoreksiLaci()" style="background:#3498db; color:#fff; border:none; width:100%; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer;">💾 SIMPAN & FIX LACI</button>
+            <button onclick="pindahHalaman('MENU')" style="background:#ecf0f1; border:none; width:100%; padding:10px; border-radius:10px; margin-top:10px; cursor:pointer;">🔙 BATAL</button></div>`;
+        document.getElementById('screen').innerHTML = out;
+        window.scrollTo(0,0);
+    };
+
+    window.simpanKoreksiLaci = function() {
+        var pC = parseInt(document.getElementById('kor_pagi_cash').value) || 0;
+        var pT = parseInt(document.getElementById('kor_pagi_tf').value) || 0;
+        var mC = parseInt(document.getElementById('kor_malam_cash').value) || 0;
+        var mT = parseInt(document.getElementById('kor_malam_tf').value) || 0;
+
+        bukuKas.harian.pagi.cash = pC; bukuKas.harian.pagi.room_cash = pC;
+        bukuKas.harian.pagi.tf = pT; bukuKas.harian.pagi.room_tf = pT;
+        bukuKas.harian.malam.cash = mC; bukuKas.harian.malam.room_cash = mC;
+        bukuKas.harian.malam.tf = mT; bukuKas.harian.malam.room_tf = mT;
+        bukuKas.harian.uangCash = pC + mC;
+        bukuKas.harian.uangTransfer = pT + mT;
+        bukuKas.harian.uang = pC + pT + mC + mT + (bukuKas.harian.uangDebit || 0);
+
+        simpanKeCloud(); alert("✅ SALDO BERHASIL DIKUNCI!"); pindahHalaman("MENU");
+    };
+
+    window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
     window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
+
         function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
         var s = shiftLabel.toLowerCase();
         var tStr = getTanggalHarian(); 
