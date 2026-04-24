@@ -1351,60 +1351,85 @@
 
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
         // --- FITUR RAHASIA BOSKU ---
+        // --- FITUR RAHASIA BOSKU ---
     let rahasiaCounter = 0;
     window.klikRahasia = function() {
         rahasiaCounter++;
-        if (rahasiaCounter >= 5) { // Harus klik 5 kali cepat
+        if (rahasiaCounter >= 5) {
             rahasiaCounter = 0;
             bukaKoreksiLaci();
         }
-        // Reset hitungan klik kalau tidak lanjut klik dalam 2 detik
         setTimeout(() => { rahasiaCounter = 0; }, 2000);
     };
 
     window.bukaKoreksiLaci = function() {
         var pC = bukuKas.harian.pagi.cash || 0; var pT = bukuKas.harian.pagi.tf || 0;
         var mC = bukuKas.harian.malam.cash || 0; var mT = bukuKas.harian.malam.tf || 0;
+        
+        var pKmr = bukuKas.harian.pagi.manual_kamar || ""; var pCIn = bukuKas.harian.pagi.manual_cin || ""; var pVD = bukuKas.harian.pagi.manual_vd || "";
+        var mKmr = bukuKas.harian.malam.manual_kamar || ""; var mCIn = bukuKas.harian.malam.manual_cin || ""; var mVD = bukuKas.harian.malam.manual_vd || "";
 
-        var out = `<div class="card"><span class="section-title">⚖️ KOREKSI SALDO FISIK (RAHASIA)</span>
-            <p style="font-size:11px; color:#e74c3c; margin-bottom:15px;">*Ketik jumlah uang fisik aktual di laci sekarang. Transaksi setelah ini akan otomatis menambah dari angka ini.</p>
+        var out = `<div class="card"><span class="section-title">⚖️ KOREKSI LACI & KAMAR (RAHASIA)</span>
+            <p style="font-size:11px; color:#e74c3c; margin-bottom:15px;">*Ketik angka laci. Untuk daftar kamar, <b>biarkan kosong</b> jika ingin sistem menghitung otomatis.</p>
+            
             <div style="background:#eafaf1; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #27ae60;">
                 <b style="color:#27ae60;">☀️ SHIFT PAGI</b>
-                <div class="form-group"><label>Cash Fisik</label><input type="number" id="kor_pagi_cash" class="form-control" value="${pC}"></div>
-                <div class="form-group"><label>Transfer</label><input type="number" id="kor_pagi_tf" class="form-control" value="${pT}"></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <div class="form-group" style="flex:1;"><label>Cash Fisik</label><input type="number" id="kor_pagi_cash" class="form-control" value="${pC}"></div>
+                    <div class="form-group" style="flex:1;"><label>Transfer</label><input type="number" id="kor_pagi_tf" class="form-control" value="${pT}"></div>
+                </div>
+                <hr style="border:1px dashed #27ae60; margin:10px 0;">
+                <div class="form-group"><label>Paksa Daftar Kamar (Misal: 2a🌞, 3b🤝🌞)</label><input type="text" id="kor_pagi_kmr" class="form-control" value="${pKmr}" placeholder="Kosong = Otomatis"></div>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;"><label>Paksa C.IN</label><input type="number" id="kor_pagi_cin" class="form-control" value="${pCIn}" placeholder="Auto"></div>
+                    <div class="form-group" style="flex:1;"><label>Paksa VD</label><input type="number" id="kor_pagi_vd" class="form-control" value="${pVD}" placeholder="Auto"></div>
+                </div>
             </div>
+
             <div style="background:#fdf2e9; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #e67e22;">
                 <b style="color:#e67e22;">🌙 SHIFT MALAM</b>
-                <div class="form-group"><label>Cash Fisik</label><input type="number" id="kor_malam_cash" class="form-control" value="${mC}"></div>
-                <div class="form-group"><label>Transfer</label><input type="number" id="kor_malam_tf" class="form-control" value="${mT}"></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <div class="form-group" style="flex:1;"><label>Cash Fisik</label><input type="number" id="kor_malam_cash" class="form-control" value="${mC}"></div>
+                    <div class="form-group" style="flex:1;"><label>Transfer</label><input type="number" id="kor_malam_tf" class="form-control" value="${mT}"></div>
+                </div>
+                <hr style="border:1px dashed #e67e22; margin:10px 0;">
+                <div class="form-group"><label>Paksa Daftar Kamar (Misal: 1a🌙, 5b🌙)</label><input type="text" id="kor_malam_kmr" class="form-control" value="${mKmr}" placeholder="Kosong = Otomatis"></div>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;"><label>Paksa C.IN</label><input type="number" id="kor_malam_cin" class="form-control" value="${mCIn}" placeholder="Auto"></div>
+                    <div class="form-group" style="flex:1;"><label>Paksa VD</label><input type="number" id="kor_malam_vd" class="form-control" value="${mVD}" placeholder="Auto"></div>
+                </div>
             </div>
-            <button onclick="simpanKoreksiLaci()" style="background:#3498db; color:#fff; border:none; width:100%; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer;">💾 SIMPAN & FIX LACI</button>
+            <button onclick="simpanKoreksiLaci()" style="background:#3498db; color:#fff; border:none; width:100%; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer;">💾 SIMPAN KOREKSI</button>
             <button onclick="pindahHalaman('MENU')" style="background:#ecf0f1; border:none; width:100%; padding:10px; border-radius:10px; margin-top:10px; cursor:pointer;">🔙 BATAL</button></div>`;
         document.getElementById('screen').innerHTML = out;
         window.scrollTo(0,0);
     };
 
     window.simpanKoreksiLaci = function() {
-        var pC = parseInt(document.getElementById('kor_pagi_cash').value) || 0;
-        var pT = parseInt(document.getElementById('kor_pagi_tf').value) || 0;
-        var mC = parseInt(document.getElementById('kor_malam_cash').value) || 0;
-        var mT = parseInt(document.getElementById('kor_malam_tf').value) || 0;
+        var pC = parseInt(document.getElementById('kor_pagi_cash').value) || 0; var pT = parseInt(document.getElementById('kor_pagi_tf').value) || 0;
+        var mC = parseInt(document.getElementById('kor_malam_cash').value) || 0; var mT = parseInt(document.getElementById('kor_malam_tf').value) || 0;
 
-        bukuKas.harian.pagi.cash = pC; bukuKas.harian.pagi.room_cash = pC;
-        bukuKas.harian.pagi.tf = pT; bukuKas.harian.pagi.room_tf = pT;
-        bukuKas.harian.malam.cash = mC; bukuKas.harian.malam.room_cash = mC;
-        bukuKas.harian.malam.tf = mT; bukuKas.harian.malam.room_tf = mT;
-        bukuKas.harian.uangCash = pC + mC;
-        bukuKas.harian.uangTransfer = pT + mT;
+        bukuKas.harian.pagi.cash = pC; bukuKas.harian.pagi.room_cash = pC; bukuKas.harian.pagi.tf = pT; bukuKas.harian.pagi.room_tf = pT;
+        bukuKas.harian.malam.cash = mC; bukuKas.harian.malam.room_cash = mC; bukuKas.harian.malam.tf = mT; bukuKas.harian.malam.room_tf = mT;
+        bukuKas.harian.uangCash = pC + mC; bukuKas.harian.uangTransfer = pT + mT;
         bukuKas.harian.uang = pC + pT + mC + mT + (bukuKas.harian.uangDebit || 0);
 
-        simpanKeCloud(); alert("✅ SALDO BERHASIL DIKUNCI!"); pindahHalaman("MENU");
+        bukuKas.harian.pagi.manual_kamar = document.getElementById('kor_pagi_kmr').value;
+        bukuKas.harian.pagi.manual_cin = document.getElementById('kor_pagi_cin').value;
+        bukuKas.harian.pagi.manual_vd = document.getElementById('kor_pagi_vd').value;
+
+        bukuKas.harian.malam.manual_kamar = document.getElementById('kor_malam_kmr').value;
+        bukuKas.harian.malam.manual_cin = document.getElementById('kor_malam_cin').value;
+        bukuKas.harian.malam.manual_vd = document.getElementById('kor_malam_vd').value;
+
+        simpanKeCloud(); alert("✅ KOREKSI TERSIMPAN! Laporan Laci & Kamar sudah dipaksa sesuai inputan Bosku."); pindahHalaman("MENU");
     };
 
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
     window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
 
-            function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
+
+                function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
         var s = shiftLabel.toLowerCase();
         var tStr = getTanggalHarian(); 
         
@@ -1418,45 +1443,41 @@
                    tglStr.startsWith(tglHariIni + " ") || tglStr.startsWith(tglHariIni + "/") || tglStr.startsWith(tglHariIni + "-");
         }
 
-        var daftarKamar = []; var kamarAktif = []; var kamarBB = []; var outVD = [];       
-        var sudahDihitung = new Set(); var sudahDihitungOut = new Set();
+        var daftarKamar = []; var kamarAktif = []; var kamarBB = []; var outVD = []; var sudahDihitung = new Set();
 
-        // 1. HITUNG SEMUA TAMU (BARU & LAMA)
-        tamuIn.forEach(function(t) {
-            var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
-            var sIn = (t.shift || "pagi").toLowerCase();
-            
-            // JIKA TAMU LAMA / NYAMBUNG -> PAKSA MASUK LAPORAN SHIFT PAGI
-            if (!isBaru) { sIn = "pagi"; }
+        tamuIn.concat(tamuOut).forEach(function(t) {
+            var adaUangHariIni = false;
+            if (t.history_bayar && t.history_bayar.length > 0) { t.history_bayar.forEach(function(hb) { if (cekHariIni(hb.tgl) && (hb.shift || "pagi").toLowerCase() === s) adaUangHariIni = true; }); } 
+            else if (cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl)) { if ((t.shift || "pagi").toLowerCase() === s && (t.sudah_dibayar > 0)) adaUangHariIni = true; }
 
-            if (sIn === s) {
-                kamarAktif.push(t.room); sudahDihitung.add(t.room);
-                var ikon = isBaru ? (s === "pagi" ? "🌞" : "🌙") : "🤝🌞"; // Simbol nyambung
-                daftarKamar.push(t.room + ikon);
-                if (t.bayar === "BELUM BAYAR" || t.bayar === "BB" || t.bayar === "D.Pending") kamarBB.push(t.room);
-            }
-        });
-
-        // 2. HITUNG KAMAR CHECK-OUT HARI INI
-        tamuOut.forEach(function(t) {
-            if (cekHariIni(t.jam_out_aktual)) {
-                var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
-                var sIn = (t.shift || "pagi").toLowerCase();
-                
-                // JIKA TAMU LAMA CHECK-OUT HARI INI -> PAKSA MASUK PAGI
-                if (!isBaru) { sIn = "pagi"; }
-
-                if (sIn === s) {
-                    if (!sudahDihitungOut.has(t.room)) { outVD.push(t.room); sudahDihitungOut.add(t.room); }
-                    if (!sudahDihitung.has(t.room)) {
-                        kamarAktif.push(t.room); sudahDihitung.add(t.room);
-                        var ikonOut = isBaru ? (s === "pagi" ? "🌞(OUT)" : "🌙(OUT)") : "🤝🌞(OUT)";
-                        daftarKamar.push(t.room + ikonOut);
-                        if (t.bayar === "BELUM BAYAR" || t.bayar === "BB" || t.bayar === "D.Pending") kamarBB.push(t.room);
-                    }
+            if (adaUangHariIni) {
+                if (!sudahDihitung.has(t.room)) {
+                    kamarAktif.push(t.room); sudahDihitung.add(t.room);
+                    var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
+                    var ikon = isBaru ? (s === "pagi" ? "🌞" : "🌙") : "🤝🌞";
+                    var labelOut = (t.jam_out_aktual && cekHariIni(t.jam_out_aktual)) ? "(OUT)" : "";
+                    daftarKamar.push(t.room + ikon + labelOut);
                 }
             }
+            if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") { if (!kamarBB.includes(t.room)) kamarBB.push(t.room); }
         });
+
+        kamarKotor.forEach(function(kmr) {
+            var lastTamu = [...tamuOut].reverse().find(t => String(t.room) === String(kmr));
+            var sVD = "pagi"; if (lastTamu && cekHariIni(lastTamu.jam_out_aktual)) sVD = (lastTamu.shift || "pagi").toLowerCase();
+            if (sVD === s && !outVD.includes(kmr)) outVD.push(kmr);
+        });
+
+        // >>> KUNCI KEKUASAAN BOSKU ADA DI SINI <<<
+        var finalKamarStr = daftarKamar.length > 0 ? daftarKamar.join(", ") : "-"; 
+        var finalCIN = kamarAktif.length;
+        var finalVD = outVD.length;
+
+        // Timpa hasil otomatis dengan input manual rahasia (kalau diisi)
+        if (bucketObj.manual_kamar && bucketObj.manual_kamar.trim() !== "") { finalKamarStr = bucketObj.manual_kamar; }
+        if (bucketObj.manual_cin && String(bucketObj.manual_cin).trim() !== "") { finalCIN = bucketObj.manual_cin; }
+        if (bucketObj.manual_vd && String(bucketObj.manual_vd).trim() !== "") { finalVD = bucketObj.manual_vd; }
+        // ==========================================
 
         var uangExtBed = (bucketObj.extrabed_in || 0) * 150000;
         var rCash = bucketObj.room_cash || 0; var rTf = bucketObj.room_tf || 0; var rDb = bucketObj.room_db || 0;
@@ -1467,19 +1488,15 @@
         var bBB = bucketObj.bayar_bb || bucketObj.pelunasan_bb || 0;
         var totalUangCash = bucketObj.cash || 0; var uangKeluarShift = 0; var teksKeluarShift = "";
         
-        if(bukuKas.harian.rincianKeluar) {
-            bukuKas.harian.rincianKeluar.forEach(function(r) {
-                if(r.shift && r.shift.toLowerCase() === s) { uangKeluarShift += r.nominal; teksKeluarShift += "- " + r.ket + " (Rp " + formatRp(r.nominal) + ")<br>"; }
-            });
-        }
+        if(bukuKas.harian.rincianKeluar) { bukuKas.harian.rincianKeluar.forEach(function(r) { if(r.shift && r.shift.toLowerCase() === s) { uangKeluarShift += r.nominal; teksKeluarShift += "- " + r.ket + " (Rp " + formatRp(r.nominal) + ")<br>"; } }); }
         
         var sisaLaci = totalUangCash - uangKeluarShift;
         var noBillLast = s === "pagi" ? (bukuKas.harian.billPagi ? bukuKas.harian.billPagi.akhir : "-") : (bukuKas.harian.billMalam ? bukuKas.harian.billMalam.akhir : "-");
         var restoThisShift = bukuKas.harian.transaksiResto ? bukuKas.harian.transaksiResto.filter(function(r) { return r.shift && r.shift.toLowerCase() === s; }) : [];
         var noBillRestoLast = restoThisShift.length > 0 ? restoThisShift[restoThisShift.length-1].inv : "-";
-        var kamarStr = daftarKamar.length > 0 ? daftarKamar.join(", ") : "-"; var bbStr = kamarBB.length > 0 ? kamarBB.join(", ") : "-";
+        var bbStr = kamarBB.length > 0 ? kamarBB.join(", ") : "-";
 
-        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga: " + kamarStr + "<br><br>total room c in 👉🏽" + kamarAktif.length + "<br>room c out yg vd 👉🏽" + outVD.length + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + formatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + formatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + formatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + formatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + formatRp(resto) + "<br>ttl uang jual bill👉🏽Rp " + formatRp(jBill) + "<br>ttl uang charge👉🏽Rp " + formatRp(charge) + "<br>ttl uang deposit/jaminan👉🏽Rp 0<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp 0<br>ttl uang panjar👉🏽Rp " + formatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp " + formatRp(bBB) + "<br><br>- *TOTAL UANG CASH :* Rp " + formatRp(totalUangCash) + "<br><br>ttl uang keluar👉🏽Rp " + formatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + formatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
+        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga: " + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + formatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + formatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + formatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + formatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + formatRp(resto) + "<br>ttl uang jual bill👉🏽Rp " + formatRp(jBill) + "<br>ttl uang charge👉🏽Rp " + formatRp(charge) + "<br>ttl uang deposit/jaminan👉🏽Rp 0<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp 0<br>ttl uang panjar👉🏽Rp " + formatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp " + formatRp(bBB) + "<br><br>- *TOTAL UANG CASH :* Rp " + formatRp(totalUangCash) + "<br><br>ttl uang keluar👉🏽Rp " + formatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + formatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
         
         if(isForArsip) return textBlock;
 
