@@ -668,7 +668,7 @@
         }
         
 
-        else if (state === "TOTAL_KAMAR") {
+                else if (state === "TOTAL_KAMAR") {
             var hPagi = 0; var hMalam = 0;
             var listPagi = []; var listMalam = [];
             var sudahDihitung = new Set();
@@ -677,30 +677,56 @@
             var tglPad = String(dCek.getDate()).padStart(2, '0'); var tglHariIni = String(dCek.getDate());
             function cekHariIni(tglStr) { if(!tglStr) return false; return tglStr.startsWith(tglPad) || tglStr.startsWith(tglHariIni); }
 
-            // HANYA HITUNG KAMAR HARI INI
+            // 1. HITUNG OTOMATIS (Sebagai Backup/Dasar)
             tamuIn.forEach(function(t) {
-                if (cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl)) {
-                    if (!sudahDihitung.has(t.room)) {
-                        sudahDihitung.add(t.room);
-                        var sIn = (t.shift || "pagi").toLowerCase();
-                        if (sIn === "pagi") { hPagi++; listPagi.push(t.room); } else { hMalam++; listMalam.push(t.room); }
-                    }
+                if (!sudahDihitung.has(t.room)) {
+                    sudahDihitung.add(t.room);
+                    var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
+                    var sIn = (t.shift || "pagi").toLowerCase();
+                    if (!isBaru) { sIn = "pagi"; } 
+
+                    if (sIn === "pagi") { hPagi++; listPagi.push(t.room + (!isBaru ? "🤝" : "")); } 
+                    else { hMalam++; listMalam.push(t.room); }
                 }
             });
+
+            kamarKotor.forEach(function(kmr) {
+                if (!sudahDihitung.has(kmr)) {
+                    sudahDihitung.add(kmr);
+                    var lastTamu = [...tamuOut].reverse().find(a => String(a.room) === String(kmr));
+                    var sIn = "pagi"; 
+                    if (lastTamu) {
+                        var isBaru = cekHariIni(lastTamu.tgl_hotel) || cekHariIni(lastTamu.tgl);
+                        sIn = (lastTamu.shift || "pagi").toLowerCase();
+                        if (!cekHariIni(lastTamu.jam_out_aktual) || !isBaru) { sIn = "pagi"; }
+                    }
+                    if (sIn === "pagi") { hPagi++; listPagi.push(kmr + "(VD)"); } 
+                    else { hMalam++; listMalam.push(kmr + "(VD)"); }
+                }
+            });
+
+            // >>> TIMPA DENGAN DATA MANUAL JIKA BOSKU MENGISINYA DI MENU RAHASIA <<<
+            if (bukuKas.harian.pagi.manual_cin && String(bukuKas.harian.pagi.manual_cin).trim() !== "") { hPagi = parseInt(bukuKas.harian.pagi.manual_cin); }
+            if (bukuKas.harian.pagi.manual_kamar && bukuKas.harian.pagi.manual_kamar.trim() !== "") { listPagi = [bukuKas.harian.pagi.manual_kamar]; }
+            
+            if (bukuKas.harian.malam.manual_cin && String(bukuKas.harian.malam.manual_cin).trim() !== "") { hMalam = parseInt(bukuKas.harian.malam.manual_cin); }
+            if (bukuKas.harian.malam.manual_kamar && bukuKas.harian.malam.manual_kamar.trim() !== "") { listMalam = [bukuKas.harian.malam.manual_kamar]; }
+            // ======================================================================
 
             var totalOkupansi = hPagi + hMalam;
 
             out += `<div class="card"><span class="section-title">📊 Laporan Hunian Kamar</span>
                     <div style="background:#fff; padding:15px; border-radius:10px; border:2px solid var(--primary); text-align:center;">
                         <p style="margin:0; color:#27ae60; font-weight:bold;">☀️ JATAH SHIFT PAGI: ${hPagi} Kamar</p>
-                        <small style="color:#777; font-size:9px;">(${listPagi.join(", ")})</small>
+                        <small style="color:#777; font-size:11px;">(${listPagi.join(", ")})</small>
                         <hr style="border:1px dashed #eee; margin:10px 0;">
                         <p style="margin:0; color:#2980b9; font-weight:bold;">🌙 JATAH SHIFT MALAM: ${hMalam} Kamar</p>
-                        <small style="color:#777; font-size:9px;">(${listMalam.join(", ")})</small>
+                        <small style="color:#777; font-size:11px;">(${listMalam.join(", ")})</small>
                         <hr style="border:1px dashed #ccc;">
                         <h2 style="margin:0; color:var(--primary);">TOTAL HARI INI: ${totalOkupansi} Kamar</h2>
                     </div><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:15px; justify-content:center;">🔙 Kembali</div></div>`;
         }
+
 
         else if (state === "TUTUP_BUKU") {
             var h_masuk = bukuKas.harian.uang || 0; var h_keluar = bukuKas.harian.keluar || 0; var h_total = h_masuk - h_keluar;
