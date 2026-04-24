@@ -94,7 +94,7 @@
     const dataHotel = [
         {tipe: "Single", kelas: "Standard", nomor: ["2a","3a","4a","5a","6a","7a","8a","9a","10a","11a","11b"], harga: 300000},
         {tipe: "Twin", kelas: "Standard", nomor: ["2b","3b","4b","5b","6b","7b","8b","9b","10b"], harga: 300000},
-        {tipe: "Single", kelas: "Deluxe", nomor: ["1","12a","13a","14a","15a","15","12b","14b"], harga: 350000},
+        {tipe: "Single", kelas: "Deluxe", nomor: ["1a","12a","13a","14a","15a","12b","14b"], harga: 350000},
         {tipe: "Twin", kelas: "Deluxe", nomor: ["1b","13b","15b"], harga: 350000},
         {tipe: "Single", kelas: "Suite", nomor: ["4av","5av","6av","7av","8av","9av","10av","11av","6bv","7bv","8bv","9bv"], harga: 400000},
         {tipe: "Twin", kelas: "Suite", nomor: ["4bv","5bv"], harga: 400000},
@@ -585,22 +585,29 @@
             arsipTamu.slice().reverse().forEach(function(a) { out += `<tr><td><b>${a.room||'-'}</b></td><td>${a.nama}</td><td>${a.inv}</td><td>${a.jam_in}</td><td>${a.jam_out}</td><td>${a.vit}</td><td>${a.charge}</td></tr>`; });
             out += `</table></div><div class="btn-mewah" onclick="pindahHalaman('ARSIP')" style="margin-top:15px; justify-content:center;">🔙 Kembali</div></div>`;
         }
-        else if (state === "ARSIP_LAPORAN") {
+                else if (state === "ARSIP_LAPORAN") {
             out += `<div class="card"><span class="section-title" style="color:#34495e;">📋 Arsip Laporan Harian Permanen</span>`;
             if (!arsipLaporanHarian || arsipLaporanHarian.length === 0) out += `<p style="text-align:center; opacity:0.5;">Belum ada arsip laporan tersimpan.</p>`;
             else {
                 arsipLaporanHarian.slice().reverse().forEach(function(al) {
-                    out += `<div style="background:#f4f6f7; border:1px solid #ccc; border-radius:8px; padding:12px; margin-bottom:15px;">
-                                <b style="color:var(--primary); font-size:14px; display:block; text-align:center; margin-bottom:10px;">📅 TANGGAL: ${al.tgl}</b>
-                                <b style="color:#27ae60; font-size:12px;">☀️ SHIFT PAGI:</b>
-                                <div style="font-size:10px; background:#fff; padding:10px; border-radius:5px; margin:5px 0 15px; border:1px dashed #27ae60;">${al.lapPagi}</div>
-                                <b style="color:#34495e; font-size:12px;">🌙 SHIFT MALAM:</b>
-                                <div style="font-size:10px; background:#fff; padding:10px; border-radius:5px; margin:5px 0; border:1px dashed #34495e;">${al.lapMalam}</div>
+                    out += `<div style="background:#f4f6f7; border:1px solid #bdc3c7; border-radius:12px; padding:15px; margin-bottom:20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                                <div style="background:#2c3e50; color:#fff; padding:8px; border-radius:8px; text-align:center; font-weight:bold; font-size:14px; margin-bottom:15px;">📅 TANGGAL: ${al.tgl}</div>
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    <div style="background:#eafaf1; border:1px solid #27ae60; border-radius:8px; padding:12px;">
+                                        <b style="color:#27ae60; font-size:13px; border-bottom:2px solid #27ae60; display:block; padding-bottom:5px; margin-bottom:10px;">☀️ SHIFT PAGI</b>
+                                        <div style="font-size:11px; font-family:monospace; line-height:1.6; color:#2c3e50;">${al.lapPagi}</div>
+                                    </div>
+                                    <div style="background:#fdf2e9; border:1px solid #e67e22; border-radius:8px; padding:12px;">
+                                        <b style="color:#e67e22; font-size:13px; border-bottom:2px solid #e67e22; display:block; padding-bottom:5px; margin-bottom:10px;">🌙 SHIFT MALAM</b>
+                                        <div style="font-size:11px; font-family:monospace; line-height:1.6; color:#2c3e50;">${al.lapMalam}</div>
+                                    </div>
+                                </div>
                             </div>`;
                 });
             }
             out += `<div class="btn-mewah" onclick="pindahHalaman('ARSIP')" style="margin-top:15px; justify-content:center;">🔙 Kembali</div></div>`;
         }
+
         else if (state === "CATATAN") {
             out += `<div class="card"><span class="section-title" style="color:#f39c12;">📝 @. Catatan Shift & Sync Laci</span>
                 <textarea id="txt_catatan" class="form-control" style="height:250px; resize:vertical;" placeholder="Ketik memo antar shift di sini...">${catatanHotel}</textarea>
@@ -624,40 +631,58 @@
                 <button class="btn-submit" style="background:var(--orange)" onclick="prosesResto()">💾 Simpan & Catat Ke Kas</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }
-                else if (state === "TOTAL_KAMAR") {
+        else if (state === "TOTAL_KAMAR") {
             var hPagi = 0; var hMalam = 0;
-            var dCek = new Date(); if (dCek.getHours() < 7) { dCek.setDate(dCek.getDate() - 1); }
-            var tglPad = String(dCek.getDate()).padStart(2, '0');
-            var tglHariIni = String(dCek.getDate());
+            var listPagi = []; var listMalam = [];
+            var sudahDihitung = new Set(); // Senjata utama agar tidak ada selisih
 
-            function cekHariIni(tglStr) {
-                if(!tglStr) return false;
-                return tglStr.startsWith(tglPad + " ") || tglStr.startsWith(tglPad + "/") || tglStr.startsWith(tglPad + "-") ||
-                       tglStr.startsWith(tglHariIni + " ") || tglStr.startsWith(tglHariIni + "/") || tglStr.startsWith(tglHariIni + "-");
-            }
-
+            // 1. Hitung Kamar Terisi (Merah & Ungu)
             tamuIn.forEach(function(t) {
-                var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
-                if (!isBaru || (t.shift && t.shift.toLowerCase() === "pagi")) { hPagi++; } else { hMalam++; }
-            });
-
-            tamuOut.forEach(function(t) {
-                if (cekHariIni(t.jam_out_aktual)) {
-                    var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
-                    var shiftIn = (t.shift || "Pagi").toLowerCase();
-                    if (!isBaru || shiftIn === "pagi") { hPagi++; } else { hMalam++; }
+                if (!sudahDihitung.has(t.room)) {
+                    sudahDihitung.add(t.room);
+                    var sIn = (t.shift || "pagi").toLowerCase();
+                    if (sIn === "pagi") { hPagi++; listPagi.push(t.room); } 
+                    else { hMalam++; listMalam.push(t.room); }
                 }
             });
+
+            // 2. Hitung Kamar Kotor Kosong (Abu-abu VD)
+            kamarKotor.forEach(function(kmr) {
+                if (!sudahDihitung.has(kmr)) {
+                    sudahDihitung.add(kmr);
+                    // Cari tahu shift asalnya dari history checkout
+                    var lastTamu = [...tamuOut].reverse().find(a => String(a.room) === String(kmr));
+                    var sIn = lastTamu ? (lastTamu.shift || "pagi").toLowerCase() : "pagi";
+                    
+                    if (sIn === "pagi") { hPagi++; listPagi.push(kmr + "(VD)"); } 
+                    else { hMalam++; listMalam.push(kmr + "(VD)"); }
+                }
+            });
+
+            // (Blok Kamar Rusak sudah resmi dihapus dari sini)
 
             var totalOkupansi = hPagi + hMalam;
 
             out += `<div class="card"><span class="section-title">📊 Laporan Hunian Kamar</span>
                     <div style="background:#fff; padding:15px; border-radius:10px; border:2px solid var(--primary); text-align:center;">
-                        <p style="margin:0; color:#27ae60; font-weight:bold;">☀️ JATAH SHIFT PAGI: ${hPagi} Kamar</p>
-                        <p style="margin:5px 0; color:#2980b9; font-weight:bold;">🌙 JATAH SHIFT MALAM: ${hMalam} Kamar</p>
-                        <hr style="border:1px dashed #ccc;"><h2 style="margin:0; color:var(--primary);">TOTAL: ${totalOkupansi} Kamar</h2>
-                    </div><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:15px;">🔙 Kembali</div></div>`;
+                        <div style="margin-bottom:15px;">
+                            <p style="margin:0; color:#27ae60; font-weight:bold; font-size:12px;">☀️ JATAH SHIFT PAGI: ${hPagi} Kamar</p>
+                            <small style="color:#777; font-size:9px;">(${listPagi.join(", ")})</small>
+                        </div>
+                        <div style="margin-bottom:15px;">
+                            <p style="margin:0; color:#2980b9; font-weight:bold; font-size:12px;">🌙 JATAH SHIFT MALAM: ${hMalam} Kamar</p>
+                            <small style="color:#777; font-size:9px;">(${listMalam.join(", ")})</small>
+                        </div>
+                        <hr style="border:1px dashed #ccc;">
+                        <h2 style="margin:0; color:var(--primary); font-size:28px;">TOTAL: ${totalOkupansi} Kamar</h2>
+                    </div>
+                    <p style="font-size:9px; color:#e74c3c; margin-top:10px; text-align:center; font-style:italic;">
+                        *Cek daftar nomor di atas, jika ada yang kurang berarti data kamar tersebut belum masuk ke daftar Check-In atau Kotor. Kamar Rusak (Maintenance) tidak dihitung.
+                    </p>
+                    <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:15px; justify-content:center;">🔙 Kembali</div></div>`;
         }
+
+
 
         else if (state === "TUTUP_BUKU") {
             var h_masuk = bukuKas.harian.uang || 0; var h_keluar = bukuKas.harian.keluar || 0; var h_total = h_masuk - h_keluar;
@@ -1015,10 +1040,21 @@
             var sub = (baseHarga * parseInt(defMalam)) + (parseInt(defExtrabed)*150000);
             var tagihanAwal = sub - dpPending; if(isEarly) tagihanAwal += 100000; if(tagihanAwal < 0) tagihanAwal = 0;
 
-            var infoRencanaTgl = (pdg && pdg.isLengkap && pdg.rencana_in && pdg.rencana_in !== "-") ? `<small style="color:var(--orange); font-weight:bold; display:block; margin-top:5px;">*(Rencana Awal Reservasi: ${pdg.rencana_in})*</small>` : "";
+                        var infoRencanaTgl = (pdg && pdg.isLengkap && pdg.rencana_in && pdg.rencana_in !== "-") ? `<small style="color:var(--orange); font-weight:bold; display:block; margin-top:5px;">*(Rencana Awal Reservasi: ${pdg.rencana_in})*</small>` : "";
+
+            // --- TAMBAHAN UNTUK SETTING KALENDER ---
+            var now = new Date();
+            var yyyy = now.getFullYear();
+            var mm = String(now.getMonth() + 1).padStart(2, '0');
+            var dd = String(now.getDate()).padStart(2, '0');
+            var hh = String(now.getHours()).padStart(2, '0');
+            var min = String(now.getMinutes()).padStart(2, '0');
+            var valDateTime = yyyy + "-" + mm + "-" + dd + "T" + hh + ":" + min;
+            // ---------------------------------------
 
             out += `<div class="card"><span class="section-title">📝 Formulir Check-In - Kamar ${tempRoom}</span>
                 <div style="background:#f4f6f7; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #ddd;">
+
                     <b style="font-size:11px; color:var(--primary); margin-bottom:10px; display:block;">👤 BIODATA TAMU</b>
                     <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" id="f_nama" class="form-control" value="${defNama}"></div>
                     <div class="form-group"><label class="form-label">Alamat / Asal Kota</label><input type="text" id="f_alamat" class="form-control" value="${defAlamat}" placeholder="Contoh: Medan"></div>
@@ -1027,7 +1063,7 @@
                 </div>
                 <div style="background:#f4f6f7; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #ddd;">
                     <b style="font-size:11px; color:var(--primary); margin-bottom:10px; display:block;">🧳 DATA MENGINAP</b>
-                    <div class="form-group"><label class="form-label">Tanggal & Jam Masuk (Bisa Diedit)</label><input type="text" id="f_tgl_in" class="form-control" value="${getTanggalSekarang()}">${infoRencanaTgl}</div>
+                    <div class="form-group"><label class="form-label">Tanggal & Jam Masuk (Bisa Diedit 1 per 1)</label><input type="datetime-local" id="f_tgl_in" class="form-control" value="${valDateTime}" style="font-weight:bold; color:var(--primary);">${infoRencanaTgl}</div>
                     <div style="display:flex; gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Malam</label><input type="tel" id="f_malam" class="form-control" value="${defMalam}" oninput="updateTotalCheckIn()"></div><div class="form-group" style="flex:1;"><label class="form-label">Extra Bed</label><select id="f_extrabed" class="form-control" onchange="updateTotalCheckIn()"><option value="0" ${defExtrabed==='0'?'selected':''}>0</option><option value="1" ${defExtrabed==='1'?'selected':''}>1</option><option value="2" ${defExtrabed==='2'?'selected':''}>2</option></select></div></div>
                     <div style="display:flex; gap:10px;"><div class="form-group" style="flex:1;"><label class="form-label">Datang Dengan</label><input type="text" id="f_transport" class="form-control" value="${defTransport}" placeholder="Mobil/Motor..."></div><div class="form-group" style="flex:1;"><label class="form-label">Tujuan (Trip)</label><select id="f_trip" class="form-control"><option value="Travelling" ${defTrip==='Travelling'?'selected':''}>Travelling</option><option value="Meeting" ${defTrip==='Meeting'?'selected':''}>Meeting</option><option value="Invitation" ${defTrip==='Invitation'?'selected':''}>Invitation</option><option value="Exhibition" ${defTrip==='Exhibition'?'selected':''}>Exhibition</option><option value="Leisure" ${defTrip==='Leisure'?'selected':''}>Leisure</option><option value="Convention" ${defTrip==='Convention'?'selected':''}>Convention</option></select></div></div>
                     <div class="form-group" style="background:#eafaf1; padding:10px; border-radius:8px; border: 1px solid var(--green);"><label class="form-label" style="display:flex; align-items:center; gap:10px; margin-bottom:0; cursor:pointer;"><input type="checkbox" id="f_early" ${isEarly ? "checked" : ""} style="width:20px; height:20px;" onchange="updateTotalCheckIn()"> <span><b>Early Check-In (+Rp 100k)</b><br><small style="color:#666; text-transform:none;">Otomatis aktif jika antara jam 05.00 - 07.59 pagi</small></span></label></div>
@@ -1204,14 +1240,33 @@
         d.transport = document.getElementById('f_transport').value || "-"; 
         d.trip = document.getElementById('f_trip').value || "-";
         
-        var jam = new Date().getHours(); d.shift = (jam >= 7 && jam < 17) ? "Pagi" : "Malam"; var bucketShift = d.shift.toLowerCase();
-        
+        // --- AMBIL JAM & TANGGAL DARI INPUT KALENDER ---
         var inputTglIn = document.getElementById('f_tgl_in');
-        d.tgl = inputTglIn ? inputTglIn.value : getTanggalSekarang(); 
+        var dateObj = new Date(); // Default jam asli saat ini
+        if (inputTglIn && inputTglIn.value) { dateObj = new Date(inputTglIn.value); }
+
+        var jam = dateObj.getHours(); 
+        d.shift = (jam >= 7 && jam < 17) ? "Pagi" : "Malam"; 
+        var bucketShift = d.shift.toLowerCase();
+        
+        // --- FORMAT RAPI: 24-Apr-2026, 09.01 ---
+        var tglHari = String(dateObj.getDate()).padStart(2, '0');
+        var bulanArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+        var tglBln = bulanArr[dateObj.getMonth()];
+        var tglThn = dateObj.getFullYear();
+        var tglJam = String(dateObj.getHours()).padStart(2, '0');
+        var tglMnt = String(dateObj.getMinutes()).padStart(2, '0');
+        
+        d.tgl = tglHari + "-" + tglBln + "-" + tglThn + ", " + tglJam + "." + tglMnt;
         
         lastInv++; d.inv = String(lastInv).padStart(4, '0');
-        var dateOut = new Date(); if (jam >= 0 && jam < 7) { dateOut.setDate(dateOut.getDate() - 1); }
-        dateOut.setDate(dateOut.getDate() + parseInt(d.malam)); d.tgl_out = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        // --- TANGGAL KELUAR MENGIKUTI TANGGAL YANG DIEDIT ---
+        var dateOut = new Date(dateObj); 
+        if (jam >= 0 && jam < 7) { dateOut.setDate(dateOut.getDate() - 1); }
+        dateOut.setDate(dateOut.getDate() + parseInt(d.malam)); 
+        d.tgl_out = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
         
         if(d.shift === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = d.inv; bukuKas.harian.billPagi.akhir = d.inv; bukuKas.harian.billPagi.count++; } 
         else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = d.inv; bukuKas.harian.billMalam.akhir = d.inv; bukuKas.harian.billMalam.count++; }
@@ -1310,23 +1365,30 @@
                    tglStr.startsWith(tglHariIni + " ") || tglStr.startsWith(tglHariIni + "/") || tglStr.startsWith(tglHariIni + "-");
         }
 
-        var daftarKamar = []; var kamarAktif = []; var kamarBB = []; var outVD = [];       
+           var daftarKamar = []; var kamarAktif = []; var kamarBB = []; var outVD = [];       
 
         tamuIn.forEach(function(t) {
             var isBaru = cekHariIni(t.tgl_hotel) || cekHariIni(t.tgl);
             var isLama = !isBaru;
+            var sIn = (t.shift || "pagi").toLowerCase();
+            
+            // Ikon mempertahankan asal usul tamu, ditambah jabat tangan (nyambung) jika sudah beda hari
+            var ikon = isLama ? (sIn === "pagi" ? "🤝🌞" : "🤝🌙") : (sIn === "pagi" ? "🌞" : "🌙");
+
+            // Kedua shift akan melaporkan TAMU LAMA sebagai bukti kamar tersebut aman (sedang dihuni)
             if (s === "pagi") {
-                if (isLama || (t.shift && t.shift.toLowerCase() === "pagi")) { 
-                    daftarKamar.push(t.room + (isLama ? "🤝🌞" : "🌞")); kamarAktif.push(t.room);
+                if (sIn === "pagi" || isLama) { 
+                    daftarKamar.push(t.room + ikon); kamarAktif.push(t.room);
                     if (t.bayar === "BELUM BAYAR" || t.bayar === "BB" || t.bayar === "D.Pending") kamarBB.push(t.room);
                 }
             } else {
-                if (!isLama && t.shift && t.shift.toLowerCase() === "malam") { 
-                    daftarKamar.push(t.room + "🌙"); kamarAktif.push(t.room);
+                if (sIn === "malam" || isLama) { 
+                    daftarKamar.push(t.room + ikon); kamarAktif.push(t.room);
                     if (t.bayar === "BELUM BAYAR" || t.bayar === "BB" || t.bayar === "D.Pending") kamarBB.push(t.room);
                 }
             }
         });
+
 
         tamuOut.forEach(function(t) {
             if (cekHariIni(t.jam_out_aktual)) {
