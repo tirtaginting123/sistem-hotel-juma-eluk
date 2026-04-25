@@ -144,17 +144,16 @@
                 arsipLaporanHarian = toArr(cloudData.arsipLaporanHarian);
                 riwayatHarian = toArr(cloudData.riwayatHarian);
                 
-                // Buat Arsip Laporan Sama Persis (Pagi & Malam)
-                var lapPagi = generateLaporanShift("Pagi", bukuKas.harian.pagi);
-                var lapMalam = generateLaporanShift("Malam", bukuKas.harian.malam);
-                var divP = document.createElement("div"); divP.innerHTML = lapPagi;
-                var divM = document.createElement("div"); divM.innerHTML = lapMalam;
+                // Buat Arsip Laporan Kemas & Baca Input Manual
+                var teksPagi = generateLaporanShift("Pagi", bukuKas.harian.pagi, true);
+                var teksMalam = generateLaporanShift("Malam", bukuKas.harian.malam, true);
                 
                 arsipLaporanHarian.push({ 
                     tgl: bukuKas.harian.tgl, 
-                    lapPagi: divP.innerText.replace("📋 COPY KE WHATSAPP", "").trim().replace(/\n/g, "<br>"), 
-                    lapMalam: divM.innerText.replace("📋 COPY KE WHATSAPP", "").trim().replace(/\n/g, "<br>") 
+                    lapPagi: teksPagi, 
+                    lapMalam: teksMalam 
                 });
+
 
                 // Tambah Uang Ke Laporan Bulanan
                 var h = bukuKas.harian; var b = bukuKas.bulanan || {};
@@ -1203,21 +1202,20 @@
                 simpanKeCloud(); if(state === "DAFTAR_TAMU" || state === "RINGKASAN_KAMAR" || state === "HASIL_CARI") { renderScreen(); } else { pindahHalaman("MENU"); }
             }
         }
-            else if (val === "RESET_HARIAN") { 
-        var s = prompt("Sandi Tutup Buku Global (jumaeluk1234):"); 
-        if(s && s.trim() === "jumaeluk1234") { 
-            // 1. Simpan Teks ke Arsip Permanen (Menu 9)
-            var lapPagi = generateLaporanShift("Pagi", bukuKas.harian.pagi);
-            var lapMalam = generateLaporanShift("Malam", bukuKas.harian.malam);
-            var divP = document.createElement("div"); divP.innerHTML = lapPagi;
-            var divM = document.createElement("div"); divM.innerHTML = lapMalam;
+        else if (val === "RESET_HARIAN") { 
+            var s = prompt("Sandi Tutup Buku Global (jumaeluk1234):"); 
+            if(s && s.trim() === "jumaeluk1234") { 
+                // 1. Simpan Teks ke Arsip Permanen dengan Format WhatsApp Kemas
+                var teksPagi = generateLaporanShift("Pagi", bukuKas.harian.pagi, true);
+                var teksMalam = generateLaporanShift("Malam", bukuKas.harian.malam, true);
 
-            if(!arsipLaporanHarian) arsipLaporanHarian = [];
-            arsipLaporanHarian.push({ 
-                tgl: bukuKas.harian.tgl, 
-                lapPagi: divP.innerText.replace("📋 COPY WA", "").trim().replace(/\n/g, "<br>"), 
-                lapMalam: divM.innerText.replace("📋 COPY WA", "").trim().replace(/\n/g, "<br>") 
-            });
+                if(!arsipLaporanHarian) arsipLaporanHarian = [];
+                arsipLaporanHarian.push({ 
+                    tgl: bukuKas.harian.tgl, 
+                    lapPagi: teksPagi, 
+                    lapMalam: teksMalam 
+                });
+
 
             // 2. Akumulasi ke Laporan Bulanan (Lengkap!)
             var h = bukuKas.harian; var b = bukuKas.bulanan;
