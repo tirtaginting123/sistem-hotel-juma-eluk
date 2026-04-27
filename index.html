@@ -666,12 +666,12 @@
                 <button class="btn-submit" style="background:var(--orange)" onclick="prosesResto()">💾 Simpan & Catat Ke Kas</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }
-            else if (state === "TOTAL_KAMAR") {
+            
+        else if (state === "TOTAL_KAMAR") {
             var dCek = new Date(); if (dCek.getHours() < 7) { dCek.setDate(dCek.getDate() - 1); }
             var bulanArr = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             var headerTgl = String(dCek.getDate()).padStart(2, '0') + " " + bulanArr[dCek.getMonth()] + " " + dCek.getFullYear();
 
-            // FUNGSI PENDETEKSI WAKTU MUTLAK (Anti Nyasar Jam Subuh)
             function isKamarBaru(tglStr) {
                 if (!tglStr || tglStr === "-") return false;
                 var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
@@ -688,7 +688,6 @@
 
             var outHTML = `<div class="card"><span class="section-title">🧮 Rekap Kamar Terjual</span>
                            <div style="background:#fff; padding:15px; border-radius:10px; border:2px solid var(--primary); font-family:monospace; font-size:13px; line-height:1.6; white-space:pre-wrap; color:#000;">`;
-            
             outHTML += `🔥 ${headerTgl} 🔥\n\n`;
 
             var semuaKamar = [];
@@ -699,8 +698,7 @@
                 var numX = parseInt(x.match(/\d+/)[0]), numY = parseInt(y.match(/\d+/)[0]);
                 var letX = x.replace(/\d+/, ''), letY = y.replace(/\d+/, '');
                 var ix = orderArr.indexOf(letX), iy = orderArr.indexOf(letY);
-                if (ix !== iy) return ix - iy;
-                return numX - numY;
+                if (ix !== iy) return ix - iy; return numX - numY;
             });
 
             var totalPagi = 0, totalMalam = 0;
@@ -718,13 +716,21 @@
                 if (tamu) {
                     var isBaru = isKamarBaru(tamu.tgl_hotel || tamu.tgl);
                     var bs = (tamu.shift || "pagi").toLowerCase();
-                    if (!isBaru) bs = "pagi"; 
+                    
+                    // 🚨 MASA TENGGANG (GRACE PERIOD) 07.00 - 12.00 🚨
+                    if (!isBaru) {
+                        var dNow = new Date(); var adaExtend = false;
+                        if (tamu.history_bayar) tamu.history_bayar.forEach(function(hb){ if (isKamarBaru(hb.tgl)) adaExtend = true; });
+                        var outPagi = isOutToday && (tamu.shift_out || "pagi").toLowerCase() === "pagi";
+                        
+                        // Otomatis jatuh ke Pagi HANYA jika lewat jam 12 siang, bayar extend, atau checkout di shift pagi
+                        if (dNow.getHours() >= 12 || adaExtend || outPagi) { bs = "pagi"; }
+                    } 
                     
                     var emot = (bs === "pagi") ? "👍🏽" : "❤️";
                     if (bs === "pagi") totalPagi++; else totalMalam++;
 
-                    var inv = tamu.inv || "-";
-                    var detailBayar = "";
+                    var inv = tamu.inv || "-"; var detailBayar = "";
                     
                     if (isBaru) {
                         var nominal = parseInt(tamu.sudah_dibayar) || 0;
@@ -734,16 +740,11 @@
                     } else {
                         detailBayar = "nyb";
                         var bayarHariIni = 0; var viaHariIni = "";
-                        
                         if (tamu.history_bayar) {
                             tamu.history_bayar.forEach(function(hb) {
-                                if (isKamarBaru(hb.tgl)) { 
-                                    bayarHariIni += parseInt(hb.nominal)||0; 
-                                    viaHariIni = (hb.via||"").toLowerCase(); 
-                                }
+                                if (isKamarBaru(hb.tgl)) { bayarHariIni += parseInt(hb.nominal)||0; viaHariIni = (hb.via||"").toLowerCase(); }
                             });
                         }
-                        
                         if (bayarHariIni > 0) detailBayar += " " + (bayarHariIni/1000) + " " + viaHariIni;
                         else detailBayar += " day " + (tamu.malam || 1) + " lunas";
                     }
