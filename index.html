@@ -732,8 +732,7 @@
                 <button class="btn-submit" style="background:var(--orange)" onclick="prosesResto()">💾 Simpan & Catat Ke Kas</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }    
-                else if (state === "TOTAL_KAMAR") {
-            // FUNGSI WAKTU TAHAN BANTING (Anti Error Spasi/Strip)
+                        else if (state === "TOTAL_KAMAR") {
             function isKamarBaru(tglStr) {
                 if (!tglStr || tglStr === "-") return false;
                 var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
@@ -755,17 +754,17 @@
                 <div style="background:#fff; padding:15px; border-radius:10px; border:2px solid var(--primary); font-family:monospace; font-size:13px; line-height:1.6; white-space:pre-wrap; color:#000;">🔥 ${headerTgl} 🔥\n\n`;
 
             var hitungPagi = 0, hitungMalam = 0, hitungVD = 0;
-            var jamSekarang = new Date().getHours();
 
-            // 1. TAMPILKAN TAMU IN SEPERTI BIASA (Sangat Aman)
+            // 1. TAMPILKAN TAMU IN (SELALU TAMPIL 24 JAM)
             tamuIn.forEach(function(t) {
                 var baru = isKamarBaru(t.tgl_hotel || t.tgl);
                 var adaExtend = false;
                 if (t.history_bayar) t.history_bayar.forEach(function(h){ if (isKamarBaru(h.tgl)) adaExtend = true; });
                 
-                var tampil = false; var shiftKamar = "pagi";
-                if (baru) { tampil = true; shiftKamar = (t.shift || "pagi").toLowerCase(); } 
-                else if (jamSekarang >= 12 || adaExtend) { tampil = true; shiftKamar = "pagi"; } 
+                // 🔥 PERUBAHAN: JANGAN PERNAH SEMBUNYIKAN TAMU LAMA 🔥
+                var tampil = true; 
+                var shiftKamar = "pagi";
+                if (baru) { shiftKamar = (t.shift || "pagi").toLowerCase(); } 
 
                 if (tampil) {
                     if (shiftKamar === "pagi") hitungPagi++; else hitungMalam++;
@@ -779,7 +778,7 @@
                 }
             });
 
-            // 2. TEMPELKAN KAMAR VD DI BAWAH (Sesuai Ide Bosku)
+            // 2. TEMPELKAN KAMAR VD DI BAWAH
             var listOutTampil = [];
             kamarKotor.forEach(function(kmr) {
                 var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr) && isKamarBaru(x.jam_out_aktual));
@@ -802,7 +801,6 @@
             
             out += htmlUtama;
         }
-
 
         else if (state === "TUTUP_BUKU") {
             var h_masuk = bukuKas.harian.uang || 0; var h_keluar = bukuKas.harian.keluar || 0; var h_total = h_masuk - h_keluar;
@@ -1532,10 +1530,9 @@
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
     window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
 
-            function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
+                function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
         var s = shiftLabel.toLowerCase();
         
-        // FUNGSI WAKTU TAHAN BANTING (Sama dengan Menu 7)
         function isKamarBaru(tglStr) {
             if (!tglStr || tglStr === "-") return false;
             var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
@@ -1558,7 +1555,6 @@
         var outVDList = [];
         var hitungVD = 0;
         
-        var jamSekarang = new Date().getHours();
         var safeTamuIn = (typeof tamuIn !== 'undefined' && tamuIn) ? tamuIn : [];
         var safeTamuOut = (typeof tamuOut !== 'undefined' && tamuOut) ? tamuOut : [];
         var safeKamarKotor = (typeof kamarKotor !== 'undefined' && kamarKotor) ? kamarKotor : [];
@@ -1569,9 +1565,10 @@
             var adaExtend = false;
             if (t.history_bayar) t.history_bayar.forEach(function(h){ if (isKamarBaru(h.tgl)) adaExtend = true; });
 
-            var tampil = false; var shiftKamar = "pagi";
-            if (baru) { tampil = true; shiftKamar = (t.shift || "pagi").toLowerCase(); }
-            else if (jamSekarang >= 12 || adaExtend) { tampil = true; shiftKamar = "pagi"; }
+            // 🔥 PERUBAHAN: TAMU LAMA JANGAN PERNAH DIHILANGKAN 🔥
+            var tampil = true; 
+            var shiftKamar = "pagi";
+            if (baru) { shiftKamar = (t.shift || "pagi").toLowerCase(); }
 
             if (tampil && shiftKamar === s) {
                 var ket = baru ? (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase()) : "nyb";
@@ -1628,6 +1625,16 @@
         // --- 4. AMBIL UANG LANGSUNG DARI LACI KASIR (100% PRESISI) ---
         var bShift = (bukuKas && bukuKas.harian && bukuKas.harian[s]) ? bukuKas.harian[s] : null;
 
+        // --- FITUR BYPASS TOMBOL RAHASIA UNTUK KAMAR ---
+        if (bShift) {
+            if (bShift.manual_kamar && bShift.manual_kamar.trim() !== "") {
+                finalKamarStr = "<br>" + bShift.manual_kamar.replace(/,/g, "<br>"); // Ubah koma jadi enter
+            }
+            if (bShift.manual_cin && bShift.manual_cin !== "") finalCIN = bShift.manual_cin;
+            if (bShift.manual_vd && bShift.manual_vd !== "") finalVD = bShift.manual_vd;
+        }
+        // -----------------------------------------------
+
         var uangExtBed = (bShift ? (bShift.extrabed_in || 0) : 0) * 150000;
         var rCash = bShift ? (bShift.room_cash || 0) : 0;
         var rTf = bShift ? (bShift.room_tf || 0) : 0;
@@ -1666,8 +1673,6 @@
 
         return `<div style="background:#fef9e7; padding:15px; border-radius:10px; border:2px solid #27ae60; font-family:monospace; font-size:13px; line-height: 1.6; margin-bottom:20px;"><button onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText.replace(/<br>/g, '\\n')); alert('✅ Laporan WA berhasil di-copy!')" style="margin-bottom:15px; padding:12px; background:#25D366; color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer; width:100%;">📋 COPY KE WHATSAPP</button><div style="user-select:all; word-wrap:break-word;">${textBlock}</div></div>`;
     }
-
-
 
 </script>
 </body>
