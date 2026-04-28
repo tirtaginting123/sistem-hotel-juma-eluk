@@ -733,7 +733,7 @@
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }    
          
-                else if (state === "TOTAL_KAMAR") {
+                        else if (state === "TOTAL_KAMAR") {
             function isKamarBaru(tglStr) {
                 if (!tglStr || tglStr === "-") return false;
                 var op = new Date(); if (op.getHours() < 7) op.setDate(op.getDate() - 1);
@@ -757,9 +757,12 @@
             var headerTgl = String(dOp.getDate()).padStart(2, '0') + " " + ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][dOp.getMonth()] + " " + dOp.getFullYear();
 
             var htmlUtama = `<div class="card"><span class="section-title">🧮 Rekap Kamar Terjual</span>
-                <div style="background:#fff; padding:15px; border-radius:10px; border:2px solid var(--primary); font-family:monospace; font-size:13px; line-height:1.6; white-space:pre-wrap; color:#000;">🔥 ${headerTgl} 🔥\n\n`;
+                <div style="background:#fff; padding:15px; border-radius:10px; border:2px solid var(--primary); font-family:monospace; font-size:13px; line-height:1.6; white-space:pre-wrap; color:#000;">`;
+            
+            htmlUtama += `🔥 ${headerTgl} 🔥\n\n`;
 
             var hitungPagi = 0, hitungMalam = 0, hitungVD = 0;
+            var vdPagi = 0, vdMalam = 0; // Counter baru untuk VD per shift
             var jamSekarang = new Date().getHours();
 
             var semuaKamar = [];
@@ -791,14 +794,14 @@
                     }
 
                     if (baru) {
+                        // 🔴 TAMU BARU
                         ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
                         if (shiftKamar === "pagi") hitungPagi++; else hitungMalam++;
                         teksMerah += kmr + ` ✅ ${ket} ${t.inv||"-"} ${(shiftKamar === "pagi") ? "👍🏽" : "❤️"}\n`;
                         cMerah++;
                     } else {
-                        // 🔥 MUTLAK: BEGITU GANTI HARI, TAMU LAMA LANGSUNG JADI SHIFT PAGI TANPA SYARAT 🔥
+                        // 🟣 TAMU LAMA (MUTLAK PAGI)
                         shiftKamar = "pagi"; 
-                        
                         if (jamSekarang >= 12 || adaExtend) {
                             ket = "nyb";
                             if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
@@ -811,8 +814,9 @@
                     }
                 } 
                 else if (isKotor) {
+                    // ⚪ KAMAR KOTOR (VD)
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
-                    hitungVD++; 
+                    hitungVD++;
                     
                     var sOut = "pagi";
                     var ketOut = "nyb";
@@ -822,9 +826,12 @@
                         sOut = (lastT.shift || "pagi").toLowerCase();
                         invOut = lastT.inv || "-";
 
-                        // 🔥 KUNCI BARU: KALAU TAMU YANG CHECK OUT ADALAH TAMU LAMA, VD-NYA WAJIB MILIK PAGI 🔥
+                        // Logika Tamu Lama Check-Out masuk Pagi
                         var isBaruVD = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
                         if (!isBaruVD) sOut = "pagi";
+                        
+                        // Hitung VD per shift untuk rincian bawah
+                        if (sOut === "pagi") vdPagi++; else vdMalam++;
                         
                         ketOut = isKamarBaru(lastT.tgl_hotel || lastT.tgl) ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
                         if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl) && lastT.history_bayar) {
@@ -832,6 +839,8 @@
                             lastT.history_bayar.forEach(function(h) { if(isKamarBaru(h.tgl)){ adaExtOut=true; hvO += parseInt(h.nominal); vvO = (h.via||"").toLowerCase(); }});
                             if(adaExtOut) ketOut += " " + (hvO/1000) + " " + vvO; else ketOut += " day " + (lastT.malam || 1) + " lunas";
                         } else if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl)) { ketOut += " day " + (lastT.malam || 1) + " lunas"; }
+                    } else {
+                        vdPagi++; // Default jika tidak ada history
                     }
 
                     teksAbu += kmr + ` ✅ ${ketOut} ${invOut} ${(sOut === "pagi") ? "👍🏽" : "❤️"} (OUT - VD)\n`;
@@ -843,14 +852,14 @@
             if (cUngu > 0) htmlUtama += "<b>🟣 TAMU LAMA (STAYOVER SEMALAM):</b>\n" + teksUngu + "\n";
             if (cAbu > 0) htmlUtama += "<b>⚪ KAMAR KOTOR (VD):</b>\n" + teksAbu;
 
-            htmlUtama += `\n<hr style="border:1px dashed #ccc;"><b>☀️ Total Pagi: ${hitungPagi} | 🌙 Total Malam: ${hitungMalam}</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD} Kamar</b>\n<b>🔴 Kamar check in hari ini: ${cMerah}</b>\n<b>🟣 Kamar check in kemarin: ${cUngu}</b>`;
+            // RINCIAN TOTAL DENGAN TAMBAHAN VD PER SHIFT
+            htmlUtama += `\n<hr style="border:1px dashed #ccc;"><b>☀️ Total Pagi: ${hitungPagi} | 🌙 Total Malam: ${hitungMalam}</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD} Kamar</b>\n<b>🔴 Kamar check in hari ini: ${cMerah}</b>\n<b>🟣 Kamar check in kemarin: ${cUngu}</b>\n<b>☀️ Kamar vd dari sift pagi: ${vdPagi}</b>\n<b>🌙 Kamar vd dari sift malam: ${vdMalam}</b>`;
             
             htmlUtama += `<br><button onclick="navigator.clipboard.writeText(this.parentElement.innerText.replace(/🔙 Kembali/g, '')); alert('✅ Rekap Kamar Ter-Copy!')" style="margin-top:10px; padding:12px; background:#27ae60; color:#fff; border:none; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">📋 COPY REKAP KE WA</button></div>`;
             htmlUtama += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 KEMBALI KE MENU UTAMA</div></div>`;
             
             out += htmlUtama;
         }
-
 
 
         else if (state === "TUTUP_BUKU") {
