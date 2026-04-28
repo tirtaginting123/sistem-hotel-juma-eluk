@@ -733,7 +733,7 @@
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }    
          
-        else if (state === "TOTAL_KAMAR") {
+                else if (state === "TOTAL_KAMAR") {
             function isKamarBaru(tglStr) {
                 if (!tglStr || tglStr === "-") return false;
                 var op = new Date(); if (op.getHours() < 7) op.setDate(op.getDate() - 1);
@@ -796,8 +796,10 @@
                         teksMerah += kmr + ` ✅ ${ket} ${t.inv||"-"} ${(shiftKamar === "pagi") ? "👍🏽" : "❤️"}\n`;
                         cMerah++;
                     } else {
+                        // 🔥 MUTLAK: BEGITU GANTI HARI, TAMU LAMA LANGSUNG JADI SHIFT PAGI TANPA SYARAT 🔥
+                        shiftKamar = "pagi"; 
+                        
                         if (jamSekarang >= 12 || adaExtend) {
-                            shiftKamar = "pagi"; // 🔥 KUNCI PRESISI: TAMU LAMA RESMI JADI SHIFT PAGI
                             ket = "nyb";
                             if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
                         } else {
@@ -810,7 +812,7 @@
                 } 
                 else if (isKotor) {
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
-                    hitungVD++; // 🔥 VD HANYA DIHITUNG DI SINI, TIDAK MASUK TOTAL PAGI/MALAM LAGI
+                    hitungVD++; 
                     
                     var sOut = "pagi";
                     var ketOut = "nyb";
@@ -819,6 +821,10 @@
                     if (lastT) {
                         sOut = (lastT.shift || "pagi").toLowerCase();
                         invOut = lastT.inv || "-";
+
+                        // 🔥 KUNCI BARU: KALAU TAMU YANG CHECK OUT ADALAH TAMU LAMA, VD-NYA WAJIB MILIK PAGI 🔥
+                        var isBaruVD = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
+                        if (!isBaruVD) sOut = "pagi";
                         
                         ketOut = isKamarBaru(lastT.tgl_hotel || lastT.tgl) ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
                         if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl) && lastT.history_bayar) {
@@ -844,6 +850,7 @@
             
             out += htmlUtama;
         }
+
 
 
         else if (state === "TUTUP_BUKU") {
@@ -1575,7 +1582,7 @@
     window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
 
                   
-    function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
+        function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false) {
         var s = shiftLabel.toLowerCase();
         
         function isKamarBaru(tglStr) {
@@ -1637,16 +1644,17 @@
                 if (baru) {
                     ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
                 } else {
+                    // 🔥 MUTLAK: BEGITU GANTI HARI, TAMU LAMA LANGSUNG JADI SHIFT PAGI TANPA SYARAT 🔥
+                    shiftKamar = "pagi"; 
+                    
                     if (jamSekarang >= 12 || adaExtend) {
                         ket = "nyb"; 
-                        shiftKamar = "pagi"; // 🔥 TAMU LAMA OTOMATIS JADI SHIFT PAGI 🔥
                         if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
                     } else {
                         ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
                     }
                 }
 
-                // 🔥 FILTER KUNCI: HANYA MASUK JIKA SHIFT COCOK DENGAN LAPORAN YANG DIBUKA 🔥
                 if (shiftKamar === s) {
                     if (baru) listMerah.push(kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️"));
                     else listUngu.push(kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️"));
@@ -1655,22 +1663,29 @@
             } 
             else if (isKotor) {
                 var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
-                if (lastT) {
-                    var sOut = (lastT.shift || "pagi").toLowerCase();
-                    
-                    // 🔥 FILTER KUNCI: VD JUGA HARUS SESUAI SHIFT MASUKNYA 🔥
-                    if (sOut === s) {
-                        var invOut = lastT.inv || "-";
-                        var ketOut = isKamarBaru(lastT.tgl_hotel || lastT.tgl) ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
-                        if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl) && lastT.history_bayar) {
-                            var hvO = 0, vvO = "", adaExtOut = false;
-                            lastT.history_bayar.forEach(function(h) { if(isKamarBaru(h.tgl)){ adaExtOut=true; hvO += parseInt(h.nominal); vvO = (h.via||"").toLowerCase(); }});
-                            if(adaExtOut) ketOut += " " + (hvO/1000) + " " + vvO; else ketOut += " day " + (lastT.malam || 1) + " lunas";
-                        } else if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl)) { ketOut += " day " + (lastT.malam || 1) + " lunas"; }
+                var sOut = "pagi";
+                var ketOut = "nyb";
+                var invOut = "-";
 
-                        listAbu.push(kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + " (OUT - VD)");
-                        if (lastT.bayar === "D.Pending" || lastT.bayar === "BELUM BAYAR") { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
-                    }
+                if (lastT) {
+                    sOut = (lastT.shift || "pagi").toLowerCase();
+                    invOut = lastT.inv || "-";
+
+                    // 🔥 KUNCI BARU: KALAU TAMU YANG CHECK OUT ADALAH TAMU LAMA, VD-NYA WAJIB MILIK PAGI 🔥
+                    var isBaruVD = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
+                    if (!isBaruVD) sOut = "pagi";
+
+                    ketOut = isKamarBaru(lastT.tgl_hotel || lastT.tgl) ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
+                    if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl) && lastT.history_bayar) {
+                        var hvO = 0, vvO = "", adaExtOut = false;
+                        lastT.history_bayar.forEach(function(h) { if(isKamarBaru(h.tgl)){ adaExtOut=true; hvO += parseInt(h.nominal); vvO = (h.via||"").toLowerCase(); }});
+                        if(adaExtOut) ketOut += " " + (hvO/1000) + " " + vvO; else ketOut += " day " + (lastT.malam || 1) + " lunas";
+                    } else if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl)) { ketOut += " day " + (lastT.malam || 1) + " lunas"; }
+                }
+
+                if (sOut === s) {
+                    listAbu.push(kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + " (OUT - VD)");
+                    if (lastT && (lastT.bayar === "D.Pending" || lastT.bayar === "BELUM BAYAR")) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                 }
             }
         });
@@ -1732,7 +1747,6 @@
 
         return `<div style="background:#fef9e7; padding:15px; border-radius:10px; border:2px solid #27ae60; font-family:monospace; font-size:13px; line-height: 1.6; margin-bottom:20px;"><button onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText.replace(/<br>/g, '\\n')); alert('✅ Laporan WA berhasil di-copy!')" style="margin-bottom:15px; padding:12px; background:#25D366; color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer; width:100%;">📋 COPY KE WHATSAPP</button><div style="user-select:all; word-wrap:break-word;">${textBlock}</div></div>`;
     }
-
 
 </script>
 </body>
