@@ -732,8 +732,8 @@
                 <button class="btn-submit" style="background:var(--orange)" onclick="prosesResto()">💾 Simpan & Catat Ke Kas</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }    
-        
-                                else if (state === "TOTAL_KAMAR") {
+         
+        else if (state === "TOTAL_KAMAR") {
             function isKamarBaru(tglStr) {
                 if (!tglStr || tglStr === "-") return false;
                 var op = new Date(); if (op.getHours() < 7) op.setDate(op.getDate() - 1);
@@ -797,6 +797,7 @@
                         cMerah++;
                     } else {
                         if (jamSekarang >= 12 || adaExtend) {
+                            shiftKamar = "pagi"; // 🔥 KUNCI PRESISI: TAMU LAMA RESMI JADI SHIFT PAGI
                             ket = "nyb";
                             if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
                         } else {
@@ -809,7 +810,7 @@
                 } 
                 else if (isKotor) {
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
-                    hitungVD++; // HANYA DIHITUNG SEBAGAI VD, JANGAN MASUK HITUNGAN PAGI/MALAM LAGI
+                    hitungVD++; // 🔥 VD HANYA DIHITUNG DI SINI, TIDAK MASUK TOTAL PAGI/MALAM LAGI
                     
                     var sOut = "pagi";
                     var ketOut = "nyb";
@@ -843,8 +844,6 @@
             
             out += htmlUtama;
         }
-
-
 
 
         else if (state === "TUTUP_BUKU") {
