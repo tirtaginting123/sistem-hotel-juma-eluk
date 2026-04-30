@@ -892,12 +892,15 @@
                 }
             });
 
-            if (cMerah > 0) htmlUtama += "<b>🔴 TAMU BARU (CHECK-IN HARI INI):</b>\n" + teksMerah + "\n";
+                        if (cMerah > 0) htmlUtama += "<b>🔴 TAMU BARU (CHECK-IN HARI INI):</b>\n" + teksMerah + "\n";
             if (cUngu > 0) htmlUtama += "<b>🟣 TAMU LAMA (STAYOVER / NYAMBUNG):</b>\n" + teksUngu + "\n";
             if (cAbu > 0) htmlUtama += "<b>⚪ KAMAR KOTOR (VD):</b>\n" + teksAbu;
 
-            htmlUtama += `\n<hr style="border:1px dashed #ccc;"><b>☀️ Total Pagi: ${hitungPagi} | 🌙 Total Malam: ${hitungMalam}</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD} Kamar</b>\n<b>🔴 Kamar check in hari ini: ${cMerah}</b>\n<b>🟣 Kamar Nyambung (Sah): ${cUngu}</b>\n<b>☀️ Kamar vd dari sift pagi: ${vdPagi}</b>\n<b>🌙 Kamar vd dari sift malam: ${vdMalam}</b>`;
-            
+            // Variabel baru untuk menjumlahkan keseluruhan kamar terjual/nyambung
+            var totalKamarGabungan = hitungPagi + hitungMalam;
+
+            htmlUtama += `\n<hr style="border:1px dashed #ccc;"><b>☀️ Total Pagi: ${hitungPagi} | 🌙 Total Malam: ${hitungMalam}</b>\n<b>🏨 Total Kamar (Pagi + Malam): ${totalKamarGabungan} Kamar</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD} Kamar</b>\n<b>🔴 Kamar check in hari ini: ${cMerah}</b>\n<b>🟣 Kamar Nyambung (Sah): ${cUngu}</b>\n<b>☀️ Kamar vd dari sift pagi: ${vdPagi}</b>\n<b>🌙 Kamar vd dari sift malam: ${vdMalam}</b>`;
+
             htmlUtama += `<br><button onclick="navigator.clipboard.writeText(this.parentElement.innerText.replace(/🔙 Kembali/g, '')); alert('✅ Rekap Kamar Ter-Copy!')" style="margin-top:10px; padding:12px; background:#27ae60; color:#fff; border:none; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">📋 COPY REKAP KE WA</button></div>`;
             htmlUtama += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 KEMBALI KE MENU UTAMA</div></div>`;
             
