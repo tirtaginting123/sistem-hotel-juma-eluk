@@ -549,11 +549,13 @@
     };
 
     window.bukaEditTamu = function(idx) { editIndex = idx; pindahHalaman("FORM_EDIT_TAMU"); };
-    window.simpanEditTamu = function() {
+        window.simpanEditTamu = function() {
         var t = tamuIn[editIndex];
         var newRoomInput = document.getElementById('e_room').value.trim();
         var addMalamInput = parseInt(document.getElementById('e_malam').value) || 0;
+        var addExtrabedInput = parseInt(document.getElementById('e_extrabed').value) || 0; // 🔥 FITUR EXTRA BED BARU
         var depositInput = document.getElementById('e_deposit').value; 
+        
         var oldRoom = t.room; var newRoom = newRoomInput === "" ? oldRoom : newRoomInput;
         var oldMalam = parseInt(t.malam) || 1;
 
@@ -562,17 +564,34 @@
             if(tamuIn.some(x => x.room === newRoom)) { alert("Kamar terisi!"); return; }
         }
 
-        var selisihUang = (getHarga(newRoom) * (oldMalam + addMalamInput)) - (getHarga(oldRoom) * oldMalam);
-        if(selisihUang !== 0) {
-            tamuIn[editIndex].total_tagihan = (t.total_tagihan||0) + selisihUang;
-            if(t.bayar !== "D.Pending" && t.bayar !== "BELUM BAYAR" && t.bayar !== "LUNAS LAMA") { tamuIn[editIndex].bayar = "D.Pending"; alert("Tagihan berubah. Status jadi D.Pending."); }
+        // Hitung selisih harga kamar dan extra bed
+        var selisihKamar = (getHarga(newRoom) * (oldMalam + addMalamInput)) - (getHarga(oldRoom) * oldMalam);
+        var selisihExtrabed = addExtrabedInput * 150000;
+        var totalSelisih = selisihKamar + selisihExtrabed;
+
+        if(totalSelisih !== 0) {
+            tamuIn[editIndex].total_tagihan = (t.total_tagihan||0) + totalSelisih;
+            if(t.bayar !== "D.Pending" && t.bayar !== "BELUM BAYAR" && t.bayar !== "LUNAS LAMA") { 
+                tamuIn[editIndex].bayar = "D.Pending"; 
+                alert("Tagihan bertambah Rp " + formatRp(totalSelisih) + ".\nStatus kamar menjadi KURANG BAYAR (Merah).\nSilakan klik tombol '💰 Bayar Cicilan/Extend' di menu setelah ini untuk memasukkan uangnya ke Laci."); 
+            }
         }
 
         if (newRoom !== oldRoom) { if(kamarKotor.indexOf(oldRoom) === -1) kamarKotor.push(oldRoom); tamuIn[editIndex].room = newRoom; }
         if (addMalamInput > 0) { tamuIn[editIndex].malam = oldMalam + addMalamInput; tamuIn[editIndex].tgl_out = t.tgl_out + " (+" + addMalamInput + "mlm)"; }
+        
+        // 🔥 Update jumlah kasur & Laporan Shift WA
+        if (addExtrabedInput > 0) {
+            tamuIn[editIndex].extrabed = (parseInt(t.extrabed) || 0) + addExtrabedInput;
+            var jamAsli = new Date().getHours();
+            var shiftNow = (jamAsli >= 7 && jamAsli < 17) ? "pagi" : "malam";
+            bukuKas.harian[shiftNow].extrabed_in = (bukuKas.harian[shiftNow].extrabed_in || 0) + addExtrabedInput;
+        }
+
         tamuIn[editIndex].jenis_deposit = depositInput; 
         simpanKeCloud(); alert("✅ Update Berhasil!"); pindahHalaman('DAFTAR_TAMU');
     };
+
 
     window.prosesPengeluaran = function() {
         var deskripsi = document.getElementById('p_item').value || "Lain-lain"; 
@@ -1094,6 +1113,8 @@
                 <p style="font-size:12px; margin-top:0; background:#eaf2f8; padding:10px; border-radius:5px; border:1px solid var(--blue);">👤 <b>${t.nama}</b><br>🚪 Kamar Saat Ini: <b>${t.room}</b><br>🛏️ Menginap: <b>${t.malam} Malam</b></p>
                 <div class="form-group"><label class="form-label">Pindah Ke Nomor Kamar Baru</label><input type="text" id="e_room" class="form-control" value="${t.room}" placeholder="Ketik nomor kamar..."><small style="color:#777; font-size:10px;">(Biarkan jika tidak ingin pindah kamar)</small></div>
                 <div class="form-group"><label class="form-label">Tambah Extra Malam (Extend)</label><input type="number" id="e_malam" class="form-control" value="0" placeholder="0"><small style="color:#777; font-size:10px;">(Ketik angka 1, 2, dst. Biarkan 0 jika tidak ada)</small></div>
+
+                <div class="form-group"><label class="form-label">Tambah Extra Bed (Di Tengah Inap)</label><select id="e_extrabed" class="form-control"><option value="0">Tidak Tambah</option><option value="1">+ 1 Kasur (Rp 150.000)</option><option value="2">+ 2 Kasur (Rp 300.000)</option></select></div>
                 <div class="form-group"><label class="form-label">Jenis Deposit (Jaminan)</label>
                     <select id="e_deposit" class="form-control">
                         <option value="Uang 100k" ${curDep === 'Uang 100k' ? 'selected' : ''}>Uang Rp 100.000</option><option value="KTP" ${curDep === 'KTP' ? 'selected' : ''}>KTP</option><option value="SIM" ${curDep === 'SIM' ? 'selected' : ''}>SIM</option><option value="Paspor" ${curDep === 'Paspor' ? 'selected' : ''}>Paspor</option><option value="Tanpa Deposit" ${curDep === 'Tanpa Deposit' ? 'selected' : ''}>Tanpa Deposit</option>
