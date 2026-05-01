@@ -1059,15 +1059,6 @@
                         <b style="color:#8e44ad;">🚪 ${kmr} (Kotor)</b><span style="cursor:pointer; color:var(--green); font-weight:bold; font-size:10px; border:1px solid var(--green); padding:4px 8px; border-radius:4px;" onclick="kamarBersih('${kmr}')">✨ Tandai Bersih (VR)</span></div>`;
                 });
             }
-
-            out += `<br><span class="section-title">🕒 Riwayat Check-Out</span>`;
-            tamuOut.forEach(function(t, i) {
-                var isSelesai = t.deposit_kembali === true;
-                var jamKeluar = t.jam_out_aktual ? `Tglout: ${t.jam_out_aktual}` : "Data Lama";
-                out += `<div style="border-bottom: 1px solid #eee; padding-bottom:8px; margin-bottom:8px; opacity:0.8; display:flex; justify-content:space-between; align-items:center;">
-                            <div><b style="color:var(--primary); font-size:12px;">🚪 ${t.room} co ${t.vit||'vit ?'}</b><br><span style="font-size:10px;">👤 ${t.nama} <span style="color:#555;">[#${t.inv}]</span></span><br><span style="font-size:9px; color:#2980b9;">(${jamKeluar})</span><div onclick="tandaiDepositOut(${i})" style="font-size:9px; cursor:pointer; color:${isSelesai ? 'var(--green)' : 'var(--red)'}; font-weight:700;">Deposit ${t.jenis_deposit || '100k'} ${isSelesai ? '✓' : '⬜'}</div></div>
-                            <span style="color:#999; cursor:pointer; font-size:10px; border:1px solid #ddd; padding:3px 6px; border-radius:3px;" onclick="hapusRiwayat(${i})">🗑️ Hapus</span></div>`;
-            });
             out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
         else if (state === "FORM_EDIT_TAMU") {
