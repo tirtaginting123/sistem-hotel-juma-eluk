@@ -618,9 +618,11 @@
     };
 
     window.prosesResto = function() {
+        var kamar = document.getElementById('r_kamar') ? document.getElementById('r_kamar').value || "Tamu Luar" : "Tamu Luar";
         var item = document.getElementById('r_item').value; 
         var harga = parseInt(document.getElementById('r_harga').value) || 0; 
         var bayar = document.getElementById('r_bayar').value;
+
         if(harga > 0 && item && bayar !== "D.Pending") {
             // 🔥 KUNCI WAKTU ASLI 🔥
             var jamAsli = new Date().getHours(); 
@@ -628,16 +630,19 @@
             var sb = shiftNow.toLowerCase();
 
             lastRestoInv++; var invR = "R" + String(lastRestoInv).padStart(4, '0');
-            bukuKas.harian.transaksiResto.push({ item: item, nominal: harga, bayar: bayar, shift: shiftNow, inv: invR, timestamp: new Date().getTime() });
+            bukuKas.harian.transaksiResto.push({ kamar: kamar, item: item, nominal: harga, bayar: bayar, shift: shiftNow, inv: invR, timestamp: new Date().getTime() });
             
             bukuKas.harian.uang += harga; bukuKas.bulanan.uang += harga;
             if(bayar === "CASH") { bukuKas.harian.uangCash += harga; bukuKas.bulanan.uangCash += harga; bukuKas.harian[sb].cash += harga; bukuKas.harian[sb].resto_cash += harga; bukuKas.bulanan.resto_cash = (bukuKas.bulanan.resto_cash||0) + harga; }
             else if(bayar === "TRANSFER") { bukuKas.harian.uangTransfer += harga; bukuKas.bulanan.uangTransfer += harga; bukuKas.harian[sb].tf += harga; bukuKas.harian[sb].resto_tf += harga; bukuKas.bulanan.resto_tf = (bukuKas.bulanan.resto_tf||0) + harga; }
             else if(bayar === "DEBIT") { bukuKas.harian.uangDebit += harga; bukuKas.bulanan.uangDebit += harga; bukuKas.harian[sb].db += harga; bukuKas.harian[sb].resto_db += harga; bukuKas.bulanan.resto_db = (bukuKas.bulanan.resto_db||0) + harga; }
             
-            simpanKeCloud(); alert("✅ Resto shift " + shiftNow + " dicatat!"); pindahHalaman("MENU");
+            simpanKeCloud(); alert("✅ Pesanan Resto shift " + shiftNow + " berhasil dicatat!"); pindahHalaman("MENU_RESTO");
+        } else {
+            alert("❌ Menu dan Harga Total harus diisi dengan benar!");
         }
     };
+
 
     window.editPengeluaran = function(idx) {
         var item = bukuKas.harian.rincianKeluar[idx];
@@ -724,7 +729,7 @@
                 <div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')"><span>👥 2. Monitoring & Check-Out</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('TUTUP_BUKU')"><span>💰 3a. Laporan Keuangan</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('FORM_PENGELUARAN')" style="border-left: 4px solid var(--red);"><span>📉 3b. Catat Pengeluaran</span><span>➔</span></div>
-                <div class="btn-mewah" onclick="pindahHalaman('FORM_RESTO')" style="border-left: 4px solid var(--orange);"><span>🍔 4. Transaksi Resto</span><span>➔</span></div>
+                <div class="btn-mewah" <div class="btn-mewah" onclick="pindahHalaman('MENU_RESTO')" style="border-left: 4px><span>🍔 4. Transaksi Resto</span><span>➔</span></div> style="border-left: 4px sol><span>🍔 4. Transaksi Resto</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('GRAFIK')" style="border-left: 4px solid #3498db;"><span>📈 5. Tren Pendapatan</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('RINGKASAN_KAMAR')" style="border-left: 4px solid var(--green);"><span>📊 6. Ringkasan Kamar</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('TOTAL_KAMAR')" style="border-left: 4px solid #8e44ad;"><span>🧮 7. Rekap Kamar Terjual</span><span>➔</span></div>
@@ -821,15 +826,61 @@
                 <button class="btn-submit" style="background:var(--red)" onclick="prosesPengeluaran()">💾 Simpan Pengeluaran</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }
-        else if (state === "FORM_RESTO") {
-            out += `<div class="card"><span class="section-title" style="color:var(--orange);">🍔 Catat Transaksi Resto</span>
+                else if (state === "MENU_RESTO") {
+            out += `<div class="card"><span class="section-title" style="color:var(--orange);">🍔 Menu Utama Restoran</span>
+                    <div class="btn-mewah" onclick="pindahHalaman('FORM_RESTO')"><span>🛒 a. Order (Buat Pesanan Baru)</span><span>➔</span></div>
+                    <div class="btn-mewah" onclick="pindahHalaman('INFO_RESTO')"><span>📋 b. Info Penjualan Resto Hari Ini</span><span>➔</span></div>
+                    <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali ke Dashboard</div></div>`;
+        }
+        
+                else if (state === "FORM_RESTO") {
+            out += `<div class="card"><span class="section-title" style="color:var(--orange);">🛒 Buat Pesanan Resto</span>
+                <div class="form-group"><label class="form-label">Pemesan / Nomor Kamar</label><input type="text" id="r_kamar" class="form-control" placeholder="Contoh: 1a / Tamu Luar / April"></div>
                 <div class="form-group"><label class="form-label">Menu / Pesanan</label><input type="text" id="r_item" class="form-control" placeholder="Contoh: Nasi Goreng + Kopi"></div>
                 <div class="form-group"><label class="form-label">Harga Total (Rp)</label><input type="tel" id="r_harga" class="form-control" placeholder="0"></div>
                 <div class="form-group"><label class="form-label">Pembayaran via</label><select id="r_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select></div>
                 <button class="btn-submit" style="background:var(--orange)" onclick="prosesResto()">💾 Simpan & Catat Ke Kas</button>
-                <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
-        }    
-         
+                <div class="btn-mewah" onclick="pindahHalaman('MENU_RESTO')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
+        } if (state === "INFO_RESTO") {
+            out += `<div class="card"><span class="section-title" style="color:var(--orange);">📋 Info Penjualan Resto</span>`;
+            
+            var tResto = bukuKas.harian.transaksiResto || [];
+            if(tResto.length === 0) {
+                out += `<p style="text-align:center; opacity:0.6; font-size:12px; margin:30px 0;">Belum ada penjualan resto hari ini.</p>`;
+            } else {
+                var shiftPagiHtml = "";
+                var shiftMalamHtml = "";
+                
+                tResto.forEach(function(r) {
+                    var html = `<div style="border-bottom:1px solid #eee; padding:10px 0; font-size:12px;">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; align-items:center;">
+                                        <b style="color:var(--primary); font-size:13px;">🚪 Kamar: ${r.kamar || 'Tamu Luar'}</b>
+                                        <span style="font-size:10px; font-weight:800; color:#777; background:#eee; padding:2px 6px; border-radius:4px;">#${r.inv || '-'}</span>
+                                    </div>
+                                    <div style="color:#444; margin-bottom:6px; font-style:italic;">🍽️ Menu: ${r.item}</div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <b style="color:var(--orange); font-size:13px;">Rp ${formatRp(r.nominal)}</b>
+                                        <span style="font-size:10px; font-weight:bold; color:var(--blue);">💳 Via: ${r.bayar}</span>
+                                    </div>
+                                </div>`;
+                    if(r.shift && r.shift.toLowerCase() === "pagi") shiftPagiHtml += html;
+                    else shiftMalamHtml += html;
+                });
+                
+                if(shiftPagiHtml) {
+                    out += `<div style="background:#eafaf1; padding:12px; border-radius:8px; border:1px solid #27ae60; margin-bottom:15px;">
+                            <b style="color:#27ae60; font-size:13px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px; margin-bottom:5px;">☀️ PESANAN SHIFT PAGI</b>
+                            ${shiftPagiHtml}</div>`;
+                }
+                if(shiftMalamHtml) {
+                    out += `<div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #34495e; margin-bottom:15px;">
+                            <b style="color:#34495e; font-size:13px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px; margin-bottom:5px;">🌙 PESANAN SHIFT MALAM</b>
+                            ${shiftMalamHtml}</div>`;
+                }
+            }
+            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU_RESTO')" style="justify-content:center; margin-top:15px;">🔙 Kembali</div></div>`;
+        }
+
               
         else if (state === "TOTAL_KAMAR") {
             var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
@@ -939,20 +990,66 @@
                 });
             } else { rincianHTML = `<i>Belum ada catatan pengeluaran hari ini.</i>`; }
 
+            // 🔥 HITUNGAN MATEMATIKA ANTI-DOBEL SHIFT PAGI 🔥
+            var bPagi = bukuKas.harian.pagi;
+            var p_c = bPagi.cash || 0; var p_t = bPagi.tf || 0; var p_d = bPagi.db || 0;
+            var p_rc = p_c - (bPagi.resto_cash||0) - (bPagi.charge_cash||0) - (bPagi.panjar_cash||0) - (bPagi.jual_bill_cash||0);
+            var p_rt = p_t - (bPagi.resto_tf||0) - (bPagi.charge_tf||0) - (bPagi.panjar_tf||0);
+            var p_rd = p_d - (bPagi.resto_db||0) - (bPagi.charge_db||0) - (bPagi.panjar_db||0);
+
+            // 🔥 HITUNGAN MATEMATIKA ANTI-DOBEL SHIFT MALAM 🔥
+            var bMalam = bukuKas.harian.malam;
+            var m_c = bMalam.cash || 0; var m_t = bMalam.tf || 0; var m_d = bMalam.db || 0;
+            var m_rc = m_c - (bMalam.resto_cash||0) - (bMalam.charge_cash||0) - (bMalam.panjar_cash||0) - (bMalam.jual_bill_cash||0);
+            var m_rt = m_t - (bMalam.resto_tf||0) - (bMalam.charge_tf||0) - (bMalam.panjar_tf||0);
+            var m_rd = m_d - (bMalam.resto_db||0) - (bMalam.charge_db||0) - (bMalam.panjar_db||0);
+
             out += `<div class="card"><span class="section-title">💰 Laporan Keuangan Harian (Laci)</span>
-                    <div style="background:#eafaf1; padding:12px; border-radius:8px; border:1px solid #27ae60; margin-bottom:10px;">
-                        <b style="color:#27ae60; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px;">☀️ SHIFT PAGI (07:00 - 17:00)</b>
-                        <div style="font-size:12px; margin-top:5px; font-weight:600;">💵 Cash: Rp ${formatRp(bukuKas.harian.pagi.cash)}</div>
-                        <div style="font-size:12px; margin-top:3px;">📱 TF: Rp ${formatRp(bukuKas.harian.pagi.tf)} | 💳 DB: Rp ${formatRp(bukuKas.harian.pagi.db)}</div>
-                        <div style="font-size:12px; color:var(--red); font-weight:700; margin-top:5px;">📉 Keluar: Rp ${formatRp(bukuKas.harian.pagi.keluar)}</div>
+                    
+                    <div style="background:#eafaf1; padding:15px; border-radius:10px; border:1px solid #27ae60; margin-bottom:15px;">
+                        <b style="color:#27ae60; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:8px;">☀️ SHIFT PAGI (07:00 - 17:00)</b>
+                        
+                        <div style="font-size:13px; margin-top:10px; font-weight:800;">💵 CASH: Rp ${formatRp(p_c)}</div>
+                        <div style="font-size:11px; color:#444; padding-left:10px; border-left: 2px solid #27ae60; margin:4px 0 10px 5px; line-height:1.5;">
+                            Kamar: <b>Rp ${formatRp(p_rc)}</b><br>Resto: Rp ${formatRp(bPagi.resto_cash||0)}<br>Charge/Denda: Rp ${formatRp(bPagi.charge_cash||0)}<br>Panjar DP: Rp ${formatRp(bPagi.panjar_cash||0)}<br>Jual Bill: Rp ${formatRp(bPagi.jual_bill_cash||0)}
+                        </div>
+
+                        <div style="font-size:13px; font-weight:800;">📱 TRANSFER: Rp ${formatRp(p_t)}</div>
+                        <div style="font-size:11px; color:#444; padding-left:10px; border-left: 2px solid #2980b9; margin:4px 0 10px 5px; line-height:1.5;">
+                            Kamar: <b>Rp ${formatRp(p_rt)}</b><br>Resto: Rp ${formatRp(bPagi.resto_tf||0)}<br>Charge/Denda: Rp ${formatRp(bPagi.charge_tf||0)}<br>Panjar DP: Rp ${formatRp(bPagi.panjar_tf||0)}
+                        </div>
+
+                        <div style="font-size:13px; font-weight:800;">💳 DEBIT: Rp ${formatRp(p_d)}</div>
+                        <div style="font-size:11px; color:#444; padding-left:10px; border-left: 2px solid #8e44ad; margin:4px 0 10px 5px; line-height:1.5;">
+                            Kamar: <b>Rp ${formatRp(p_rd)}</b><br>Resto: Rp ${formatRp(bPagi.resto_db||0)}<br>Charge/Denda: Rp ${formatRp(bPagi.charge_db||0)}<br>Panjar DP: Rp ${formatRp(bPagi.panjar_db||0)}
+                        </div>
+
+                        <div style="font-size:12px; color:white; background:var(--red); text-align:center; padding:6px; border-radius:6px; font-weight:bold; margin-top:10px;">📉 KELUAR: Rp ${formatRp(bPagi.keluar||0)}</div>
                     </div>
-                    <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #34495e; margin-bottom:15px;">
-                        <b style="color:#34495e; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px;">🌙 SHIFT MALAM (17:00 - 07:00)</b>
-                        <div style="font-size:12px; margin-top:5px; font-weight:600;">💵 Cash: Rp ${formatRp(bukuKas.harian.malam.cash)}</div>
-                        <div style="font-size:12px; margin-top:3px;">📱 TF: Rp ${formatRp(bukuKas.harian.malam.tf)} | 💳 DB: Rp ${formatRp(bukuKas.harian.malam.db)}</div>
-                        <div style="font-size:12px; color:var(--red); font-weight:700; margin-top:5px;">📉 Keluar: Rp ${formatRp(bukuKas.harian.malam.keluar)}</div>
+
+                    <div style="background:#f4f6f7; padding:15px; border-radius:10px; border:1px solid #34495e; margin-bottom:15px;">
+                        <b style="color:#34495e; font-size:14px; border-bottom:1px solid #ccc; display:block; padding-bottom:8px;">🌙 SHIFT MALAM (17:00 - 07:00)</b>
+                        
+                        <div style="font-size:13px; margin-top:10px; font-weight:800;">💵 CASH: Rp ${formatRp(m_c)}</div>
+                        <div style="font-size:11px; color:#444; padding-left:10px; border-left: 2px solid #34495e; margin:4px 0 10px 5px; line-height:1.5;">
+                            Kamar: <b>Rp ${formatRp(m_rc)}</b><br>Resto: Rp ${formatRp(bMalam.resto_cash||0)}<br>Charge/Denda: Rp ${formatRp(bMalam.charge_cash||0)}<br>Panjar DP: Rp ${formatRp(bMalam.panjar_cash||0)}<br>Jual Bill: Rp ${formatRp(bMalam.jual_bill_cash||0)}
+                        </div>
+
+                        <div style="font-size:13px; font-weight:800;">📱 TRANSFER: Rp ${formatRp(m_t)}</div>
+                        <div style="font-size:11px; color:#444; padding-left:10px; border-left: 2px solid #2980b9; margin:4px 0 10px 5px; line-height:1.5;">
+                            Kamar: <b>Rp ${formatRp(m_rt)}</b><br>Resto: Rp ${formatRp(bMalam.resto_tf||0)}<br>Charge/Denda: Rp ${formatRp(bMalam.charge_tf||0)}<br>Panjar DP: Rp ${formatRp(bMalam.panjar_tf||0)}
+                        </div>
+
+                        <div style="font-size:13px; font-weight:800;">💳 DEBIT: Rp ${formatRp(m_d)}</div>
+                        <div style="font-size:11px; color:#444; padding-left:10px; border-left: 2px solid #8e44ad; margin:4px 0 10px 5px; line-height:1.5;">
+                            Kamar: <b>Rp ${formatRp(m_rd)}</b><br>Resto: Rp ${formatRp(bMalam.resto_db||0)}<br>Charge/Denda: Rp ${formatRp(bMalam.charge_db||0)}<br>Panjar DP: Rp ${formatRp(bMalam.panjar_db||0)}
+                        </div>
+
+                        <div style="font-size:12px; color:white; background:var(--red); text-align:center; padding:6px; border-radius:6px; font-weight:bold; margin-top:10px;">📉 KELUAR: Rp ${formatRp(bMalam.keluar||0)}</div>
                     </div>
+                    
                     <div style="margin-bottom:15px;">
+
                         <p style="margin:5px 0;">Total Kotor Global: <b style="color:var(--green)">+ Rp ${formatRp(h_masuk)}</b></p>
                         <p style="margin:5px 0;">Total Pengeluaran Kas: <b style="color:var(--red)">- Rp ${formatRp(h_keluar)}</b></p>
                         <div style="font-size:10px; color:#777; margin-bottom:10px;">${rincianHTML}</div><hr>
@@ -2113,15 +2210,34 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             if (bShift.manual_vd && bShift.manual_vd !== "") finalVD = bShift.manual_vd;
         }
 
-        var uangExtBed = (bShift ? (bShift.extrabed_in || 0) : 0) * 150000;
-        var rCash = bShift ? (bShift.room_cash || 0) : 0;
-        var rTf = bShift ? (bShift.room_tf || 0) : 0;
-        var rDb = bShift ? (bShift.room_db || 0) : 0;
+        // 🔥 PERBAIKAN BUG DOUBLE COUNTING LACI & WA REPORT 🔥
+        var totalUangCash = bShift ? (bShift.cash || 0) : 0;
+        var totalUangTf = bShift ? (bShift.tf || 0) : 0;
+        var totalUangDb = bShift ? (bShift.db || 0) : 0;
 
-        var resto = (bShift ? (bShift.resto_cash || 0) : 0) + (bShift ? (bShift.resto_tf || 0) : 0) + (bShift ? (bShift.resto_db || 0) : 0);
-        var charge = (bShift ? (bShift.charge_cash || 0) : 0) + (bShift ? (bShift.charge_tf || 0) : 0) + (bShift ? (bShift.charge_db || 0) : 0);
+        var resto_c = bShift ? (bShift.resto_cash || 0) : 0;
+        var resto_t = bShift ? (bShift.resto_tf || 0) : 0;
+        var resto_d = bShift ? (bShift.resto_db || 0) : 0;
+        var resto = resto_c + resto_t + resto_d;
+
+        var charge_c = bShift ? (bShift.charge_cash || 0) : 0;
+        var charge_t = bShift ? (bShift.charge_tf || 0) : 0;
+        var charge_d = bShift ? (bShift.charge_db || 0) : 0;
+        var charge = charge_c + charge_t + charge_d;
+
+        var panjar_c = bShift ? (bShift.panjar_cash || 0) : 0;
+        var panjar_t = bShift ? (bShift.panjar_tf || 0) : 0;
+        var panjar_d = bShift ? (bShift.panjar_db || 0) : 0;
+        var pnjr = panjar_c + panjar_t + panjar_d;
+
         var jBill = bShift ? (bShift.jual_bill_cash || 0) : 0;
-        var pnjr = bShift ? ((bShift.panjar_cash || 0) + (bShift.panjar_tf || 0) + (bShift.panjar_db || 0)) : 0;
+        var uangExtBed = (bShift ? (bShift.extrabed_in || 0) : 0) * 150000;
+
+        // SISTEM MENGALAH: Room Cash = Total Cash dikurangi Resto & Charge (Agar Math WA selalu imbang)
+        var rCash = totalUangCash - resto_c - charge_c - panjar_c - jBill;
+        var rTf = totalUangTf - resto_t - charge_t - panjar_t;
+        var rDb = totalUangDb - resto_d - charge_d - panjar_d;
+
         var uangKeluarShift = bShift ? (bShift.keluar || 0) : 0;
         
         var teksKeluarShift = "";
@@ -2131,8 +2247,8 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             });
         }
 
-        var totalUangCash = rCash + (bShift ? (bShift.resto_cash || 0) : 0) + (bShift ? (bShift.charge_cash || 0) : 0) + jBill + (bShift ? (bShift.panjar_cash||0) : 0);
         var sisaLaci = totalUangCash - uangKeluarShift;
+
 
         var noBillLast = "-";
         if (bukuKas && bukuKas.harian) {
