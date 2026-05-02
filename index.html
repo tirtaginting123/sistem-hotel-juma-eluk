@@ -1199,10 +1199,19 @@
                         }
                     }
                     labelStatus = "KOTOR (VD)" + ikonKotor; 
-                } 
-                else if (rm.isRusak) { sClass = "status-orange"; }
+                }
+                                else if (rm.isRusak) { sClass = "status-orange"; }
+                
+                // 🔥 TAMBAHAN UNTUK MEMUNCULKAN WARNA BIRU (PENDING/BOOKING) 🔥
+                else if (rm.pending) { 
+                    sClass = "status-blue"; 
+                    labelStatus = "PENDING ⏳"; 
+                }
 
                 var inner = (sClass === "status-gray" && labelStatus === "BERSIHKAN!") ? 
+
+
+              
                     `<div style="font-size:18px; font-weight:900;">${rm.no}</div><div style="font-size:10px; font-weight:800;">${labelStatus}</div>` :
                     `<div style="font-size:16px;">${rm.no}</div><div style="font-size:9px; font-weight:800;">${labelStatus}</div><div style="font-size:9px; font-weight:400;">${rm.tip}</div>`;
                 return `<div class="room-box ${sClass}" ${action}>${inner}</div>`;
