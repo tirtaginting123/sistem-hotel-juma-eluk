@@ -1179,11 +1179,13 @@
                     var isVisBaru = isKmrVisualBaru(rm.tamu);
                     if (rm.tamu.minta_bersih) { sClass = "status-gray"; labelStatus = "BERSIHKAN!"; } 
                     else {
-                        if (isVisBaru) { 
-                            sClass = "status-red"; 
-                            // 🔥 Logo tetap pakai logo asli L.toLowerCase() === "malam") ? "🌙" : "🌞";
-                            labelStatus = rm.kls + " " + ikon; 
-                        } else { sClass = "status-purple"; labelStatus = rm.kls + " 🤝🌞"; }
+                                            if (isVisBaru) { 
+                        sClass = "status-red"; 
+                        // 🔥 Kembalikan variabel ikon yang hilang
+                        var ikon = (rm.tamu.shift && rm.tamu.shift.toLowerCase() === "malam") ? "🌙" : "🌞";
+                        labelStatus = rm.kls + " " + ikon; 
+                    } else { sClass = "status-purple"; labelStatus = rm.kls + " 🤝🌞"; }
+
                     }
                 } 
                 else if (rm.isKotor) { 
