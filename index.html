@@ -183,7 +183,9 @@
                 bukuKas.bulanan = b;
 
                 // 🔥 WAJIB 0 MUTLAK: Hapus Riwayat CO & Daftar VD 
-                tamuOut = []; 
+                                 // 🔥 PERTAHANKAN DATA TAMU VD AGAR BISA MASUK ARSIP DENGAN SEMPURNA
+                tamuOut = tamuOut.filter(function(t) { return kamarKotor.includes(t.room); });
+
                 
 
                 simpanKeCloud();
@@ -913,9 +915,13 @@
                         }
                     }
                 } 
+                
                 else if (isKotor) {
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
-                    if (!lastT) return; // Menyembunyikan VD kemarin
+                    // 🔥 MESIN WAKTU VD: Sembunyikan VD kemarin agar di laporan hari ini jadi 0
+                    if (lastT && lastT.jam_out_aktual) {
+                        if (!isKamarBaru(lastT.jam_out_aktual)) return; 
+                    } else if (!lastT) { return; }
 
                     hitungVD++;
                     cAbu++;
@@ -1487,7 +1493,9 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 }; 
 
                 // 🔥 WAJIB 0 MUTLAK: Hapus Riwayat CO & Daftar VD
-                tamuOut = [];
+                                // 🔥 PERTAHANKAN DATA TAMU VD AGAR BISA MASUK ARSIP DENGAN SEMPURNA
+                tamuOut = tamuOut.filter(function(t) { return kamarKotor.includes(t.room); });
+
                 
 
                 simpanKeCloud(); 
@@ -1807,7 +1815,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             } 
             else if (isKotor) {
                 var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
-                                if (!lastT) return; // 🔥 MENGNOLKAN VD SISA KEMARIN DI LAPORAN WA
+                // 🔥 MESIN WAKTU VD: Sembunyikan VD kemarin agar di laporan WA hari ini jadi 0
+                if (lastT && lastT.jam_out_aktual) {
+                    if (!isKamarBaru(lastT.jam_out_aktual)) return; 
+                } else if (!lastT) { return; }
+
 
                 var sOut = "pagi"; var ketOut = "nyb"; var invOut = "-";
 
