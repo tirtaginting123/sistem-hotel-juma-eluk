@@ -832,25 +832,6 @@
          
               
         else if (state === "TOTAL_KAMAR") {
-            function isKamarBaru(tglStr) {
-                if (!tglStr || tglStr === "-") return false;
-                var op = new Date(); if (op.getHours() < 7) op.setDate(op.getDate() - 1);
-                var dd = String(op.getDate()).padStart(2, '0');
-                var blnArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-                var target = dd + "-" + blnArr[op.getMonth()] + "-" + op.getFullYear();
-                
-                var parts = tglStr.split(",");
-                var tglBersih = parts[0].trim().replace(/ /g, '-').replace(/\//g, '-'); 
-                var jam = 12; 
-                if (parts.length >= 2) jam = parseInt(parts[1].trim().replace(':', '.').split(".")[0]);
-                
-                if (tglBersih === target && jam >= 7) return true;
-                var dN = new Date(op); dN.setDate(dN.getDate() + 1);
-                var targetN = String(dN.getDate()).padStart(2, '0') + "-" + blnArr[dN.getMonth()] + "-" + dN.getFullYear();
-                if (tglBersih === targetN && jam < 7) return true;
-                return false;
-            }
-
             var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
             var headerTgl = String(dOp.getDate()).padStart(2, '0') + " " + ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][dOp.getMonth()] + " " + dOp.getFullYear();
 
@@ -861,9 +842,8 @@
 
             var hitungPagi = 0, hitungMalam = 0, hitungVD = 0;
             var vdPagi = 0, vdMalam = 0; 
-            var cMerah = 0, cUngu = 0, cAbu = 0;
+            var cMerah = 0, cUngu = 0;
 
-            // Wadah teks masing-masing shift
             var listPagiIn = "", listPagiNyb = "", listPagiVD = "";
             var listMalamIn = "", listMalamVD = "";
 
@@ -885,113 +865,64 @@
                 var isKotor = kamarKotor.includes(kmr);
 
                 if (t) {
-                    var baru = isKamarBaru(t.tgl_hotel || t.tgl);
+                    // 🔥 PAKAI MESIN WAKTU GLOBAL AGAR KAMAR JAM 1 PAGI TERBACA
+                    var baru = isKmrBaruGlobal(t.tgl_hotel || t.tgl);
                     var shiftKamar = (t.shift || "pagi").toLowerCase(); 
                     var ket = "";
                     var adaExtend = false, hv = 0, vv = "";
-                    
                     if (t.history_bayar) {
-                        t.history_bayar.forEach(function(h){ if(isKamarBaru(h.tgl)) { adaExtend = true; hv += parseInt(h.nominal); vv = (h.via||"").toLowerCase(); }});
+                        t.history_bayar.forEach(function(h){ if(isKmrBaruGlobal(h.tgl)) { adaExtend = true; hv += parseInt(h.nominal); vv = (h.via||"").toLowerCase(); }});
                     }
 
                     if (baru) {
                         ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
                         cMerah++;
-                        if (shiftKamar === "pagi") {
-                            hitungPagi++;
-                            listPagiIn += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽\n`;
-                        } else {
-                            hitungMalam++;
-                            listMalamIn += kmr + ` ✅ ${ket} ${t.inv||"-"} ❤️\n`;
-                        }
+                        if (shiftKamar === "pagi") { hitungPagi++; listPagiIn += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽\n`; } 
+                        else { hitungMalam++; listMalamIn += kmr + ` ✅ ${ket} ${t.inv||"-"} ❤️\n`; }
                     } else {
-                        var isSahNyambung = adaExtend || (timeFloat >= 16.5);
+                        // 🔥 LOGIKA NYAMBUNG: Hanya di Pagi, Kebal Jam Begadang
+                        var isSahNyambung = adaExtend || (timeFloat >= 16.5 || timeFloat < 7);
                         if (isSahNyambung) {
-                            shiftKamar = "pagi"; 
                             ket = "nyb";
                             if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
-                            
-                            hitungPagi++;
-                            cUngu++;
+                            hitungPagi++; cUngu++;
                             listPagiNyb += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽\n`;
                         }
                     }
                 } 
-                
                 else if (isKotor) {
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
-                    // 🔥 MESIN WAKTU VD: Sembunyikan VD kemarin agar di laporan hari ini jadi 0
-                    if (lastT && lastT.jam_out_aktual) {
-                        if (!isKamarBaru(lastT.jam_out_aktual)) return; 
-                    } else if (!lastT) { return; }
-
-                    hitungVD++;
-                    cAbu++;
+                    if (lastT && lastT.jam_out_aktual) { if (!isKmrBaruGlobal(lastT.jam_out_aktual)) return; } else if (!lastT) { return; }
                     
-                    var sOut = "pagi";
-                    var ketOut = "nyb";
-                    var invOut = "-";
-
-                    if (lastT) {
-                        sOut = (lastT.shift || "pagi").toLowerCase();
-                        invOut = lastT.inv || "-";
-
-                        var isBaruVD = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
-                        if (!isBaruVD) sOut = "pagi";
-                        
-                        ketOut = isKamarBaru(lastT.tgl_hotel || lastT.tgl) ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
-                        if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl) && lastT.history_bayar) {
-                            var hvO = 0, vvO = "", adaExtOut = false;
-                            lastT.history_bayar.forEach(function(h) { if(isKamarBaru(h.tgl)){ adaExtOut=true; hvO += parseInt(h.nominal); vvO = (h.via||"").toLowerCase(); }});
-                            if(adaExtOut) ketOut += " " + (hvO/1000) + " " + vvO; else ketOut += " day " + (lastT.malam || 1) + " lunas";
-                        } else if (!isKamarBaru(lastT.tgl_hotel || lastT.tgl)) { ketOut += " day " + (lastT.malam || 1) + " lunas"; }
-                    }
-
-                    // Masukkan ke wadah Shift yang benar
-                    if (sOut === "pagi") {
-                        vdPagi++;
-                        listPagiVD += kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 (OUT - VD)\n`;
-                    } else {
-                        vdMalam++;
-                        listMalamVD += kmr + ` ✅ ${ketOut} ${invOut} ❤️ (OUT - VD)\n`;
-                    }
+                    hitungVD++;
+                    var sOut = (lastT.shift_out || "Pagi").toLowerCase();
+                    var ketOut = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl) ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
+                    if (sOut === "pagi") { vdPagi++; listPagiVD += kmr + ` ✅ ${ketOut} ${lastT.inv} 👍🏽 (OUT - VD)\n`; } 
+                    else { vdMalam++; listMalamVD += kmr + ` ✅ ${ketOut} ${lastT.inv} ❤️ (OUT - VD)\n`; }
                 }
             });
 
-            // GABUNGKAN BLOK PAGI
             var htmlPagi = "";
-            var totalKamarPagi = hitungPagi + vdPagi; 
             if (listPagiIn || listPagiNyb || listPagiVD) {
                 htmlPagi += "<b>☀️ ------------- SHIFT PAGI -------------</b>\n";
                 if (listPagiIn) htmlPagi += "<b>🔴 KAMAR CHECK IN:</b>\n" + listPagiIn + "\n";
                 if (listPagiNyb) htmlPagi += "<b>🟣 KAMAR NYAMBUNG:</b>\n" + listPagiNyb + "\n";
                 if (listPagiVD) htmlPagi += "<b>⚪ KAMAR KOTOR (VD):</b>\n" + listPagiVD + "\n";
-                htmlPagi += `<b>➡️ Total Kamar Pagi: ${totalKamarPagi} Kamar</b>\n\n`;
+                htmlPagi += `<b>➡️ Total Kamar Pagi: ${hitungPagi + vdPagi} Kamar</b>\n\n`;
             }
 
-            // GABUNGKAN BLOK MALAM
             var htmlMalam = "";
-            var totalKamarMalam = hitungMalam + vdMalam; 
             if (listMalamIn || listMalamVD) {
                 htmlMalam += "<b>🌙 ------------- SHIFT MALAM -------------</b>\n";
                 if (listMalamIn) htmlMalam += "<b>🔴 KAMAR CHECK IN:</b>\n" + listMalamIn + "\n";
                 if (listMalamVD) htmlMalam += "<b>⚪ KAMAR KOTOR (VD):</b>\n" + listMalamVD + "\n";
-                htmlMalam += `<b>➡️ Total Kamar Malam: ${totalKamarMalam} Kamar</b>\n\n`;
+                htmlMalam += `<b>➡️ Total Kamar Malam: ${hitungMalam + vdMalam} Kamar</b>\n\n`;
             }
 
-            if (!htmlPagi && !htmlMalam) {
-                htmlUtama += "<i>Belum ada data kamar terjual/kotor hari ini.</i>\n\n";
-            } else {
-                htmlUtama += htmlPagi + htmlMalam;
-            }
-
-            var totalKamarGabungan = hitungPagi + hitungMalam + hitungVD;
-
-            htmlUtama += `<hr style="border:1px dashed #ccc;"><b>🏨 Total Keseluruhan (Pagi + Malam + VD): ${totalKamarGabungan} Kamar</b>\n<b>🔴 Total Check in hari ini: ${cMerah}</b>\n<b>🟣 Total Nyambung (Sah): ${cUngu}</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD}</b>`;
-
-            htmlUtama += `<br><button onclick="navigator.clipboard.writeText(this.parentElement.innerText.replace(/🔙 Kembali/g, '')); alert('✅ Rekap Kamar Ter-Copy!')" style="margin-top:10px; padding:12px; background:#27ae60; color:#fff; border:none; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">📋 COPY REKAP KE WA</button></div>`;
-            htmlUtama += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 KEMBALI KE MENU UTAMA</div></div>`;
-            
+            htmlUtama += (!htmlPagi && !htmlMalam) ? "<i>Belum ada data kamar terjual hari ini.</i>\n\n" : (htmlPagi + htmlMalam);
+            htmlUtama += `<hr style="border:1px dashed #ccc;"><b>🏨 Total Keseluruhan: ${hitungPagi + hitungMalam + hitungVD} Kamar</b>\n<b>🔴 Total Check in: ${cMerah}</b>\n<b>🟣 Total Nyambung: ${cUngu}</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD}</b>`;
+            htmlUtama += `<br><button onclick="navigator.clipboard.writeText(this.parentElement.innerText.replace(/🔙 Kembali/g, '')); alert('✅ Rekap Ter-Copy!')" style="margin-top:10px; padding:12px; background:#27ae60; color:#fff; border:none; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">📋 COPY REKAP KE WA</button></div>`;
+            htmlUtama += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali</div></div>`;
             out += htmlUtama;
         }
 
