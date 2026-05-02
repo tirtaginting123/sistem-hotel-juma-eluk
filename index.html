@@ -686,8 +686,8 @@
 
 
     function renderScreen() {
-        var out = ""; document
-      .getElementById('topSearchArea').style.display = (state === "MENU" || state === "HASIL_CARI") ? "block" : "none";
+        var out = ""; document.getElementById('topSearchArea').style.display = "block";
+
               // 🔥 MESIN WAKTU VISUAL 16:30 🔥
         function isKmrBaruGlobal(tglStr) {
             if (!tglStr || tglStr === "-") return false;
@@ -1173,7 +1173,7 @@
             function buatKotak(rm) {
                 var sClass = "status-green";
                 var labelStatus = rm.kls;
-                var action = `onclick="tempRoom='${rm.no}'; pindahHalaman('OPSI_KAMAR_HIJAU')"`;
+                var action = `onclick="tempRoom='${rm.no}'; window.dariPencarian=false; pindahHalaman('OPSI_KAMAR_HIJAU')"`;
 
                 if (rm.tamu) {
                     var isVisBaru = isKmrVisualBaru(rm.tamu);
@@ -1181,8 +1181,7 @@
                     else {
                         if (isVisBaru) { 
                             sClass = "status-red"; 
-                            // 🔥 Logo tetap pakai logo asli check-in nya 🔥
-                            var ikon = (rm.tamu.shift && rm.tamu.shift.toLowerCase() === "malam") ? "🌙" : "🌞";
+                            // 🔥 Logo tetap pakai logo asli L.toLowerCase() === "malam") ? "🌙" : "🌞";
                             labelStatus = rm.kls + " " + ikon; 
                         } else { sClass = "status-purple"; labelStatus = rm.kls + " 🤝🌞"; }
                     }
@@ -1288,12 +1287,16 @@
                     out += `<div class="btn-mewah" onclick="window.isCheckInNormal=false; pindahHalaman('FORM_CHECKIN')" style="border-left: 4px solid var(--blue);">📝 Check-In Tamu Pending (Maju Jadwal)</div>`;
                     out += `<div class="btn-mewah" onclick="klikMenu('BATAL_PENDING')" style="color:var(--red);">❌ Batalkan Bookingan</div>`;
                 } else {
-                    if(isPendingMode) { 
-                        out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING')">⏳ 1. Form Pending Singkat (DP Saja)</div>`; 
-                        out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING_LENGKAP')" style="border-left: 4px solid var(--blue);">📝 2. Form Reservasi Lengkap</div>`; 
+                                        if(isPendingMode) { 
+                        out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING_LENGKAP')" style="border-left: 4px solid var(--blue);">📝 Form  Pending Bookingan</div>`; 
                     } else { 
                         out += `<div class="btn-mewah" onclick="window.isCheckInNormal=true; pindahHalaman('FORM_CHECKIN')">📝 Lakukan Check-In Normal</div>`; 
+                        
+                        if (window.dariPencarian) {
+                            out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING_LENGKAP')" style="border-left: 4px solid var(--blue);">📝 Pending Bookingan</div>`;
+                        }
                     }
+
                     out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')" style="color:var(--orange);">🛠️ Tandai Sedang Diperbaiki</div>`; 
                 }
             }
@@ -1415,7 +1418,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                         } else {
                             innerContent = `<div style="font-size:16px; margin-bottom:2px;">${no}</div><div style="font-size:9px; font-weight:800; opacity:0.9; line-height:1;">${labelCari}</div><div style="font-size:9px; font-weight:400; opacity:0.9; line-height:1;">${k.tipe}</div>`;
                         }
-                        out += `<div class="room-box ${sCari}" onclick="tempRoom='${no}'; pindahHalaman('OPSI_KAMAR_HIJAU')">${innerContent}</div>`; 
+                        out += `<div class="room-box ${sCari}" onclick="tempRoom='${no}'; window.dariPencarian=true; pindahHalaman('OPSI_KAMAR_HIJAU')">${innerContent}</div>`; 
                     } 
                 }); 
             });
