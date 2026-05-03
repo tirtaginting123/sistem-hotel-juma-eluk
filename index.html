@@ -617,14 +617,46 @@
         }
     };
 
+        window.hitungTotalResto = function() {
+        var prices = document.querySelectorAll('.r_item_price');
+        var total = 0;
+        prices.forEach(function(p) { total += parseInt(p.value) || 0; });
+        var elTotal = document.getElementById('r_harga');
+        if(elTotal) elTotal.value = total;
+    };
+
+    window.tambahBarisResto = function() {
+        var div = document.createElement('div');
+        div.className = 'resto-row';
+        div.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; align-items:center;';
+        div.innerHTML = `
+            <div style="flex:2;"><input type="text" class="form-control r_item_name" placeholder="Nama Menu Lainnya"></div>
+            <div style="flex:1;"><input type="number" class="form-control r_item_price" placeholder="Harga (Rp)" oninput="hitungTotalResto()"></div>
+            <div style="cursor:pointer; color:red; padding:5px; font-size:16px; font-weight:bold;" onclick="this.parentElement.remove(); hitungTotalResto();">❌</div>
+        `;
+        document.getElementById('resto_list').appendChild(div);
+    };
+
     window.prosesResto = function() {
         var kamar = document.getElementById('r_kamar') ? document.getElementById('r_kamar').value || "Tamu Luar" : "Tamu Luar";
-        var item = document.getElementById('r_item').value; 
+        
+        var names = document.querySelectorAll('.r_item_name');
+        var prices = document.querySelectorAll('.r_item_price');
+        var arrItems = [];
+        
+        for(var i=0; i<names.length; i++) {
+            var n = names[i].value.trim();
+            var p = parseInt(prices[i].value) || 0;
+            if(n !== "") {
+                arrItems.push("• " + n + " <b>(Rp " + formatRp(p) + ")</b>");
+            }
+        }
+        
+        var item = arrItems.join("<br>"); 
         var harga = parseInt(document.getElementById('r_harga').value) || 0; 
         var bayar = document.getElementById('r_bayar').value;
 
-        if(harga > 0 && item && bayar !== "D.Pending") {
-            // 🔥 KUNCI WAKTU ASLI 🔥
+        if(harga > 0 && arrItems.length > 0 && bayar !== "D.Pending") {
             var jamAsli = new Date().getHours(); 
             var shiftNow = (jamAsli >= 7 && jamAsli < 17) ? "Pagi" : "Malam"; 
             var sb = shiftNow.toLowerCase();
@@ -639,9 +671,10 @@
             
             simpanKeCloud(); alert("✅ Pesanan Resto shift " + shiftNow + " berhasil dicatat!"); pindahHalaman("MENU_RESTO");
         } else {
-            alert("❌ Menu dan Harga Total harus diisi dengan benar!");
+            alert("❌ Masukkan minimal 1 menu pesanan beserta harganya!");
         }
     };
+
 
 
     window.editPengeluaran = function(idx) {
@@ -833,14 +866,26 @@
                     <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali ke Dashboard</div></div>`;
         }
         
-                else if (state === "FORM_RESTO") {
+                        else if (state === "FORM_RESTO") {
             out += `<div class="card"><span class="section-title" style="color:var(--orange);">🛒 Buat Pesanan Resto</span>
                 <div class="form-group"><label class="form-label">Pemesan / Nomor Kamar</label><input type="text" id="r_kamar" class="form-control" placeholder="Contoh: 1a / Tamu Luar / April"></div>
-                <div class="form-group"><label class="form-label">Menu / Pesanan</label><input type="text" id="r_item" class="form-control" placeholder="Contoh: Nasi Goreng + Kopi"></div>
-                <div class="form-group"><label class="form-label">Harga Total (Rp)</label><input type="tel" id="r_harga" class="form-control" placeholder="0"></div>
+                
+                <b style="font-size:11px; color:var(--primary); margin-bottom:5px; display:block;">DAFTAR PESANAN:</b>
+                <div id="resto_list">
+                    <div class="resto-row" style="display:flex; gap:10px; margin-bottom:10px;">
+                        <div style="flex:2;"><input type="text" class="form-control r_item_name" placeholder="Nama Menu (Misal: Nasi Goreng)"></div>
+                        <div style="flex:1;"><input type="number" class="form-control r_item_price" placeholder="Harga (Rp)" oninput="hitungTotalResto()"></div>
+                    </div>
+                </div>
+                
+                <button onclick="tambahBarisResto()" style="background:#eaf2f8; color:var(--blue); border:1px dashed var(--blue); width:100%; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; font-weight:bold; cursor:pointer;">➕ Tambah Menu Lain</button>
+
+                <div class="form-group"><label class="form-label">Harga Total Keseluruhan (Dihitung Otomatis)</label><input type="tel" id="r_harga" class="form-control" style="font-weight:bold; color:var(--red); background:#fff3f3;" placeholder="0" readonly></div>
                 <div class="form-group"><label class="form-label">Pembayaran via</label><select id="r_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select></div>
                 <button class="btn-submit" style="background:var(--orange)" onclick="prosesResto()">💾 Simpan & Catat Ke Kas</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU_RESTO')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
+        
+
         } if (state === "INFO_RESTO") {
             out += `<div class="card"><span class="section-title" style="color:var(--orange);">📋 Info Penjualan Resto</span>`;
             
