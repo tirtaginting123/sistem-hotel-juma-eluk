@@ -743,13 +743,10 @@
             return false;
         }
 
-        function isKmrVisualBaru(t) {
-            if (isKmrBaruGlobal(t.tgl_hotel || t.tgl)) return true; // Tamu yg beneran baru check-in hari ini (Merah)
-            var dNow = new Date(); var timeFloat = dNow.getHours() + (dNow.getMinutes() / 60);
-            var adaExtend = false;
-            if (t.history_bayar) { t.history_bayar.forEach(function(h){ if(isKmrBaruGlobal(h.tgl)) adaExtend = true; }); }
-            if (!adaExtend && timeFloat < 16.5) return true; // 🔥 TAHAN WARNA MERAH & LOGO LAMA SAMPAI 16:30 🔥
-            return false;
+                function isKmrVisualBaru(t) {
+            // 🔥 SINKRONISASI MUTLAK DENGAN LAPORAN WA 🔥
+            // Jika di Laporan WA statusnya "Baru", maka Merah. Jika "Nyambung", maka Ungu.
+            return isKmrBaruGlobal(t.tgl_hotel || t.tgl);
         }
 
 
@@ -986,15 +983,36 @@
                         }
                     }
                 } 
-                else if (isKotor) {
+                                else if (isKotor) {
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
                     if (lastT && lastT.jam_out_aktual) { if (!isKmrBaruGlobal(lastT.jam_out_aktual)) return; } else if (!lastT) { return; }
                     
                     hitungVD++;
-                    var sOut = (lastT.shift_out || "Pagi").toLowerCase();
-                    var ketOut = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl) ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
-                    if (sOut === "pagi") { vdPagi++; listPagiVD += kmr + ` ✅ ${ketOut} ${lastT.inv} 👍🏽 (OUT - VD)\n`; } 
-                    else { vdMalam++; listMalamVD += kmr + ` ✅ ${ketOut} ${lastT.inv} ❤️ (OUT - VD)\n`; }
+                    
+                    // 🔥 SINKRONISASI LOGIKA VD DENGAN LAPORAN WA 🔥
+                    var sOut = "pagi";
+                    var ketOut = "nyb";
+                    var invOut = "-";
+
+                    if (lastT) {
+                        sOut = (lastT.shift || "pagi").toLowerCase();
+                        invOut = lastT.inv || "-";
+                        var isBaruVD = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
+                        if (!isBaruVD) sOut = "pagi"; // Tamu nyambung selalu masuk Pagi
+
+                        ketOut = isBaruVD ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
+                        
+                        if (!isBaruVD && lastT.history_bayar) {
+                            var hvO = 0, vvO = "", adaExtOut = false;
+                            lastT.history_bayar.forEach(function(h) { if(isKmrBaruGlobal(h.tgl)){ adaExtOut=true; hvO += parseInt(h.nominal); vvO = (h.via||"").toLowerCase(); }});
+                            if(adaExtOut) ketOut += " " + (hvO/1000) + " " + vvO; else ketOut += " day " + (lastT.malam || 1) + " lunas";
+                        } else if (!isBaruVD) { 
+                            ketOut += " day " + (lastT.malam || 1) + " lunas"; 
+                        }
+                    }
+
+                    if (sOut === "pagi") { vdPagi++; listPagiVD += kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 (OUT - VD)\n`; } 
+                    else { vdMalam++; listMalamVD += kmr + ` ✅ ${ketOut} ${invOut} ❤️ (OUT - VD)\n`; }
                 }
             });
 
