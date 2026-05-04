@@ -863,6 +863,24 @@
                     <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali ke Dashboard</div></div>`;
         }
         
+                else if (state === "FORM_CHARGE") {
+            var t = tamuIn[tempIndex];
+            out += `<div class="card"><span class="section-title" style="color:#e67e22;">⚠️ Form Pembayaran Denda / Charge</span>
+                <div style="background:#fff3e0; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #f39c12; font-size:13px;">
+                    <b style="color:#d35400;">🚪 Kamar: ${t.room}</b><br>Tamu: ${t.nama}
+                </div>
+                <div class="form-group"><label class="form-label">Keterangan Denda</label><input type="text" id="c_ket" class="form-control" placeholder="Contoh: Kunci Hilang / Merusak Handuk"></div>
+                <div class="form-group"><label class="form-label">Nominal Charge (Rp)</label><input type="number" id="c_nominal" class="form-control" placeholder="Contoh: 100000"></div>
+                <div class="form-group"><label class="form-label">Pembayaran via</label><select id="c_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select></div>
+                                <button class="btn-submit" onclick="prosesEditTamu()">💾 Simpan Pembayaran</button>
+                
+                <div style="margin-top:20px; border-top:2px dashed #f39c12; padding-top:15px;">
+                    <button onclick="pindahHalaman('FORM_CHARGE')" style="background:#fff3e0; color:#d35400; border:1px solid #f39c12; width:100%; padding:12px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">⚠️ Klik Disini Untuk Bayar Charge / Denda</button>
+                </div>
+
+                <div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')" style="margin-top:15px; justify-content:center;">🔙 Batal</div></div>`;
+}
+
                         else if (state === "FORM_RESTO") {
             out += `<div class="card"><span class="section-title" style="color:var(--orange);">🛒 Buat Pesanan Resto</span>
                 <div class="form-group"><label class="form-label">Pemesan / Nomor Kamar</label><input type="text" id="r_kamar" class="form-control" placeholder="Contoh: 1a / Tamu Luar / April"></div>
@@ -1159,17 +1177,14 @@
                     html += `<div style="font-size:11px; font-weight:bold; color:red; margin-top:3px;">Kurang: Rp ${formatRp(sisa)}</div>
                              <div style="margin-top:5px; cursor:pointer; font-size:10px; font-weight:bold; background:#e74c3c; color:white; display:inline-block; padding:4px 8px; border-radius:4px;" onclick="bayarCicilan(${i})">💰 Bayar Cicilan/Extend</div>`;
                 }
-                html += `<div style="margin-top:8px; margin-right:10px; background:#fff3f3; padding:8px; border-radius:6px; border:1px dashed var(--red);">
-                            <div style="font-size:10px; font-weight:bold; color:var(--red); margin-bottom:5px;">⚠️ Form Charge (Isi jika denda)</div>
-                            <input type="text" id="charge_item_${i}" class="form-control" style="padding:6px; font-size:11px; margin-bottom:5px; color:#000;" placeholder="Nama Barang Charge">
-                            <div style="display:flex; gap:5px;">
-                                <input type="number" id="charge_harga_${i}" class="form-control" style="padding:6px; font-size:11px; margin-bottom:0; flex:1; color:#000;" placeholder="Rp">
-                                <select id="charge_bayar_${i}" class="form-control" style="padding:6px; font-size:11px; margin-bottom:0; flex:1; color:#000;"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select>
-                            </div>
+                                html += `<div style="margin-top:8px; margin-right:10px;">
+                            <button onclick="bukaFormCharge(${i})" style="background:#fff3e0; color:#d35400; border:1px dashed #e67e22; width:100%; padding:8px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer; text-align:left;">⚠️ + Klik Disini Untuk Bayar Charge/Denda</button>
                         </div>
+
                     </div>
                     <div style="text-align:right;">
                         <span style="cursor:pointer; font-weight:700; font-size:10px; border:1px solid var(--blue); color:white; background:var(--blue); padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:5px;" onclick="bukaEditTamu(${i})">🔄 Pindah / Extra Malam</span><br>
+              
                         <span style="cursor:pointer; font-weight:700; font-size:10px; border:1px solid var(--orange); color:var(--orange); padding:4px 6px; border-radius:4px; display:inline-block; margin-bottom:5px;" onclick="editPembayaran(${i})">✏️ Ubah Pembayaran</span><br>
                         <span style="cursor:pointer; font-weight:700; font-size:10px; border:1px solid var(--red); color:white; background:var(--red); padding:4px 6px; border-radius:4px; margin-right:5px; display:inline-block; margin-bottom:5px;" onclick="batalCheckIn(${i})">⚠️ Batal (Salah Input)</span><br>
                         <span style="cursor:pointer; font-weight:700; font-size:12px; border:1px solid #ddd; padding:5px 10px; border-radius:5px; background:var(--bg);" onclick="prosesCheckOut(${i})">🏃 Check Out</span>
@@ -2337,6 +2352,36 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             .then(() => console.log("Aplikasi SDB Juma Eluk Siap Di-Install!"))
             .catch((err) => console.log("Gagal: ", err));
     }
+        window.bukaFormCharge = function(index) {
+        tempIndex = index;
+        pindahHalaman("FORM_CHARGE");
+    };
+
+    window.prosesChargeLangsung = function() {
+        var t = tamuIn[tempIndex];
+        var ket = document.getElementById('c_ket').value || "Charge Tambahan";
+        var nom = parseInt(document.getElementById('c_nominal').value) || 0;
+        var via = document.getElementById('c_bayar').value;
+
+        if(nom > 0 && ket !== "") {
+            var jamAsli = new Date().getHours(); 
+            var shiftNow = (jamAsli >= 7 && jamAsli < 17) ? "Pagi" : "Malam"; 
+            var sb = shiftNow.toLowerCase();
+
+            // Uang otomatis dihitung masuk Laci sebagai "UANG CHARGE", bukan uang kamar!
+            bukuKas.harian.uang += nom; bukuKas.bulanan.uang += nom;
+            if(via === "CASH") { bukuKas.harian.uangCash += nom; bukuKas.bulanan.uangCash += nom; bukuKas.harian[sb].cash += nom; bukuKas.harian[sb].charge_cash = (bukuKas.harian[sb].charge_cash||0) + nom; }
+            else if(via === "TRANSFER") { bukuKas.harian.uangTransfer += nom; bukuKas.bulanan.uangTransfer += nom; bukuKas.harian[sb].tf += nom; bukuKas.harian[sb].charge_tf = (bukuKas.harian[sb].charge_tf||0) + nom; }
+            else if(via === "DEBIT") { bukuKas.harian.uangDebit += nom; bukuKas.bulanan.uangDebit += nom; bukuKas.harian[sb].db += nom; bukuKas.harian[sb].charge_db = (bukuKas.harian[sb].charge_db||0) + nom; }
+
+            simpanKeCloud(); 
+            alert("✅ SUKSES!\nUang Charge Rp " + formatRp(nom) + " untuk " + ket + " berhasil masuk ke Laci Kasir Laporan Keuangan.");
+            pindahHalaman("DAFTAR_TAMU");
+        } else {
+            alert("❌ Keterangan dan Nominal Denda harus diisi!");
+        }
+    };
+
 </script>
 
 </body>
