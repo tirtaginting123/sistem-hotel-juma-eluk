@@ -1216,13 +1216,17 @@
                 });
             }
 
-            if(kamarKotor.length > 0) {
-                out += `<br><span class="section-title" style="color:#8e44ad;">🧹 Status Kamar Kotor (VD)</span>`;
-                kamarKotor.forEach(function(kmr, i) {
+                        // 🔥 TAMBAHAN UNTUK MEMUNCULKAN RIWAYAT JUAL BILL DI MONITORING 🔥
+            if (bukuKas.harian.jualBill && bukuKas.harian.jualBill.length > 0) {
+                out += `<br><span class="section-title" style="color:#f39c12;">🏷️ Riwayat Jual Bill Hari Ini</span>`;
+                bukuKas.harian.jualBill.forEach(function(jb) {
                     out += `<div style="border-bottom: 1px solid #eee; padding-bottom:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
-                        <b style="color:#8e44ad;">🚪 ${kmr} (Kotor)</b><span style="cursor:pointer; color:var(--green); font-weight:bold; font-size:10px; border:1px solid var(--green); padding:4px 8px; border-radius:4px;" onclick="kamarBersih('${kmr}')">✨ Tandai Bersih (VR)</span></div>`;
+                        <div><b style="color:#d35400;">🚪 Kamar ${jb.kamar} (JUAL BILL)</b><br><span style="font-size:10px; color:#777;">Invoice: #${jb.inv} | Shift: ${jb.shift}</span></div>
+                        <span style="font-weight:bold; color:white; background:#f39c12; padding:4px 8px; border-radius:4px; font-size:10px;">Hanya Beli Bill</span>
+                    </div>`;
                 });
             }
+
             out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
         else if (state === "FORM_EDIT_TAMU") {
@@ -1410,9 +1414,16 @@
                     out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')" style="color:var(--orange);">🛠️ Tandai Sedang Diperbaiki</div>`; 
                 }
             }
+            
+            // 🔥 TOMBOL BYPASS KHUSUS MODE JUAL BILL 🔥
+            if (isJualBillMode) {
+                out += `<div class="btn-mewah" onclick="window.isCheckInNormal=true; pindahHalaman('FORM_CHECKIN')" style="background:#f1c40f; color:#000; font-weight:bold; border-left:6px solid #e67e22;">🏷️ Lanjutkan Beli Bill (Bypass Status Kamar)</div>`;
+            }
+
             out += `<div class="btn-mewah" onclick="history.back()" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
         else if (state === "FORM_ROMBONGAN") {
+
             out += `<div class="card"><span class="section-title" style="color:#9b59b6;">🚌 Formulir Tamu Rombongan (Multi-Kamar)</span>
                 <div style="background:#f4f6f7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #ddd;">
                     <div class="form-group"><label class="form-label" style="color:#e74c3c;">Ketik Nomor Kamar (Pisahkan dengan koma)</label><input type="text" id="rom_kamar" class="form-control" style="font-weight:bold; font-size:16px;" placeholder="Contoh: 1a, 1b, 2av, 5b"></div>
@@ -2026,10 +2037,12 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         }
 
         if(isJualBillMode) {
-            setoranLaporanKas = (metodeSetoran === "BELUM BAYAR" || d.sudah_dibayar === 0 || metodeSetoran === "LUNAS LAMA") ? 0 : 100000;
-            d.total_tagihan = 100000; d.sudah_dibayar = setoranLaporanKas;
+            var totalHargaBill = 100000 * parseInt(d.malam || 1); // 🔥 MATEMATIKA OTOMATIS: 100.000 x Malam
+            setoranLaporanKas = (metodeSetoran === "BELUM BAYAR" || d.sudah_dibayar === 0 || metodeSetoran === "LUNAS LAMA") ? 0 : totalHargaBill;
+            d.total_tagihan = totalHargaBill; d.sudah_dibayar = setoranLaporanKas;
             if(!bukuKas.harian.jualBill) bukuKas.harian.jualBill = []; bukuKas.harian.jualBill.push({ kamar: tempRoom, inv: d.inv, shift: d.shift });
         }
+
 
         if(setoranLaporanKas > 0 && metodeSetoran !== "BELUM BAYAR" && metodeSetoran !== "LUNAS LAMA") {
             bukuKas.harian.uang += setoranLaporanKas; bukuKas.bulanan.uang += setoranLaporanKas;
@@ -2058,9 +2071,13 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             d.history_bayar.push({ nominal: setoranLaporanKas, via: metodeSetoran, shift: d.shift, tgl: tglAkuratC });
         }
 
-        tamuIn.push(Object.assign({}, d, { room: tempRoom })); 
-        if(pdg) { tamuPending = tamuPending.filter(function(t) { return t.room !== tempRoom; }); }
-        if(metodeSetoran !== "LUNAS LAMA") { bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1; bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1; }
+        
+        // 🔥 CEGAH DATA MASUK KAMAR JIKA HANYA BELI BILL 🔥
+        if (!isJualBillMode) {
+            tamuIn.push(Object.assign({}, d, { room: tempRoom })); 
+            if(pdg) { tamuPending = tamuPending.filter(function(t) { return t.room !== tempRoom; }); }
+            if(metodeSetoran !== "LUNAS LAMA") { bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1; bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1; }
+        }
 
         isJualBillMode = false; window.isCheckInNormal = true; simpanKeCloud(); pindahHalaman("PESAN_SUKSES");
     }
