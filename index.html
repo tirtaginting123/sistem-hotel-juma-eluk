@@ -756,6 +756,8 @@
                 <div class="btn-mewah" onclick="isPendingMode=true; isJualBillMode=false; pindahHalaman('PILIH_KELAS')" style="border-left: 4px solid var(--blue);"><span>⏳ #. Pending Bookingan</span><span>➔</span></div>
 <div class="btn-mewah" onclick="pindahHalaman('FORM_ROMBONGAN')" style="border-left: 4px solid #9b59b6;"><span>🚌 #. Booking & Check-In Rombongan</span><span>➔</span></div>
 
+<div class="btn-mewah" onclick="pindahHalaman('FORM_JUAL_BILL')" style="border-left: 4px solid #f39c12; background:#fef9e7;"><span>🏷️ #. Jual Bill (Struk Kosong)</span><span>➔</span></div>
+
                 <div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')"><span>👥 2. Monitoring & Check-Out</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('TUTUP_BUKU')"><span>💰 3a. Laporan Keuangan</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('FORM_PENGELUARAN')" style="border-left: 4px solid var(--red);"><span>📉 3b. Catat Pengeluaran</span><span>➔</span></div>
@@ -1216,17 +1218,13 @@
                 });
             }
 
-                        // 🔥 TAMBAHAN UNTUK MEMUNCULKAN RIWAYAT JUAL BILL DI MONITORING 🔥
-            if (bukuKas.harian.jualBill && bukuKas.harian.jualBill.length > 0) {
-                out += `<br><span class="section-title" style="color:#f39c12;">🏷️ Riwayat Jual Bill Hari Ini</span>`;
-                bukuKas.harian.jualBill.forEach(function(jb) {
+            if(kamarKotor.length > 0) {
+                out += `<br><span class="section-title" style="color:#8e44ad;">🧹 Status Kamar Kotor (VD)</span>`;
+                kamarKotor.forEach(function(kmr, i) {
                     out += `<div style="border-bottom: 1px solid #eee; padding-bottom:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
-                        <div><b style="color:#d35400;">🚪 Kamar ${jb.kamar} (JUAL BILL)</b><br><span style="font-size:10px; color:#777;">Invoice: #${jb.inv} | Shift: ${jb.shift}</span></div>
-                        <span style="font-weight:bold; color:white; background:#f39c12; padding:4px 8px; border-radius:4px; font-size:10px;">Hanya Beli Bill</span>
-                    </div>`;
+                        <b style="color:#8e44ad;">🚪 ${kmr} (Kotor)</b><span style="cursor:pointer; color:var(--green); font-weight:bold; font-size:10px; border:1px solid var(--green); padding:4px 8px; border-radius:4px;" onclick="kamarBersih('${kmr}')">✨ Tandai Bersih (VR)</span></div>`;
                 });
             }
-
             out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
         else if (state === "FORM_EDIT_TAMU") {
@@ -1247,12 +1245,12 @@
         else if (state === "GRAFIK") {
             out += `<div class="card"><span class="section-title">📈 Tren Pendapatan Harian</span><div style="position: relative; height:35vh; width:100%; margin-top:20px;"><canvas id="cryptoChart"></canvas></div><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali</div></div>`;
         }
-        else if (state === "PILIH_KELAS") {
+                else if (state === "PILIH_KELAS") {
             out += `<div class="card"><span class="section-title">🏨 Pilih Kelas Kamar</span>`;
             ["Standard", "Deluxe", "Suite", "VIP"].forEach(function(c, i) { out += `<div class="btn-mewah" onclick="isJualBillMode=false; klikMenu('KLS_${i+1}')">💎 ${c}</div>`; });
-            out += `<div class="btn-mewah" onclick="isJualBillMode=true; alert('✅ MODE JUAL BILL AKTIF!'); this.style.background='#e74c3c'; this.style.color='#fff';" style="background:#f1c40f; color:#000; font-weight:800; text-align:center; justify-content:center;">🏷️ Beli Bill (Set Harga 100k)</div>`;
             out += `<div class="btn-mewah" onclick="isJualBillMode=false; pindahHalaman('MENU')" style="color:var(--red); justify-content:center;">🔙 Batal</div></div>`;
         }
+
         else if (state === "PILIH_BED") {
             out += `<div class="card"><span class="section-title">🛏️ Pilih Tipe Kasur</span><div class="btn-mewah" onclick="klikMenu('BED_1')">👤 Single Bed</div><div class="btn-mewah" onclick="klikMenu('BED_2')">👥 Twin Bed</div><div class="btn-mewah" onclick="pindahHalaman('PILIH_KELAS')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
@@ -1414,16 +1412,23 @@
                     out += `<div class="btn-mewah" onclick="klikMenu('AKSI_RUSAK')" style="color:var(--orange);">🛠️ Tandai Sedang Diperbaiki</div>`; 
                 }
             }
-            
-            // 🔥 TOMBOL BYPASS KHUSUS MODE JUAL BILL 🔥
-            if (isJualBillMode) {
-                out += `<div class="btn-mewah" onclick="window.isCheckInNormal=true; pindahHalaman('FORM_CHECKIN')" style="background:#f1c40f; color:#000; font-weight:bold; border-left:6px solid #e67e22;">🏷️ Lanjutkan Beli Bill (Bypass Status Kamar)</div>`;
-            }
-
             out += `<div class="btn-mewah" onclick="history.back()" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
-        else if (state === "FORM_ROMBONGAN") {
+                else if (state === "FORM_JUAL_BILL") {
+            out += `<div class="card"><span class="section-title" style="color:#d35400;">🏷️ Form Jual Bill (Struk Kosong)</span>
+                <div style="background:#fff3e0; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #f39c12; font-size:12px; color:#d35400;">
+                    <b>💡 Mode Jual Bill:</b><br>Kamar asli tidak akan terganggu (tamu fisik tidak masuk), tapi uang langsung tercatat di Laporan dan Invoice bisa dicetak. Harga mutlak <b>Rp 100.000 / malam</b>.
+                </div>
+                <div class="form-group"><label class="form-label">Nomor Kamar</label><input type="text" id="jb_kamar" class="form-control" placeholder="Contoh: 1a, 2av, 5b..." autocomplete="off"></div>
+                <div class="form-group"><label class="form-label">Nama Tamu (Hanya untuk di Struk)</label><input type="text" id="jb_nama" class="form-control" placeholder="Boleh dikosongkan" autocomplete="off"></div>
+                <div class="form-group"><label class="form-label">Berapa Malam?</label><input type="number" id="jb_malam" class="form-control" value="1" oninput="document.getElementById('jb_harga').value = formatRp(this.value * 100000);"></div>
+                <div class="form-group"><label class="form-label">Total Harga (Otomatis)</label><input type="text" id="jb_harga" class="form-control" value="100.000" style="font-weight:bold; color:var(--red); background:#fdf2e9;" readonly></div>
+                <div class="form-group"><label class="form-label">Metode Pembayaran</label><select id="jb_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select></div>
+                <button class="btn-submit" style="background:#d35400;" onclick="prosesJualBill()">💾 Proses Bill & Cetak Struk</button>
+                <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
+        }
 
+        else if (state === "FORM_ROMBONGAN") {
             out += `<div class="card"><span class="section-title" style="color:#9b59b6;">🚌 Formulir Tamu Rombongan (Multi-Kamar)</span>
                 <div style="background:#f4f6f7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #ddd;">
                     <div class="form-group"><label class="form-label" style="color:#e74c3c;">Ketik Nomor Kamar (Pisahkan dengan koma)</label><input type="text" id="rom_kamar" class="form-control" style="font-weight:bold; font-size:16px;" placeholder="Contoh: 1a, 1b, 2av, 5b"></div>
@@ -1670,7 +1675,55 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
     };
 
     window.prosesFormPending = function() {
-      
+          window.prosesJualBill = function() {
+        var kamar = document.getElementById('jb_kamar').value.trim();
+        var nama = document.getElementById('jb_nama').value || "Tamu Jual Bill";
+        var malam = parseInt(document.getElementById('jb_malam').value) || 1;
+        var bayar = document.getElementById('jb_bayar').value;
+        var hargaTotal = malam * 100000;
+
+        if (kamar === "") { alert("❌ Nomor Kamar harus diisi!"); return; }
+
+        var jamAsli = new Date().getHours();
+        var shiftNow = (jamAsli >= 7 && jamAsli < 17) ? "Pagi" : "Malam";
+        var sb = shiftNow.toLowerCase();
+
+        // 1. Uang masuk laci khusus jalur "Jual Bill"
+        bukuKas.harian.uang += hargaTotal; bukuKas.bulanan.uang += hargaTotal;
+        if (bayar === "CASH") { bukuKas.harian.uangCash += hargaTotal; bukuKas.bulanan.uangCash += hargaTotal; bukuKas.harian[sb].cash += hargaTotal; bukuKas.harian[sb].jual_bill_cash = (bukuKas.harian[sb].jual_bill_cash || 0) + hargaTotal; bukuKas.bulanan.jual_bill_cash = (bukuKas.bulanan.jual_bill_cash || 0) + hargaTotal; }
+        else if (bayar === "TRANSFER") { bukuKas.harian.uangTransfer += hargaTotal; bukuKas.bulanan.uangTransfer += hargaTotal; bukuKas.harian[sb].tf += hargaTotal; bukuKas.harian[sb].room_tf = (bukuKas.harian[sb].room_tf || 0) + hargaTotal; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf || 0) + hargaTotal; }
+        else if (bayar === "DEBIT") { bukuKas.harian.uangDebit += hargaTotal; bukuKas.bulanan.uangDebit += hargaTotal; bukuKas.harian[sb].db += hargaTotal; bukuKas.harian[sb].room_db = (bukuKas.harian[sb].room_db || 0) + hargaTotal; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db || 0) + hargaTotal; }
+
+        // 2. Tarik Nomor Invoice Resmi
+        lastInv++; var inv = String(lastInv).padStart(4, '0');
+        if(shiftNow === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = inv; bukuKas.harian.billPagi.akhir = inv; bukuKas.harian.billPagi.count++; }
+        else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = inv; bukuKas.harian.billMalam.akhir = inv; bukuKas.harian.billMalam.count++; }
+
+        // 3. Masukkan ke Riwayat Monitoring Jual Bill
+        if(!bukuKas.harian.jualBill) bukuKas.harian.jualBill = [];
+        bukuKas.harian.jualBill.push({ kamar: kamar, inv: inv, shift: shiftNow });
+
+        // 4. Siapkan Data Struk (Tanpa merusak data kamar aslinya)
+        var waktuAsli = new Date();
+        var tglHari = String(waktuAsli.getDate()).padStart(2, '0'); var bulanArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+        var tglInFormat = tglHari + "-" + bulanArr[waktuAsli.getMonth()] + "-" + waktuAsli.getFullYear() + ", " + String(waktuAsli.getHours()).padStart(2, '0') + "." + String(waktuAsli.getMinutes()).padStart(2, '0');
+        
+        var dateOut = new Date(waktuAsli); if (waktuAsli.getHours() >= 0 && waktuAsli.getHours() < 7) { dateOut.setDate(dateOut.getDate() - 1); }
+        dateOut.setDate(dateOut.getDate() + malam);
+        var tglOutFormat = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        // Manipulasi database sementara untuk cetak struk
+        d = {
+            room: kamar, nama: nama, alamat: "-", warga: "Indonesia", ktp: "-", hp: "-",
+            malam: malam, extrabed: 0, transport: "-", trip: "Travelling", bayar: bayar,
+            total_tagihan: hargaTotal, sudah_dibayar: hargaTotal, tgl: tglInFormat, tgl_out: tglOutFormat, inv: inv
+        };
+
+        simpanKeCloud();
+        alert("✅ BILL BERHASIL DIBUAT!\nKamar: " + kamar + "\nTotal Harga: Rp " + formatRp(hargaTotal) + "\n\nInvoice siap dicetak!");
+        pindahHalaman("PESAN_SUKSES");
+    };
+
     window.prosesFormRombongan = function() {
         var kamarStr = document.getElementById('rom_kamar').value.toLowerCase().replace(/\s/g, '');
         var arrKamarRaw = kamarStr.split(',').filter(function(k) { return k !== ""; });
@@ -2037,12 +2090,10 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         }
 
         if(isJualBillMode) {
-            var totalHargaBill = 100000 * parseInt(d.malam || 1); // 🔥 MATEMATIKA OTOMATIS: 100.000 x Malam
-            setoranLaporanKas = (metodeSetoran === "BELUM BAYAR" || d.sudah_dibayar === 0 || metodeSetoran === "LUNAS LAMA") ? 0 : totalHargaBill;
-            d.total_tagihan = totalHargaBill; d.sudah_dibayar = setoranLaporanKas;
+            setoranLaporanKas = (metodeSetoran === "BELUM BAYAR" || d.sudah_dibayar === 0 || metodeSetoran === "LUNAS LAMA") ? 0 : 100000;
+            d.total_tagihan = 100000; d.sudah_dibayar = setoranLaporanKas;
             if(!bukuKas.harian.jualBill) bukuKas.harian.jualBill = []; bukuKas.harian.jualBill.push({ kamar: tempRoom, inv: d.inv, shift: d.shift });
         }
-
 
         if(setoranLaporanKas > 0 && metodeSetoran !== "BELUM BAYAR" && metodeSetoran !== "LUNAS LAMA") {
             bukuKas.harian.uang += setoranLaporanKas; bukuKas.bulanan.uang += setoranLaporanKas;
@@ -2071,13 +2122,9 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             d.history_bayar.push({ nominal: setoranLaporanKas, via: metodeSetoran, shift: d.shift, tgl: tglAkuratC });
         }
 
-        
-        // 🔥 CEGAH DATA MASUK KAMAR JIKA HANYA BELI BILL 🔥
-        if (!isJualBillMode) {
-            tamuIn.push(Object.assign({}, d, { room: tempRoom })); 
-            if(pdg) { tamuPending = tamuPending.filter(function(t) { return t.room !== tempRoom; }); }
-            if(metodeSetoran !== "LUNAS LAMA") { bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1; bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1; }
-        }
+        tamuIn.push(Object.assign({}, d, { room: tempRoom })); 
+        if(pdg) { tamuPending = tamuPending.filter(function(t) { return t.room !== tempRoom; }); }
+        if(metodeSetoran !== "LUNAS LAMA") { bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1; bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1; }
 
         isJualBillMode = false; window.isCheckInNormal = true; simpanKeCloud(); pindahHalaman("PESAN_SUKSES");
     }
