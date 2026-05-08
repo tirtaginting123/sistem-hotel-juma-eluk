@@ -1724,19 +1724,29 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var kamarStr = document.getElementById('rom_kamar').value.toLowerCase().replace(/\s/g, '');
         var arrKamarRaw = kamarStr.split(',').filter(function(k) { return k !== ""; });
         if(arrKamarRaw.length === 0) { alert("❌ Masukkan minimal 1 nomor kamar!"); return; }
+        
         var semuaKamarValid = [];
         dataHotel.forEach(function(k) { k.nomor.forEach(function(no) { semuaKamarValid.push(no); }); });
+        
+        // 🔥 MODIFIKASI: Sistem mengecek "Jenis Tindakan" lebih dulu
+        var jenis = document.getElementById('rom_jenis').value;
+        
         var arrKamar = [];
         for(var i=0; i<arrKamarRaw.length; i++) {
             var k = arrKamarRaw[i];
             if(semuaKamarValid.indexOf(k) === -1) { alert("❌ GAGAL: Kamar " + k + " tidak ada di database!"); return; }
-            if(tamuIn.some(function(t) { return String(t.room) === k; })) { alert("❌ GAGAL: Kamar " + k + " sedang terisi!"); return; }
-            if(kamarKotor.indexOf(k) !== -1) { alert("❌ GAGAL: Kamar " + k + " KOTOR (VD)!"); return; }
+            
+            // 🔥 MODIFIKASI: Hanya blokir jika Bosku milih "Langsung Check-In"
+            if (jenis === "CHECKIN") {
+                if(tamuIn.some(function(t) { return String(t.room) === k; })) { alert("❌ GAGAL: Kamar " + k + " sedang terisi untuk Check-In! (Ubah ke PENDING jika untuk tanggal depan)"); return; }
+                if(kamarKotor.indexOf(k) !== -1) { alert("❌ GAGAL: Kamar " + k + " masih KOTOR (VD)! Bersihkan dulu."); return; }
+            }
+            
             arrKamar.push(k);
         }
+        
         var nama = document.getElementById('rom_nama').value || "Tamu Rombongan";
         var hp = document.getElementById('rom_hp').value || "-";
-        var jenis = document.getElementById('rom_jenis').value;
         var malam = parseInt(document.getElementById('rom_malam').value) || 1;
         var tglMasuk = document.getElementById('rom_tgl').value || "-";
         var totalTagihan = parseInt(document.getElementById('rom_total').value) || 0;
@@ -1754,7 +1764,6 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var sisaTagihan = totalTagihan - (hargaPerKamar * arrKamar.length); 
         var sisaBayar = bayarNow - (bayarPerKamar * arrKamar.length);
         
-        // 🔥 MODIFIKASI: Cegah "LUNAS LAMA" masuk hitungan Laci Kasir Hari Ini
         if (bayarNow > 0 && metode !== "D.Pending" && metode !== "LUNAS LAMA") {
             bukuKas.harian.uang += bayarNow; bukuKas.bulanan.uang += bayarNow;
             if(metode === "CASH") { bukuKas.harian.uangCash += bayarNow; bukuKas.bulanan.uangCash += bayarNow; bukuKas.harian[sb].cash += bayarNow; }
@@ -1783,7 +1792,6 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             var myHarga = hargaPerKamar + (idx === 0 ? sisaTagihan : 0);
             var myBayar = bayarPerKamar + (idx === 0 ? sisaBayar : 0);
             
-            // 🔥 MODIFIKASI: Pastikan "LUNAS LAMA" menempel di keterangan tiap kamar
             var myMetode = myBayar >= myHarga ? metode : (myBayar > 0 ? "D.Pending" : "D.Pending");
             if (metode === "D.Pending") myMetode = "D.Pending";
             if (metode === "LUNAS LAMA") myMetode = "LUNAS LAMA"; 
@@ -1797,7 +1805,6 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = inv; bukuKas.harian.billMalam.akhir = inv; bukuKas.harian.billMalam.count++; }
                 
                 var hist = []; 
-                // 🔥 MODIFIKASI: Cegah masuk history agar Laporan WA bersih
                 if(myBayar > 0 && metode !== "D.Pending" && metode !== "LUNAS LAMA") { 
                     hist.push({ nominal: myBayar, via: metode, shift: shiftNow, tgl: tglAkuratC }); 
                 }
@@ -1808,6 +1815,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         });
         simpanKeCloud(); alert("✅ SUKSES ROMBONGAN!"); pindahHalaman("MENU");
     };
+
 
 
     window.prosesJualBill = function() {
