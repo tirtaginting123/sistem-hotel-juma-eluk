@@ -220,8 +220,20 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
     function simpanKeCloud() { 
         document.getElementById('loadingBar').style.display = "block"; 
-        dataRef.set({ checkin: tamuIn, checkout: tamuOut, pending: tamuPending, maintenance: kamarRusak, kamarKotor: kamarKotor, arsip: arsipTamu, arsipLaporanHarian: arsipLaporanHarian || [], last_inv: lastInv, last_resto_inv: lastRestoInv, bukuKas: bukuKas, riwayatHarian: riwayatHarian, catatan: catatanHotel }).then(function() { document.getElementById('loadingBar').style.display = "none"; }); 
+        dataRef.set({ 
+            checkin: tamuIn, checkout: tamuOut, pending: tamuPending, 
+            maintenance: kamarRusak, kamarKotor: kamarKotor, arsip: arsipTamu, 
+            arsipLaporanHarian: arsipLaporanHarian || [], last_inv: lastInv, 
+            last_resto_inv: lastRestoInv, bukuKas: bukuKas, 
+            riwayatHarian: riwayatHarian, catatan: catatanHotel 
+        }).then(function() { 
+            document.getElementById('loadingBar').style.display = "none"; 
+        }).catch(function(error) {
+            document.getElementById('loadingBar').style.display = "none";
+            alert("❌ GAGAL MENYIMPAN KE CLOUD!\nKoneksi terputus atau Firebase Terkunci.\nError: " + error.message);
+        }); 
     }
+
 
     function getHarga(noKmr) { for (var i=0; i<dataHotel.length; i++) { if (dataHotel[i].nomor.indexOf(noKmr) !== -1) return dataHotel[i].harga; } return 0; }
     function formatRp(angka) { return new Intl.NumberFormat('id-ID').format(angka); }
