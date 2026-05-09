@@ -141,59 +141,82 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
             // >>> FITUR ROBOT AUTO-RESET JAM 7 PAGI <<<
             if (dbKasHarian.tgl && dbKasHarian.tgl !== "" && dbKasHarian.tgl !== realTglHarian) {
-                tamuIn = toArr(cloudData.checkin); 
-                tamuPending = toArr(cloudData.pending); 
-                kamarRusak = toArr(cloudData.maintenance); 
                 
-                var oldBukuKas = cloudData.bukuKas; 
-
-                // 🔥 KUNCI ARSIP: Pakai mesin waktu membaca hari kemarin
-                var arsipDate = new Date();
-                arsipDate.setDate(arsipDate.getDate() - 1);
-                arsipDate.setHours(12);
-
-                var teksPagi = generateLaporanShift("Pagi", oldBukuKas.harian.pagi, true, arsipDate);
-                var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, arsipDate);
+                // 🔥 SOLUSI ANTI-TABRAKAN: JEDA WAKTU ACAK (JITTER) 🔥
+                // Sistem mengundi waktu tunggu antara 2 sampai 7 detik secara otomatis
+                var waktuTunggu = Math.floor(Math.random() * 5000) + 2000; 
                 
-                arsipLaporanHarian = toArr(cloudData.arsipLaporanHarian);
-                arsipLaporanHarian.push({ 
-                    tgl: oldBukuKas.harian.tgl, 
-                    lapPagi: teksPagi, 
-                    lapMalam: teksMalam 
-                });
+                document.getElementById('loadingBar').innerText = ">>> MENYIAPKAN TUTUP BUKU OTOMATIS...";
+                document.getElementById('loadingBar').style.display = "block";
 
-                var h = oldBukuKas.harian; var b = oldBukuKas.bulanan || {};
-                var fields = ["uang", "uangCash", "uangTransfer", "uangDebit", "keluar", "kamar", "room_cash", "room_tf", "room_db", "resto_cash", "resto_tf", "resto_db", "charge_cash", "charge_tf", "charge_db", "panjar_cash", "panjar_tf", "panjar_db", "jual_bill_cash"];
-                fields.forEach(function(f) { b[f] = (b[f] || 0) + (h[f] || 0); });
+                // Menahan eksekusi sesuai waktu undian
+                setTimeout(function() {
+                    // Setelah menunggu, robot mengecek lagi ke Cloud (Internet)
+                    dataRef.once('value').then(function(cekSnapshot) {
+                        var freshData = cekSnapshot.val();
+                        var freshTgl = ((freshData.bukuKas || {}).harian || {}).tgl;
+                        
+                        // Jika tanggalnya sudah berubah (berarti sudah diurus duluan oleh HP/Komputer lain yang undian waktunya lebih cepat)
+                        if (freshTgl === realTglHarian) {
+                            console.log("Aman! Tutup buku sudah dikerjakan oleh perangkat lain. Perangkat ini batal mengeksekusi.");
+                            document.getElementById('loadingBar').style.display = "none";
+                            return; // Hentikan proses, biarkan firebase merender data baru secara otomatis
+                        }
+
+                        // JIKA MASIH TANGGAL LAMA, BERARTI PERANGKAT INI YANG MENANG UNDIAN & BERTUGAS!
+                        tamuIn = toArr(freshData.checkin); 
+                        tamuPending = toArr(freshData.pending); 
+                        kamarRusak = toArr(freshData.maintenance); 
+                        
+                        var oldBukuKas = freshData.bukuKas; 
+
+                        // Mesin Waktu Arsip
+                        var arsipDate = new Date();
+                        arsipDate.setDate(arsipDate.getDate() - 1);
+                        arsipDate.setHours(12);
+
+                        var teksPagi = generateLaporanShift("Pagi", oldBukuKas.harian.pagi, true, arsipDate);
+                        var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, arsipDate);
+                        
+                        arsipLaporanHarian = toArr(freshData.arsipLaporanHarian);
+                        arsipLaporanHarian.push({ 
+                            tgl: oldBukuKas.harian.tgl, 
+                            lapPagi: teksPagi, 
+                            lapMalam: teksMalam 
+                        });
+
+                        var h = oldBukuKas.harian; var b = oldBukuKas.bulanan || {};
+                        var fields = ["uang", "uangCash", "uangTransfer", "uangDebit", "keluar", "kamar", "room_cash", "room_tf", "room_db", "resto_cash", "resto_tf", "resto_db", "charge_cash", "charge_tf", "charge_db", "panjar_cash", "panjar_tf", "panjar_db", "jual_bill_cash"];
+                        fields.forEach(function(f) { b[f] = (b[f] || 0) + (h[f] || 0); });
+                        
+                        riwayatHarian = toArr(freshData.riwayatHarian);
+                        if(h.uang > 0) { riwayatHarian.push({ tgl: h.tgl, uang: h.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
+
+                        var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
+                        
+                        bukuKas.harian = { 
+                            tgl: realTglHarian, uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, kamar: 0, 
+                            rincianKeluar: [], transaksiResto: [], jualBill: [],
+                            pagi: Object.assign({}, defShift), 
+                            malam: Object.assign({}, defShift), 
+                            billPagi: {awal:null, akhir:null, count:0}, 
+                            billMalam: {awal:null, akhir:null, count:0}, 
+                            last_reset: new Date().getTime() 
+                        };
+                        bukuKas.bulanan = b;
+
+                        var safeKamarKotor = toArr(freshData.kamarKotor);
+                        kamarKotor = safeKamarKotor;
+                        var freshTamuOut = toArr(freshData.checkout);
+                        tamuOut = freshTamuOut.filter(function(t) { return safeKamarKotor.includes(t.room); });
+
+                        simpanKeCloud();
+                        alert("🌅 AUTO-RESET BERHASIL!\nLaporan berhasil diproses oleh perangkat ini dan disimpan ke Arsip.");
+                    });
+                }, waktuTunggu);
                 
-                riwayatHarian = toArr(cloudData.riwayatHarian);
-                if(h.uang > 0) { riwayatHarian.push({ tgl: h.tgl, uang: h.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
-
-                var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
-                
-                bukuKas.harian = { 
-                    tgl: realTglHarian, uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, kamar: 0, 
-                    rincianKeluar: [], transaksiResto: [], jualBill: [],
-                    pagi: Object.assign({}, defShift), 
-                    malam: Object.assign({}, defShift), 
-                    billPagi: {awal:null, akhir:null, count:0}, 
-                    billMalam: {awal:null, akhir:null, count:0}, 
-                    last_reset: new Date().getTime() 
-                };
-                bukuKas.bulanan = b;
-
-                // 🔥 WAJIB 0 MUTLAK: Hapus Riwayat CO & Daftar VD 
-                                 // 🔥 PERTAHANKAN DATA TAMU VD AGAR BISA MASUK ARSIP DENGAN SEMPURNA
-                tamuOut = tamuOut.filter(function(t) { return kamarKotor.includes(t.room); });
-
-                
-
-                simpanKeCloud();
-                alert("🌅 AUTO-RESET BERHASIL!\nLaporan Sempurna disimpan ke Arsip. Hitungan Kamar & VD kembali 0 Mutlak.");
-                return; 
+                return; // Mencegah tampilan termuat separuh jalan
             }
-
-
             // >>> AKHIR FITUR ROBOT <<<
 
             // Jika bukan jam 7 pagi, Muat Data Normal:
@@ -1989,67 +2012,128 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
     };
 
     window.bukaKoreksiLaci = function() {
-        var pC = bukuKas.harian.pagi.cash || 0; var pT = bukuKas.harian.pagi.tf || 0;
-        var mC = bukuKas.harian.malam.cash || 0; var mT = bukuKas.harian.malam.tf || 0;
+        // Tarik data asli saat ini agar form terisi otomatis
+        var p = bukuKas.harian.pagi;
+        var m = bukuKas.harian.malam;
+
+        var out = `<div class="card" style="background:#1a1a2e; border: 2px solid #e94560;">
+            <span class="section-title" style="color:#e94560; text-align:center; display:block; font-size:16px;">🛠️ KOREKSI BUKU KAS (GOD MODE)</span>
+            <p style="text-align:center; font-size:11px; color:#ccc;">Sistem otomatis memunculkan angka laci Anda saat ini. Silakan ubah angka yang salah.</p>
+            <hr style="border-color:#333;">
+
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; color:#fff;">
+                
+                <!-- KOLOM GLOBAL -->
+                <div style="width:100%; margin-bottom:15px; background:#0f2027; padding:12px; border-radius:8px;">
+                    <h4 style="color:#4db8ff; border-bottom:1px solid #4db8ff; margin-top:0; padding-bottom:5px;">💰 TOTAL GLOBAL HARI INI</h4>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total Cash Laci</label><input type="number" id="kor_uangCash" class="form-control" value="${bukuKas.harian.uangCash||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total TF</label><input type="number" id="kor_uangTransfer" class="form-control" value="${bukuKas.harian.uangTransfer||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total Debit</label><input type="number" id="kor_uangDebit" class="form-control" value="${bukuKas.harian.uangDebit||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total Keluar</label><input type="number" id="kor_keluar" class="form-control" value="${bukuKas.harian.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                    </div>
+                </div>
+
+                <!-- KOLOM PAGI -->
+                <div style="width:100%; margin-bottom:15px; background:#0b2e13; padding:12px; border-radius:8px;">
+                    <h4 style="color:#00ff88; border-bottom:1px solid #00ff88; margin-top:0; padding-bottom:5px;">☀️ RINCIAN SHIFT PAGI</h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Kamar (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_roomCash" class="form-control" value="${p.room_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_roomTf" class="form-control" value="${p.room_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Resto (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_restoCash" class="form-control" value="${p.resto_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_restoTf" class="form-control" value="${p.resto_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Panjar/DP (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_panjarCash" class="form-control" value="${p.panjar_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_panjarTf" class="form-control" value="${p.panjar_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Charge/Denda (Cash|TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_chargeCash" class="form-control" value="${p.charge_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_chargeTf" class="form-control" value="${p.charge_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Jual Bill (Cash)</label><input type="number" id="kor_pagi_jualBill" class="form-control" value="${p.jual_bill_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Pengeluaran Pagi</label><input type="number" id="kor_pagi_keluar" class="form-control" value="${p.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                    </div>
+                </div>
+
+                <!-- KOLOM MALAM -->
+                <div style="width:100%; background:#2c2c00; padding:12px; border-radius:8px;">
+                    <h4 style="color:#ffcc00; border-bottom:1px solid #ffcc00; margin-top:0; padding-bottom:5px;">🌙 RINCIAN SHIFT MALAM</h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Kamar (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_roomCash" class="form-control" value="${m.room_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_roomTf" class="form-control" value="${m.room_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Resto (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_restoCash" class="form-control" value="${m.resto_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_restoTf" class="form-control" value="${m.resto_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Panjar/DP (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_panjarCash" class="form-control" value="${m.panjar_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_panjarTf" class="form-control" value="${m.panjar_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Charge/Denda (Cash|TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_chargeCash" class="form-control" value="${m.charge_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_chargeTf" class="form-control" value="${m.charge_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Jual Bill (Cash)</label><input type="number" id="kor_mlm_jualBill" class="form-control" value="${m.jual_bill_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Pengeluaran Malam</label><input type="number" id="kor_mlm_keluar" class="form-control" value="${m.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="btn" style="background:#e94560; color:white; margin-top:25px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; box-shadow:0 4px 10px rgba(233, 69, 96, 0.5);" onclick="simpanKoreksiGodMode()">💾 UPDATE BUKU KAS SEKARANG</button>
+            <button class="btn" style="background:#333; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer;" onclick="pindahHalaman('MENU')">🔙 BATAL KOREKSI</button>
+        </div>`;
         
-        var pKmr = bukuKas.harian.pagi.manual_kamar || ""; var pCIn = bukuKas.harian.pagi.manual_cin || ""; var pVD = bukuKas.harian.pagi.manual_vd || "";
-        var mKmr = bukuKas.harian.malam.manual_kamar || ""; var mCIn = bukuKas.harian.malam.manual_cin || ""; var mVD = bukuKas.harian.malam.manual_vd || "";
-
-        var out = `<div class="card"><span class="section-title">⚖️ KOREKSI LACI & KAMAR (RAHASIA)</span>
-            <p style="font-size:11px; color:#e74c3c; margin-bottom:15px;">*Ketik angka laci. Untuk daftar kamar, <b>biarkan kosong</b> jika ingin sistem menghitung otomatis.</p>
-            
-            <div style="background:#eafaf1; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #27ae60;">
-                <b style="color:#27ae60;">☀️ SHIFT PAGI</b>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <div class="form-group" style="flex:1;"><label>Cash Fisik</label><input type="number" id="kor_pagi_cash" class="form-control" value="${pC}"></div>
-                    <div class="form-group" style="flex:1;"><label>Transfer</label><input type="number" id="kor_pagi_tf" class="form-control" value="${pT}"></div>
-                </div>
-                <hr style="border:1px dashed #27ae60; margin:10px 0;">
-                <div class="form-group"><label>Paksa Daftar Kamar (Misal: 2a🌞, 3b🤝🌞)</label><input type="text" id="kor_pagi_kmr" class="form-control" value="${pKmr}" placeholder="Kosong = Otomatis"></div>
-                <div style="display:flex; gap:10px;">
-                    <div class="form-group" style="flex:1;"><label>Paksa C.IN</label><input type="number" id="kor_pagi_cin" class="form-control" value="${pCIn}" placeholder="Auto"></div>
-                    <div class="form-group" style="flex:1;"><label>Paksa VD</label><input type="number" id="kor_pagi_vd" class="form-control" value="${pVD}" placeholder="Auto"></div>
-                </div>
-            </div>
-
-            <div style="background:#fdf2e9; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #e67e22;">
-                <b style="color:#e67e22;">🌙 SHIFT MALAM</b>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <div class="form-group" style="flex:1;"><label>Cash Fisik</label><input type="number" id="kor_malam_cash" class="form-control" value="${mC}"></div>
-                    <div class="form-group" style="flex:1;"><label>Transfer</label><input type="number" id="kor_malam_tf" class="form-control" value="${mT}"></div>
-                </div>
-                <hr style="border:1px dashed #e67e22; margin:10px 0;">
-                <div class="form-group"><label>Paksa Daftar Kamar (Misal: 1a🌙, 5b🌙)</label><input type="text" id="kor_malam_kmr" class="form-control" value="${mKmr}" placeholder="Kosong = Otomatis"></div>
-                <div style="display:flex; gap:10px;">
-                    <div class="form-group" style="flex:1;"><label>Paksa C.IN</label><input type="number" id="kor_malam_cin" class="form-control" value="${mCIn}" placeholder="Auto"></div>
-                    <div class="form-group" style="flex:1;"><label>Paksa VD</label><input type="number" id="kor_malam_vd" class="form-control" value="${mVD}" placeholder="Auto"></div>
-                </div>
-            </div>
-            <button onclick="simpanKoreksiLaci()" style="background:#3498db; color:#fff; border:none; width:100%; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer;">💾 SIMPAN KOREKSI</button>
-            <button onclick="pindahHalaman('MENU')" style="background:#ecf0f1; border:none; width:100%; padding:10px; border-radius:10px; margin-top:10px; cursor:pointer;">🔙 BATAL</button></div>`;
         document.getElementById('screen').innerHTML = out;
         window.scrollTo(0,0);
     };
 
-    window.simpanKoreksiLaci = function() {
-        var pC = parseInt(document.getElementById('kor_pagi_cash').value) || 0; var pT = parseInt(document.getElementById('kor_pagi_tf').value) || 0;
-        var mC = parseInt(document.getElementById('kor_malam_cash').value) || 0; var mT = parseInt(document.getElementById('kor_malam_tf').value) || 0;
+    window.simpanKoreksiGodMode = function() {
+        var pin = prompt("🔐 Masukkan PIN Admin (1234) untuk melanjutkan:");
+        if(pin !== "1234") { alert("❌ PIN SALAH!"); return; } // Ganti 1234 dengan PIN rahasia Bosku
 
-        bukuKas.harian.pagi.cash = pC; bukuKas.harian.pagi.room_cash = pC; bukuKas.harian.pagi.tf = pT; bukuKas.harian.pagi.room_tf = pT;
-        bukuKas.harian.malam.cash = mC; bukuKas.harian.malam.room_cash = mC; bukuKas.harian.malam.tf = mT; bukuKas.harian.malam.room_tf = mT;
-        bukuKas.harian.uangCash = pC + mC; bukuKas.harian.uangTransfer = pT + mT;
-        bukuKas.harian.uang = pC + pT + mC + mT + (bukuKas.harian.uangDebit || 0);
+        // AMBIL DATA GLOBAL
+        bukuKas.harian.uangCash = parseInt(document.getElementById('kor_uangCash').value) || 0;
+        bukuKas.harian.uangTransfer = parseInt(document.getElementById('kor_uangTransfer').value) || 0;
+        bukuKas.harian.uangDebit = parseInt(document.getElementById('kor_uangDebit').value) || 0;
+        bukuKas.harian.keluar = parseInt(document.getElementById('kor_keluar').value) || 0;
+        bukuKas.harian.uang = bukuKas.harian.uangCash + bukuKas.harian.uangTransfer + bukuKas.harian.uangDebit;
 
-        bukuKas.harian.pagi.manual_kamar = document.getElementById('kor_pagi_kmr').value;
-        bukuKas.harian.pagi.manual_cin = document.getElementById('kor_pagi_cin').value;
-        bukuKas.harian.pagi.manual_vd = document.getElementById('kor_pagi_vd').value;
+        // AMBIL DATA SHIFT PAGI
+        var p = bukuKas.harian.pagi;
+        p.room_cash = parseInt(document.getElementById('kor_pagi_roomCash').value) || 0;
+        p.room_tf = parseInt(document.getElementById('kor_pagi_roomTf').value) || 0;
+        p.resto_cash = parseInt(document.getElementById('kor_pagi_restoCash').value) || 0;
+        p.resto_tf = parseInt(document.getElementById('kor_pagi_restoTf').value) || 0;
+        p.panjar_cash = parseInt(document.getElementById('kor_pagi_panjarCash').value) || 0;
+        p.panjar_tf = parseInt(document.getElementById('kor_pagi_panjarTf').value) || 0;
+        p.charge_cash = parseInt(document.getElementById('kor_pagi_chargeCash').value) || 0;
+        p.charge_tf = parseInt(document.getElementById('kor_pagi_chargeTf').value) || 0;
+        p.jual_bill_cash = parseInt(document.getElementById('kor_pagi_jualBill').value) || 0;
+        p.keluar = parseInt(document.getElementById('kor_pagi_keluar').value) || 0;
 
-        bukuKas.harian.malam.manual_kamar = document.getElementById('kor_malam_kmr').value;
-        bukuKas.harian.malam.manual_cin = document.getElementById('kor_malam_cin').value;
-        bukuKas.harian.malam.manual_vd = document.getElementById('kor_malam_vd').value;
+        // AMBIL DATA SHIFT MALAM
+        var m = bukuKas.harian.malam;
+        m.room_cash = parseInt(document.getElementById('kor_mlm_roomCash').value) || 0;
+        m.room_tf = parseInt(document.getElementById('kor_mlm_roomTf').value) || 0;
+        m.resto_cash = parseInt(document.getElementById('kor_mlm_restoCash').value) || 0;
+        m.resto_tf = parseInt(document.getElementById('kor_mlm_restoTf').value) || 0;
+        m.panjar_cash = parseInt(document.getElementById('kor_mlm_panjarCash').value) || 0;
+        m.panjar_tf = parseInt(document.getElementById('kor_mlm_panjarTf').value) || 0;
+        m.charge_cash = parseInt(document.getElementById('kor_mlm_chargeCash').value) || 0;
+        m.charge_tf = parseInt(document.getElementById('kor_mlm_chargeTf').value) || 0;
+        m.jual_bill_cash = parseInt(document.getElementById('kor_mlm_jualBill').value) || 0;
+        m.keluar = parseInt(document.getElementById('kor_mlm_keluar').value) || 0;
 
-        simpanKeCloud(); alert("✅ KOREKSI TERSIMPAN! Laporan Laci & Kamar sudah dipaksa sesuai inputan Bosku."); pindahHalaman("MENU");
+        // KALKULASI OTOMATIS SUB-TOTAL SHIFT
+        p.cash = p.room_cash + p.resto_cash + p.panjar_cash + p.charge_cash + p.jual_bill_cash;
+        p.tf = p.room_tf + p.resto_tf + p.panjar_tf + p.charge_tf;
+        m.cash = m.room_cash + m.resto_cash + m.panjar_cash + m.charge_cash + m.jual_bill_cash;
+        m.tf = m.room_tf + m.resto_tf + m.panjar_tf + m.charge_tf;
+
+        simpanKeCloud();
+        alert("✅ BUKU KAS BERHASIL DI-KOREKSI SECARA TOTAL!");
+        pindahHalaman('MENU');
     };
+
 
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
     window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
@@ -2281,6 +2365,25 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             alert("❌ Keterangan dan Nominal Denda harus diisi!");
         }
     };
+    // 🔥 ALARM AUTO-REFRESH TEPAT JAM 07:00 PAGI 🔥
+    let sudahRefreshPagiIni = false;
+    setInterval(function() {
+        var waktuLokal = new Date();
+        // Cek apakah jam menunjukkan pukul 07:00 pagi
+        if (waktuLokal.getHours() === 7 && waktuLokal.getMinutes() === 0) {
+            if (!sudahRefreshPagiIni) {
+                sudahRefreshPagiIni = true;
+                console.log("Alarm jam 07:00 berbunyi! Me-refresh layar otomatis...");
+                location.reload(); // Memaksa refresh halaman (F5 otomatis)
+            }
+        } else {
+            // Reset alarm jika sudah lewat jam 07:00 supaya besok bisa bunyi lagi
+            if (waktuLokal.getHours() !== 7) {
+                sudahRefreshPagiIni = false; 
+            }
+        }
+    }, 10000); // Sistem mengecek jam komputer setiap 10 detik
+
 
 </script>
 
