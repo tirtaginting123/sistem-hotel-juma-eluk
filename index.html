@@ -319,19 +319,28 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
         function cekWaktu(tglStr) {
             if (!tglStr || tglStr === "-") return false;
-            var d = new Date(); if (d.getHours() < 7) d.setDate(d.getDate() - 1);
-            var dd = String(d.getDate()).padStart(2, '0');
-            var mmmArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-            var target = dd + "-" + mmmArr[d.getMonth()] + "-" + d.getFullYear();
-            var parts = tglStr.split(", ");
-            if (parts.length < 2) return parts[0] === target;
-            var hour = 12; if(parts[1]) hour = parseInt(parts[1].split(".")[0]);
-            if (parts[0] === target && hour >= 7) return true;
-            var dNext = new Date(d); dNext.setDate(dNext.getDate() + 1);
-            var targetNext = String(dNext.getDate()).padStart(2, '0') + "-" + mmmArr[dNext.getMonth()] + "-" + dNext.getFullYear();
-            if (parts[0] === targetNext && hour < 7) return true;
+            var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
+            var tglPad = String(dOp.getDate()).padStart(2, '0');
+            var blnArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+            var target = tglPad + "-" + blnArr[dOp.getMonth()] + "-" + dOp.getFullYear();
+            
+            // NORMALISASI STRING
+            var cleanStr = tglStr.trim().replace(/ /g, '-').replace(/\//g, '-');
+            var parts = cleanStr.split(",");
+            var tglBersih = parts[0];
+            
+            var jam = 12; // default jam
+            if (parts.length >= 2) jam = parseInt(parts[1].trim().replace(':', '.').split(".")[0]);
+            
+            if (tglBersih === target && jam >= 7) return true;
+            
+            var dN = new Date(dOp); dN.setDate(dN.getDate() + 1);
+            var targetN = String(dN.getDate()).padStart(2, '0') + "-" + blnArr[dN.getMonth()] + "-" + dN.getFullYear();
+            if (tglBersih === targetN && jam < 7) return true;
+            
             return false;
         }
+
 
         function tambahKeLaci(nom, via, bs, jenis) {
             if(nom <= 0 || via === "BELUM BAYAR" || via === "LUNAS LAMA" || via === "D.PENDING") return;
@@ -588,7 +597,8 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         // STEMPEL WAKTU KE HISTORY (Biar dibaca oleh Laporan WA sebagai uang hari ini)
                         var waktuAsli = new Date();
                         var mmArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-                        var tglAkuratC = String(waktuAsli.getDate()).padStart(2, '0') + "-" + mmArr[waktuAsli.getMonth()] + "-" + waktuAsli.getFullYear() + ", " + String(waktuAsli.getHours()).padStart(2, '0') + "." + String(waktuAsli.getMinutes()).padStart(2, '0');
+                                var tglAkuratC = String(waktuAsli.getDate()).padStart(2, '0') + "-" + mmArr[waktuAsli.getMonth()] + "-" + waktuAsli.getFullYear() + ", " + String(waktuAsli.getHours()).padStart(2, '0') + "." + String(waktuAsli.getMinutes()).padStart(2, '0');
+
                         
                         if(!tamuIn[index].history_bayar) tamuIn[index].history_bayar = [];
                         tamuIn[index].history_bayar.push({ nominal: bayar, via: via, shift: shiftNow, tgl: tglAkuratC });
@@ -1953,8 +1963,19 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         d.is_jual_bill = isJualBillMode; 
 
+        // 🔥 KUNCI ANTI-BOCOR: Cek apakah input tanggal mundur ke hari kemarin 🔥
+        var setoranLaciAktif = setoranLaporanKas;
+        var batasPagiIni = new Date();
+        if (batasPagiIni.getHours() < 7) batasPagiIni.setDate(batasPagiIni.getDate() - 1);
+        batasPagiIni.setHours(7,0,0,0);
+        
+        if (dateObj.getTime() < batasPagiIni.getTime() && !isJualBillMode) {
+            setoranLaciAktif = 0; // Uang tidak dimasukkan ke laci shift hari ini
+        }
+
         if(isJualBillMode) {
-            setoranLaporanKas = (metodeSetoran === "BELUM BAYAR" || d.sudah_dibayar === 0 || metodeSetoran === "LUNAS LAMA") ? 0 : tagihanNormal;
+            setoranLaciAktif = (metodeSetoran === "BELUM BAYAR" || d.sudah_dibayar === 0 || metodeSetoran === "LUNAS LAMA") ? 0 : tagihanNormal;
+
             d.total_tagihan = tagihanNormal; d.sudah_dibayar = setoranLaporanKas;
             if(!bukuKas.harian.jualBill) bukuKas.harian.jualBill = []; bukuKas.harian.jualBill.push({ kamar: tempRoom, inv: d.inv, shift: d.shift });
         }
@@ -1983,7 +2004,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         d.jenis_deposit = "Uang 100k"; d.dilaporkan = false;
 
         var waktuAsli = new Date();
-        var tglAkuratC = String(waktuAsli.getDate()).padStart(2, '0') + " " + bulanArr[waktuAsli.getMonth()] + " " + waktuAsli.getFullYear();
+        var tglAkuratC = String(dateObj.getDate()).padStart(2, '0') + "-" + bulanArr[dateObj.getMonth()] + "-" + dateObj.getFullYear() + ", " + String(dateObj.getHours()).padStart(2, '0') + "." + String(dateObj.getMinutes()).padStart(2, '0');
         d.history_bayar = [];
         if(setoranLaporanKas > 0 && metodeSetoran !== "BELUM BAYAR" && metodeSetoran !== "LUNAS LAMA") {
             d.history_bayar.push({ nominal: setoranLaporanKas, via: metodeSetoran, shift: d.shift, tgl: tglAkuratC });
@@ -2334,7 +2355,8 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         function safeFormatRp(val) { return typeof formatRp === 'function' ? formatRp(val) : val; }
 
-        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + safeFormatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto) + "<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill) + "<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) + "<br>ttl uang deposit/jaminan👉🏽Rp 0<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp 0<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(totalUangCash) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
+        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + safeFormatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto_c) + " cash / Rp " + safeFormatRp(resto_t) + " tf<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill) + "<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) +
+ "<br>ttl uang deposit/jaminan👉🏽Rp 0<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp 0<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(totalUangCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
         
         if(isForArsip) return textBlock;
 
