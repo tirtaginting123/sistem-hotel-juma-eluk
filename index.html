@@ -164,11 +164,23 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         }
 
                         // JIKA MASIH TANGGAL LAMA, BERARTI PERANGKAT INI YANG MENANG UNDIAN & BERTUGAS!
+                        // 🔥 AMBIL SEMUA DATA DARI INTERNET AGAR TIDAK HILANG SAAT SAVE 🔥
                         tamuIn = toArr(freshData.checkin); 
                         tamuPending = toArr(freshData.pending); 
                         kamarRusak = toArr(freshData.maintenance); 
+                        kamarKotor = toArr(freshData.kamarKotor);
+                        tamuOut = toArr(freshData.checkout);
+                        
+                        // INI YANG PENTING AGAR MENU 9-1 DAN MENU 5 TIDAK TERHAPUS:
+                        arsipTamu = toArr(freshData.arsip); 
+                        arsipLaporanHarian = toArr(freshData.arsipLaporanHarian);
+                        riwayatHarian = toArr(freshData.riwayatHarian);
+                        lastInv = freshData.last_inv || 0;
+                        lastRestoInv = freshData.last_resto_inv || 0;
+                        catatanHotel = freshData.catatan || "";
                         
                         var oldBukuKas = freshData.bukuKas; 
+
 
                         // Mesin Waktu Arsip
                         var arsipDate = new Date();
@@ -1045,7 +1057,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     var invOut = "-";
 
                     if (lastT) {
-                        sOut = (lastT.shift || "pagi").toLowerCase();
+                        sOut = (lastT.shift_out || lastT.shift || "pagi").toLowerCase();
                         invOut = lastT.inv || "-";
                         var isBaruVD = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
                         if (!isBaruVD) sOut = "pagi"; // Tamu nyambung selalu masuk Pagi
@@ -2233,7 +2245,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 var sOut = "pagi"; var ketOut = "nyb"; var invOut = "-";
 
                 if (lastT) {
-                    sOut = (lastT.shift || "pagi").toLowerCase();
+                    sOut = (lastT.shift_out || lastT.shift || "pagi").toLowerCase();
                     invOut = lastT.inv || "-";
                     var isBaruVD = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
                     if (!isBaruVD) sOut = "pagi";
