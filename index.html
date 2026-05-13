@@ -750,6 +750,37 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
     };
 
     window.simpanCatatan = function() { catatanHotel = document.getElementById('txt_catatan').value; simpanKeCloud(); alert("✅ Catatan disimpan!"); pindahHalaman('MENU'); };
+    
+    window.aturNomorBill = function() {
+        var nextBill = prompt("🎫 PENGATURAN NOMOR BILL 🎫\nBerapa angka nomor bill SELANJUTNYA yang mau dipakai?\n(Contoh: Jika di buku fisik bill berikutnya adalah 1200, ketik 1200)", "");
+        if (nextBill !== null && nextBill.trim() !== "") {
+            var angka = parseInt(nextBill);
+            if (!isNaN(angka) && angka > 0) {
+                var sandi = prompt("Kunci Keamanan! Masukkan sandi master:");
+                if (sandi === "vipjumaeluk1234") {
+                    lastInv = angka - 1; // Dikurangi 1, karena saat ada tamu masuk sistem otomatis nambah +1
+                    simpanKeCloud();
+                    alert("✅ SUKSES BOSKU!\nSistem telah disinkronkan. Bill tamu berikutnya akan memakai nomor " + angka);
+                    renderScreen();
+                } else {
+                    alert("❌ Sandi salah!");
+                }
+            } else {
+                alert("❌ Masukkan angka saja ya Bosku!");
+            }
+        }
+    };
+    let billCounter = 0;
+    window.klikAturBill = function() {
+        billCounter++;
+        if (billCounter >= 5) {
+            billCounter = 0; // Reset hitungan
+            aturNomorBill(); // Panggil fungsi atur bill
+        }
+        // Jika dalam 2 detik tidak ketuk lagi, hitungan kembali ke 0
+        setTimeout(function() { billCounter = 0; }, 2000); 
+    };
+
 
     window.siapkanInvoice = function() {
         var cetakKelas = tempKelas; var cetakBed = tempBed;
@@ -898,7 +929,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
         }
 
         else if (state === "CATATAN") {
-            out += `<div class="card"><span class="section-title" style="color:#f39c12;">📝 @. Catatan Shift & Sync Laci</span>
+            out += `<div class="card"><span class="section-title" style="color:#f39c12;" onclick="klikAturBill()">📝 @. Catatan Shift & Sync Laci</span>
                 <textarea id="txt_catatan" class="form-control" style="height:250px; resize:vertical;" placeholder="Ketik memo antar shift di sini...">${catatanHotel}</textarea>
                 <button class="btn-submit" style="background:#f39c12;" onclick="simpanCatatan()">💾 Simpan Memo</button>
                 <div class="btn-mewah" onclick="sinkronHariIni()" style="background:var(--blue); color:white; justify-content:center; margin-top:30px; border:none;">🔄 Sesuaikan Uang Laci (Repair)</div>
@@ -1068,7 +1099,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                     var invOut = "-";
 
                     if (lastT) {
-                        sOut = (lastT.shift_out || lastT.shift || "pagi").toLowerCase();
+                        sOut = (lastT.shift || "pagi").toLowerCase();
                         invOut = lastT.inv || "-";
                         var isBaruVD = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
                         if (!isBaruVD) sOut = "pagi"; // Tamu nyambung selalu masuk Pagi
@@ -2278,7 +2309,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 var sOut = "pagi"; var ketOut = "nyb"; var invOut = "-";
 
                 if (lastT) {
-                    sOut = (lastT.shift_out || lastT.shift || "pagi").toLowerCase();
+                    sOut = (lastT.shift || "pagi").toLowerCase();
                     invOut = lastT.inv || "-";
                     var isBaruVD = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
                     if (!isBaruVD) sOut = "pagi";
