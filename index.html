@@ -1994,7 +1994,18 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var e_chk = document.getElementById('f_early'); if(e_chk && e_chk.checked) sub += 100000;
         var tagihanNormal = sub - dpPending; if(tagihanNormal < 0) tagihanNormal = 0;
 
-                        var isAdvanced = document.getElementById('ui_adv_pay').style.display === 'block';
+        // --- HITUNG ULANG DP & TOTAL DI DALAM FUNGSI SIMPAN BIAR SISTEM TIDAK BINGUNG ---
+        var m = parseInt(document.getElementById('f_malam').value) || 1;
+        var eb = parseInt(document.getElementById('f_extrabed').value) || 0;
+        var baseHarga = getHarga(tempRoom);
+        var sub = (baseHarga * m) + (eb * 150000);
+        if(document.getElementById('f_early') && document.getElementById('f_early').checked) sub += 100000;
+
+        var pdg = window.isCheckInNormal ? null : tamuPending.find(function(t) { return t.room === tempRoom; });
+        var dpPending = pdg ? (pdg.dp || 0) : 0;
+        // --------------------------------------------------------------------------------
+
+        var isAdvanced = document.getElementById('ui_adv_pay').style.display === 'block';
         var metodeSetoran = ""; var setoranLaporanKas = 0;
 
         if (isAdvanced) {
@@ -2035,6 +2046,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 }
             }
         }
+
 
 
         if(metodeSetoran !== "LUNAS LAMA" && !isJualBillMode) { 
