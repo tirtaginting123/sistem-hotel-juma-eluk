@@ -293,7 +293,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
         }
     };
 
-    window.updateTotalCheckIn = function() {
+        window.updateTotalCheckIn = function() {
         var m = parseInt(document.getElementById('f_malam').value) || 1;
         var eb = parseInt(document.getElementById('f_extrabed').value) || 0;
         var baseHarga = getHarga(tempRoom);
@@ -302,13 +302,13 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
         var e_chk = document.getElementById('f_early');
         if(e_chk && e_chk.checked) sub += 100000;
 
-        var pdg = window.isCheckInNormal ? null : tamuPending.find(function(t) { return t.room === tempRoom; });
-        var dp = pdg ? (pdg.dp || 0) : 0;
-        var tot = sub - dp; if(tot < 0) tot = 0;
-
         var elTotal = document.getElementById('f_total');
-        if(elTotal) { elTotal.value = tot; document.getElementById('f_dibayar').value = tot; }
+        if(elTotal) { 
+            elTotal.value = sub; 
+            document.getElementById('f_dibayar').value = sub; 
+        }
     };
+
                 window.sinkronHariIni = function() {
         var conf = confirm("🚨 REPAIR TOTAL (KAS & RESTO) 🚨\nSistem akan menghitung ulang semua uang laci dan transaksi Resto. Lanjut?");
         if (!conf) return;
@@ -1593,13 +1593,16 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
 
                 <b style="font-size:11px; color:var(--primary); margin-bottom:10px; display:block;">💰 PEMBAYARAN</b>
                 <div id="ui_basic_pay"><div class="form-group"><label class="form-label">Metode Pembayaran</label><select id="f_bayar_basic" class="form-control" onchange="if(this.value==='D.Pending'){ document.getElementById('ui_basic_pay').style.display='none'; document.getElementById('ui_adv_pay').style.display='block'; updateTotalCheckIn(); }"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option><option value="LUNAS LAMA">LUNAS LAMA (Tanpa Masuk Laci)</option><option value="D.Pending">D.Pending (DP / Cicil / Edit Harga)</option></select></div></div>
-                <div id="ui_adv_pay" style="display:none; background:#fef9e7; padding:15px; border-radius:8px; border:1px dashed #f39c12; margin-top:15px;">
+                               <div id="ui_adv_pay" style="display:none; background:#fef9e7; padding:15px; border-radius:8px; border:1px dashed #f39c12; margin-top:15px;">
                     <div style="text-align:right; margin-bottom:10px;"><span style="cursor:pointer; color:red; font-size:11px; font-weight:bold; border:1px solid red; padding:3px 6px; border-radius:4px;" onclick="document.getElementById('ui_adv_pay').style.display='none'; document.getElementById('ui_basic_pay').style.display='block'; document.getElementById('f_bayar_basic').value='CASH';">❌ Batal Custom Harga</span></div>
-                    <div class="form-group"><label class="form-label">Total Harga Kamar Kesepakatan (Bisa Diedit) Rp</label><input type="tel" id="f_total" class="form-control" value="${tagihanAwal}" style="font-weight:bold; color:var(--red);" oninput="document.getElementById('f_dibayar').value=this.value;"></div>
-                    <div class="form-group"><label class="form-label">Uang Dibayar Sekarang (Panjar/Lunas) Rp</label><input type="tel" id="f_dibayar" class="form-control" value="${tagihanAwal}" style="font-weight:bold; color:var(--green);"></div>
-                    <div class="form-group"><label class="form-label">Metode Pembayaran DP/Lunas</label><select id="f_metode_adv" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option><option value="LUNAS LAMA">LUNAS LAMA (Tanpa Masuk Laci)</option><option value="BELUM BAYAR">BELUM BAYAR SAMA SEKALI</option></select></div>
+                    
+                    <div class="form-group"><label class="form-label">Total Harga Kamar (Kesepakatan) Rp</label><input type="tel" id="f_total" class="form-control" value="${sub}" style="font-weight:bold; color:var(--red);" oninput="document.getElementById('f_dibayar').value=this.value;"></div>
+                    <div class="form-group"><label class="form-label">Total Keseluruhan Uang Dibayar (DP + Sekarang) Rp</label><input type="tel" id="f_dibayar" class="form-control" value="${sub}" style="font-weight:bold; color:var(--green);"></div>
+                    <div class="form-group"><label class="form-label">Metode Pembayaran</label><select id="f_metode_adv" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option><option value="LUNAS LAMA">LUNAS LAMA (Tanpa Masuk Laci)</option><option value="BELUM BAYAR">BELUM BAYAR SAMA SEKALI</option></select></div>
+                    
+                    <div style="font-size:10px; color:#d35400; font-weight:bold; margin-top:5px;">*Sistem otomatis memotong uang DP (Rp ${formatRp(dpPending)}) dari hitungan setoran laci hari ini.</div>
                 </div>
-                
+
                 <button class="btn-submit" onclick="prosesFormCheckIn()">✔️ Selesaikan Check-In</button>
                 <div class="btn-mewah" onclick="history.back()" style="margin-top:10px; justify-content:center;">🔙 Batal</div>
             </div>`;
@@ -1945,57 +1948,55 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var e_chk = document.getElementById('f_early'); if(e_chk && e_chk.checked) sub += 100000;
         var tagihanNormal = sub - dpPending; if(tagihanNormal < 0) tagihanNormal = 0;
 
-        var isAdvanced = document.getElementById('ui_adv_pay').style.display === 'block';
+                var isAdvanced = document.getElementById('ui_adv_pay').style.display === 'block';
         var metodeSetoran = ""; var setoranLaporanKas = 0;
 
         if (isAdvanced) {
             d.total_tagihan = parseInt(document.getElementById('f_total').value) || 0;
-            d.sudah_dibayar = parseInt(document.getElementById('f_dibayar').value) || 0;
+            var totalDibayarInput = parseInt(document.getElementById('f_dibayar').value) || 0;
             var met = document.getElementById('f_metode_adv').value;
 
-            if (met === "BELUM BAYAR" || d.sudah_dibayar === 0) { d.sudah_dibayar = 0; d.bayar = "D.Pending"; metodeSetoran = "BELUM BAYAR"; setoranLaporanKas = 0; } 
-            else if (met === "LUNAS LAMA") { d.bayar = "LUNAS LAMA"; metodeSetoran = "LUNAS LAMA"; setoranLaporanKas = 0; } 
-            else { if (d.sudah_dibayar >= d.total_tagihan) d.bayar = met; else d.bayar = "D.Pending"; metodeSetoran = met; setoranLaporanKas = d.sudah_dibayar; }
+            // Sistem Pintar: Uang laci HARI INI = Total Dibayar input dikurangi DP masa lalu
+            var bayarSekarang = totalDibayarInput - dpPending;
+            if (bayarSekarang < 0) bayarSekarang = 0; 
+
+            d.sudah_dibayar = dpPending + bayarSekarang; 
+            
+            if (met === "BELUM BAYAR" || (bayarSekarang === 0 && d.sudah_dibayar < d.total_tagihan)) { 
+                d.bayar = "D.Pending"; metodeSetoran = "BELUM BAYAR"; setoranLaporanKas = 0; 
+            } 
+            else if (met === "LUNAS LAMA") { 
+                d.bayar = "LUNAS LAMA"; metodeSetoran = "LUNAS LAMA"; setoranLaporanKas = 0; d.sudah_dibayar = d.total_tagihan; 
+            } 
+            else { 
+                if (d.sudah_dibayar >= d.total_tagihan) {
+                    d.bayar = (bayarSekarang > 0) ? met : (pdg ? pdg.bayar : met);
+                } else {
+                    d.bayar = "D.Pending"; 
+                }
+                metodeSetoran = met; setoranLaporanKas = bayarSekarang; 
+            }
         } else {
-            d.total_tagihan = tagihanNormal; d.sudah_dibayar = tagihanNormal;
+            d.total_tagihan = sub; 
+            var bayarSekarang = sub - dpPending; if(bayarSekarang < 0) bayarSekarang = 0;
+            d.sudah_dibayar = dpPending + bayarSekarang;
+            
             d.bayar = document.getElementById('f_bayar_basic').value;
-            metodeSetoran = d.bayar; setoranLaporanKas = tagihanNormal;
-            if(d.bayar === "LUNAS LAMA") { setoranLaporanKas = 0; }
-        }
-
-        d.is_jual_bill = isJualBillMode; 
-
-        // 🔥 KUNCI ANTI-BOCOR: Cek apakah input tanggal mundur ke hari kemarin 🔥
-        var setoranLaciAktif = setoranLaporanKas;
-        var batasPagiIni = new Date();
-        if (batasPagiIni.getHours() < 7) batasPagiIni.setDate(batasPagiIni.getDate() - 1);
-        batasPagiIni.setHours(7,0,0,0);
-        
-        if (dateObj.getTime() < batasPagiIni.getTime() && !isJualBillMode) {
-            setoranLaciAktif = 0; // Uang tidak dimasukkan ke laci shift hari ini
-        }
-
-        if(isJualBillMode) {
-            setoranLaciAktif = (metodeSetoran === "BELUM BAYAR" || d.sudah_dibayar === 0 || metodeSetoran === "LUNAS LAMA") ? 0 : tagihanNormal;
-
-            d.total_tagihan = tagihanNormal; d.sudah_dibayar = setoranLaporanKas;
-            if(!bukuKas.harian.jualBill) bukuKas.harian.jualBill = []; bukuKas.harian.jualBill.push({ kamar: tempRoom, inv: d.inv, shift: d.shift });
-        }
-
-        if(setoranLaporanKas > 0 && metodeSetoran !== "BELUM BAYAR" && metodeSetoran !== "LUNAS LAMA") {
-            bukuKas.harian.uang += setoranLaporanKas; bukuKas.bulanan.uang += setoranLaporanKas;
-            if(metodeSetoran === "CASH") { bukuKas.harian.uangCash += setoranLaporanKas; bukuKas.bulanan.uangCash += setoranLaporanKas; bukuKas.harian[bucketShift].cash += setoranLaporanKas; }
-            else if(metodeSetoran === "TRANSFER") { bukuKas.harian.uangTransfer += setoranLaporanKas; bukuKas.bulanan.uangTransfer += setoranLaporanKas; bukuKas.harian[bucketShift].tf += setoranLaporanKas; }
-            else if(metodeSetoran === "DEBIT") { bukuKas.harian.uangDebit += setoranLaporanKas; bukuKas.bulanan.uangDebit += setoranLaporanKas; bukuKas.harian[bucketShift].db += setoranLaporanKas; }
-
-            if(isJualBillMode) { 
-                if(metodeSetoran === "CASH") { bukuKas.harian[bucketShift].jual_bill_cash = (bukuKas.harian[bucketShift].jual_bill_cash||0) + setoranLaporanKas; bukuKas.bulanan.jual_bill_cash = (bukuKas.bulanan.jual_bill_cash||0) + setoranLaporanKas; } 
+            
+            if(d.bayar === "LUNAS LAMA") { 
+                setoranLaporanKas = 0; metodeSetoran = "LUNAS LAMA"; 
+            } else if (d.bayar === "D.Pending") {
+                setoranLaporanKas = 0; metodeSetoran = "D.Pending";
+                d.sudah_dibayar = dpPending; // Karena ditunda, yang sah dibayar baru DP
             } else {
-                 if(metodeSetoran === "CASH") { bukuKas.harian[bucketShift].room_cash = (bukuKas.harian[bucketShift].room_cash||0) + setoranLaporanKas; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) + setoranLaporanKas; }
-                 else if(metodeSetoran === "TRANSFER") { bukuKas.harian[bucketShift].room_tf = (bukuKas.harian[bucketShift].room_tf||0) + setoranLaporanKas; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) + setoranLaporanKas; }
-                 else if(metodeSetoran === "DEBIT") { bukuKas.harian[bucketShift].room_db = (bukuKas.harian[bucketShift].room_db||0) + setoranLaporanKas; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) + setoranLaporanKas; }
+                setoranLaporanKas = bayarSekarang;
+                metodeSetoran = d.bayar;
+                if(bayarSekarang === 0 && d.sudah_dibayar >= d.total_tagihan && pdg) {
+                    d.bayar = pdg.bayar; // Lunas mutlak dari DP
+                }
             }
         }
+
 
         if(metodeSetoran !== "LUNAS LAMA" && !isJualBillMode) { 
             bukuKas.harian[bucketShift].kamar_in = (bukuKas.harian[bucketShift].kamar_in || 0) + 1; 
