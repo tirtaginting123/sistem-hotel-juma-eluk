@@ -858,7 +858,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
         if (state === "MENU") {
             out += `<div class="card"><span class="section-title">🏠 Reception Dashboard</span>
                 <div class="btn-mewah" onclick="isPendingMode=false; isJualBillMode=false; pindahHalaman('PILIH_KELAS')"><span>🛏️ 1. Booking Kamar Baru</span><span>➔</span></div>
-                <div class="btn-mewah" onclick="isPendingMode=true; isJualBillMode=false; pindahHalaman('PILIH_KELAS')" style="border-left: 4px solid var(--blue);"><span>⏳ #. Pending Bookingan</span><span>➔</span></div>
+              
 <div class="btn-mewah" onclick="pindahHalaman('FORM_ROMBONGAN')" style="border-left: 4px solid #9b59b6;"><span>🚌 #. Booking & Check-In Rombongan</span><span>➔</span></div>
 
 <div class="btn-mewah" onclick="pindahHalaman('FORM_JUAL_BILL')" style="border-left: 4px solid #f39c12; background:#fef9e7;"><span>🏷️ #. Jual Bill (Struk Kosong)</span><span>➔</span></div>
@@ -1924,9 +1924,45 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 tamuIn.push({ room: kmr, nama: nama + (arrKamar.length > 1 ? " (Grup)" : ""), hp: hp, alamat: "Tamu Rombongan", warga: "Indonesia", ktp: "-", malam: malam, extrabed: 0, transport: "Mobil Rombongan", trip: "Travelling", jenis_deposit: "Uang 100k", dilaporkan: false, shift: shiftNow, tgl: tglInFormat, tgl_hotel: tglInFormat, tgl_out: tglOutFormat, inv: inv, total_tagihan: myHarga, sudah_dibayar: myBayar, bayar: myMetode, history_bayar: hist });
                 bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1; bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1; bukuKas.harian[sb].kamar_in = (bukuKas.harian[sb].kamar_in || 0) + 1;
             }
-        });
-        simpanKeCloud(); alert("✅ SUKSES ROMBONGAN!"); pindahHalaman("MENU");
+        }); // Penutup dari arrKamar.forEach
+
+        // --- OTAK UNTUK CETAK INVOICE ROMBONGAN ---
+        if (jenis === "CHECKIN") {
+            // Merakit gabungan data grup ke memori 'd' agar bisa diprint di Struk
+            d = {
+                inv: "GRP-" + String(lastInv).padStart(4, '0'), // Kode GRP menandakan ini bill rombongan
+                nama: nama + (arrKamar.length > 1 ? " (Grup)" : ""),
+                alamat: "Tamu Rombongan",
+                warga: "Indonesia",
+                ktp: "-",
+                hp: hp,
+                room: arrKamar.join(", "), // Menampilkan semua kamar sekaligus (misal: 1a, 1b, 2av)
+                malam: malam,
+                extrabed: "0",
+                transport: "Kendaraan Rombongan",
+                trip: "Travelling",
+                bayar: metode,
+                total_tagihan: totalTagihan,
+                sudah_dibayar: bayarNow,
+                tgl: tglInFormat,
+                tgl_out: tglOutFormat
+            };
+            
+            // Memanipulasi nama kelas di Invoice agar tidak error
+            tempKelas = "Rombongan";
+            tempBed = arrKamar.length + " Kamar";
+
+            simpanKeCloud(); 
+            alert("✅ CHECK-IN ROMBONGAN BERHASIL!\nSistem akan mengarahkan ke halaman Cetak Invoice."); 
+            pindahHalaman("PESAN_SUKSES");
+        } else {
+            // Jika hanya Pending Booking (belum Check-In), langsung kembali ke Menu
+            simpanKeCloud(); 
+            alert("✅ PENDING BOOKING ROMBONGAN BERHASIL DISIMPAN!"); 
+            pindahHalaman("MENU");
+        }
     };
+
 
 
 
