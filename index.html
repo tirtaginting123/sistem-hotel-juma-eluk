@@ -2054,10 +2054,38 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         var waktuAsli = new Date();
         var tglAkuratC = String(dateObj.getDate()).padStart(2, '0') + "-" + bulanArr[dateObj.getMonth()] + "-" + dateObj.getFullYear() + ", " + String(dateObj.getHours()).padStart(2, '0') + "." + String(dateObj.getMinutes()).padStart(2, '0');
-        d.history_bayar = [];
-        if(setoranLaporanKas > 0 && metodeSetoran !== "BELUM BAYAR" && metodeSetoran !== "LUNAS LAMA") {
+               d.history_bayar = [];
+        if(setoranLaporanKas > 0 && metodeSetoran !== "BELUM BAYAR" && metodeSetoran !== "D.Pending" && metodeSetoran !== "LUNAS LAMA") {
+            // 1. Catat ke riwayat tamu
             d.history_bayar.push({ nominal: setoranLaporanKas, via: metodeSetoran, shift: d.shift, tgl: tglAkuratC });
+            
+            // 2. MASUKKAN UANGNYA KE LACI KASIR (Ini yang kemarin terhapus)
+            bukuKas.harian.uang += setoranLaporanKas;
+            bukuKas.bulanan.uang += setoranLaporanKas;
+            
+            if(metodeSetoran === "CASH") { 
+                bukuKas.harian.uangCash += setoranLaporanKas; 
+                bukuKas.bulanan.uangCash += setoranLaporanKas; 
+                bukuKas.harian[bucketShift].cash += setoranLaporanKas; 
+                bukuKas.harian[bucketShift].room_cash = (bukuKas.harian[bucketShift].room_cash || 0) + setoranLaporanKas; 
+                bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash || 0) + setoranLaporanKas; 
+            }
+            else if(metodeSetoran === "TRANSFER") { 
+                bukuKas.harian.uangTransfer += setoranLaporanKas; 
+                bukuKas.bulanan.uangTransfer += setoranLaporanKas; 
+                bukuKas.harian[bucketShift].tf += setoranLaporanKas; 
+                bukuKas.harian[bucketShift].room_tf = (bukuKas.harian[bucketShift].room_tf || 0) + setoranLaporanKas; 
+                bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf || 0) + setoranLaporanKas; 
+            }
+            else if(metodeSetoran === "DEBIT") { 
+                bukuKas.harian.uangDebit += setoranLaporanKas; 
+                bukuKas.bulanan.uangDebit += setoranLaporanKas; 
+                bukuKas.harian[bucketShift].db += setoranLaporanKas; 
+                bukuKas.harian[bucketShift].room_db = (bukuKas.harian[bucketShift].room_db || 0) + setoranLaporanKas; 
+                bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db || 0) + setoranLaporanKas; 
+            }
         }
+
 
         tamuIn.push(Object.assign({}, d, { room: tempRoom })); 
         if(pdg) { tamuPending = tamuPending.filter(function(t) { return t.room !== tempRoom; }); }
