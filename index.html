@@ -293,7 +293,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
         }
     };
 
-        window.updateTotalCheckIn = function() {
+            window.updateTotalCheckIn = function() {
         var m = parseInt(document.getElementById('f_malam').value) || 1;
         var eb = parseInt(document.getElementById('f_extrabed').value) || 0;
         var baseHarga = getHarga(tempRoom);
@@ -302,12 +302,19 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
         var e_chk = document.getElementById('f_early');
         if(e_chk && e_chk.checked) sub += 100000;
 
+        var pdg = window.isCheckInNormal ? null : tamuPending.find(function(t) { return t.room === tempRoom; });
+        var dp = pdg ? (pdg.dp || 0) : 0;
+        var sisa = sub - dp; if(sisa < 0) sisa = 0;
+
         var elTotal = document.getElementById('f_total');
         if(elTotal) { 
             elTotal.value = sub; 
-            document.getElementById('f_dibayar').value = sub; 
+            document.getElementById('f_dibayar').value = sisa; // Langsung minta bayar sisanya
+            var txtSisa = document.getElementById('txt_sisa_kurang');
+            if(txtSisa) txtSisa.innerText = "Rp " + (typeof formatRp === 'function' ? formatRp(sisa) : sisa);
         }
     };
+
 
                 window.sinkronHariIni = function() {
         var conf = confirm("🚨 REPAIR TOTAL (KAS & RESTO) 🚨\nSistem akan menghitung ulang semua uang laci dan transaksi Resto. Lanjut?");
@@ -770,6 +777,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
             }
         }
     };
+    
     let billCounter = 0;
     window.klikAturBill = function() {
         billCounter++;
@@ -852,7 +860,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                 <div class="btn-mewah" onclick="pindahHalaman('FORM_PENGELUARAN')" style="border-left: 4px solid var(--red);"><span>📉 3b. Catat Pengeluaran</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU_RESTO')" style="border-left: 4px solid var(--orange);"><span>🍔 4. Transaksi Resto</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('GRAFIK')" style="border-left: 4px solid #3498db;"><span>📈 5. Tren Pendapatan</span><span>➔</span></div>
-                <div class="btn-mewah" onclick="pindahHalaman('RINGKASAN_KAMAR')" style="border-left: 4px solid var(--green);"><span>📊 6. Ringkasan Kamar</span><span>➔</span></div>
+                <div class="btn-mewah" onclick="pindahHalaman('RINGKASAN_KAMAR')" style="border-left: 4px solid var(--green);"><span>📊 6. Ringkasan Kamar Berwarna</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('TOTAL_KAMAR')" style="border-left: 4px solid #8e44ad;"><span>🧮 7. Rekap Kamar Terjual</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('ALL_INFO_MENU')" style="border-left: 4px solid #1abc9c; background:#1abc9c; color:white;"><span>🌐 8. ALL INFO (LAPORAN DETAIL)</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('ARSIP')" style="border-left: 4px solid #34495e; background:#34495e; color:white; margin-top:25px;"><span>🗄️ 9. Penyimpanan Arsip Permanen</span><span>➔</span></div>
@@ -1623,14 +1631,21 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                 </div>
 
                 <b style="font-size:11px; color:var(--primary); margin-bottom:10px; display:block;">💰 PEMBAYARAN</b>
-                <div id="ui_basic_pay"><div class="form-group"><label class="form-label">Metode Pembayaran</label><select id="f_bayar_basic" class="form-control" onchange="if(this.value==='D.Pending'){ document.getElementById('ui_basic_pay').style.display='none'; document.getElementById('ui_adv_pay').style.display='block'; updateTotalCheckIn(); }"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option><option value="LUNAS LAMA">LUNAS LAMA (Tanpa Masuk Laci)</option><option value="D.Pending">D.Pending (DP / Cicil / Edit Harga)</option></select></div></div>
-                               <div id="ui_adv_pay" style="display:none; background:#fef9e7; padding:15px; border-radius:8px; border:1px dashed #f39c12; margin-top:15px;">
+                <div 
+                                <div id="ui_adv_pay" style="display:none; background:#fef9e7; padding:15px; border-radius:8px; border:1px dashed #f39c12; margin-top:15px;">
                     <div style="text-align:right; margin-bottom:10px;"><span style="cursor:pointer; color:red; font-size:11px; font-weight:bold; border:1px solid red; padding:3px 6px; border-radius:4px;" onclick="document.getElementById('ui_adv_pay').style.display='none'; document.getElementById('ui_basic_pay').style.display='block'; document.getElementById('f_bayar_basic').value='CASH';">❌ Batal Custom Harga</span></div>
                     
-                    <div class="form-group"><label class="form-label">Total Harga Kamar (Kesepakatan) Rp</label><input type="tel" id="f_total" class="form-control" value="${sub}" style="font-weight:bold; color:var(--red);" oninput="document.getElementById('f_dibayar').value=this.value;"></div>
-                    <div class="form-group"><label class="form-label">Total Keseluruhan Uang Dibayar (DP + Sekarang) Rp</label><input type="tel" id="f_dibayar" class="form-control" value="${sub}" style="font-weight:bold; color:var(--green);"></div>
-                    <div class="form-group"><label class="form-label">Metode Pembayaran</label><select id="f_metode_adv" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option><option value="LUNAS LAMA">LUNAS LAMA (Tanpa Masuk Laci)</option><option value="BELUM BAYAR">BELUM BAYAR SAMA SEKALI</option></select></div>
+                    <div class="form-group"><label class="form-label">Total Harga Kamar (Kesepakatan) Rp</label><input type="tel" id="f_total" class="form-control" value="${sub}" style="font-weight:bold; color:var(--red);" oninput="var s = this.value - ${dpPending}; if(s<0)s=0; document.getElementById('f_dibayar').value=s; document.getElementById('txt_sisa_kurang').innerText='Rp '+s;"></div>
                     
+                    <div style="background:#eee; padding:10px; border-radius:6px; margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Uang DP Sebelumnya:</span><span style="font-weight:bold;">Rp ${formatRp(dpPending)}</span></div>
+                        <div style="display:flex; justify-content:space-between; font-size:14px; color:red; margin-top:5px; border-top:1px solid #ccc; padding-top:5px;"><span>Sisa Kekurangan:</span><span id="txt_sisa_kurang" style="font-weight:bold;">Rp ${formatRp(sub - dpPending < 0 ? 0 : sub - dpPending)}</span></div>
+                    </div>
+
+                    <div class="form-group"><label class="form-label">Uang Tambahan yg Dibayar SEKARANG Rp</label><input type="tel" id="f_dibayar" class="form-control" value="${sub - dpPending < 0 ? 0 : sub - dpPending}" style="font-weight:bold; color:var(--green);"></div>
+                    <div class="form-group"><label class="form-label">Metode Pembayaran Sisa</label><select id="f_metode_adv" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option><option value="BELUM BAYAR">BELUM BAYAR SAMA SEKALI</option></select></div>
+                </div>
+
                     <div style="font-size:10px; color:#d35400; font-weight:bold; margin-top:5px;">*Sistem otomatis memotong uang DP (Rp ${formatRp(dpPending)}) dari hitungan setoran laci hari ini.</div>
                 </div>
 
@@ -1979,25 +1994,18 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var e_chk = document.getElementById('f_early'); if(e_chk && e_chk.checked) sub += 100000;
         var tagihanNormal = sub - dpPending; if(tagihanNormal < 0) tagihanNormal = 0;
 
-                var isAdvanced = document.getElementById('ui_adv_pay').style.display === 'block';
+                        var isAdvanced = document.getElementById('ui_adv_pay').style.display === 'block';
         var metodeSetoran = ""; var setoranLaporanKas = 0;
 
         if (isAdvanced) {
             d.total_tagihan = parseInt(document.getElementById('f_total').value) || 0;
-            var totalDibayarInput = parseInt(document.getElementById('f_dibayar').value) || 0;
+            var bayarSekarang = parseInt(document.getElementById('f_dibayar').value) || 0;
             var met = document.getElementById('f_metode_adv').value;
-
-            // Sistem Pintar: Uang laci HARI INI = Total Dibayar input dikurangi DP masa lalu
-            var bayarSekarang = totalDibayarInput - dpPending;
-            if (bayarSekarang < 0) bayarSekarang = 0; 
 
             d.sudah_dibayar = dpPending + bayarSekarang; 
             
             if (met === "BELUM BAYAR" || (bayarSekarang === 0 && d.sudah_dibayar < d.total_tagihan)) { 
                 d.bayar = "D.Pending"; metodeSetoran = "BELUM BAYAR"; setoranLaporanKas = 0; 
-            } 
-            else if (met === "LUNAS LAMA") { 
-                d.bayar = "LUNAS LAMA"; metodeSetoran = "LUNAS LAMA"; setoranLaporanKas = 0; d.sudah_dibayar = d.total_tagihan; 
             } 
             else { 
                 if (d.sudah_dibayar >= d.total_tagihan) {
