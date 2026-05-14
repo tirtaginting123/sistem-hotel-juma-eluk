@@ -1087,19 +1087,21 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                         t.history_bayar.forEach(function(h){ if(isKmrBaruGlobal(h.tgl)) { adaExtend = true; hv += parseInt(h.nominal); vv = (h.via||"").toLowerCase(); }});
                     }
 
-                    if (baru) {
+                                        if (baru) {
                         ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
+                        var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : ""; // Ambil Jam
                         cMerah++;
-                        if (shiftKamar === "pagi") { hitungPagi++; listPagiIn += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽\n`; } 
-                        else { hitungMalam++; listMalamIn += kmr + ` ✅ ${ket} ${t.inv||"-"} ❤️\n`; }
+                        if (shiftKamar === "pagi") { hitungPagi++; listPagiIn += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}\n`; } 
+                        else { hitungMalam++; listMalamIn += kmr + ` ✅ ${ket} ${t.inv||"-"} ❤️ ${jT}\n`; }
                     } else {
-                        // 🔥 LOGIKA NYAMBUNG: Hanya di Pagi, Kebal Jam Begadang
+                        // Untuk yang NYAMBUNG
                         var isSahNyambung = adaExtend || (timeFloat >= 16.5 || timeFloat < 7);
                         if (isSahNyambung) {
                             ket = "nyb";
                             if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
+                            var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : ""; 
                             hitungPagi++; cUngu++;
-                            listPagiNyb += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽\n`;
+                            listPagiNyb += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}\n`;
                         }
                     }
                 } 
@@ -1131,8 +1133,9 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                         }
                     }
 
-                    if (sOut === "pagi") { vdPagi++; listPagiVD += kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 (OUT - VD)\n`; } 
-                    else { vdMalam++; listMalamVD += kmr + ` ✅ ${ketOut} ${invOut} ❤️ (OUT - VD)\n`; }
+                                        var jOut = (lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
+                    if (sOut === "pagi") { vdPagi++; listPagiVD += kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 ${jOut} (OUT-VD)\n`; } 
+                    else { vdMalam++; listMalamVD += kmr + ` ✅ ${ketOut} ${invOut} ❤️ ${jOut} (OUT-VD)\n`; }
                 }
             });
 
@@ -2368,32 +2371,32 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     t.history_bayar.forEach(function(h){ if(isKamarBaru(h.tgl)) { adaExtend = true; hv += parseInt(h.nominal); vv = (h.via||"").toLowerCase(); }});
                 }
 
-                if (baru) {
+                                if (baru) {
                     ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
+                    var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : "";
                     if (shiftKamar === s) {
-                        listMerah.push(kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️"));
+                        listMerah.push(kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️") + ` ${jT}`);
                         if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
                 } else {
-                    // 🔥 LOGIKA NYAMBUNG: Hanya muncul di Pagi, Kebal Bug Begadang 🔥
+                                // 🔥 LOGIKA NYAMBUNG: Hanya muncul di Pagi, Kebal Bug Begadang 🔥
                     var isSahNyambung = adaExtend || (timeFloat >= 16.5 || timeFloat < 7);
                     if (isSahNyambung && s === "pagi") { 
                         ket = "nyb"; 
                         if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
+                        var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : "";
                         
-                        listUngu.push(kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽`);
+                        listUngu.push(kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`);
                         if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
-                }
-
-            } 
+                } // PENTING: Kurung kurawal ini yang tadi hilang
+            } // PENTING: Kurung kurawal ini juga tadi hilang
             else if (isKotor) {
                 var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
                 // 🔥 MESIN WAKTU VD: Sembunyikan VD kemarin agar di laporan WA hari ini jadi 0
                 if (lastT && lastT.jam_out_aktual) {
                     if (!isKamarBaru(lastT.jam_out_aktual)) return; 
                 } else if (!lastT) { return; }
-
 
                 var sOut = "pagi"; var ketOut = "nyb"; var invOut = "-";
 
@@ -2412,11 +2415,13 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 }
 
                 if (sOut === s) {
-                    listAbu.push(kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + " (OUT - VD)");
+                    var jOut = (lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
+                    listAbu.push(kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + ` ${jOut} (OUT-VD)`);
                     if (lastT && (lastT.bayar === "D.Pending" || lastT.bayar === "BELUM BAYAR")) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                 }
-            }
+            } // PENTING: Dan kurung kurawal ini yang tadi hilang
         });
+
 
         var finalCIN = listMerah.length + listUngu.length; 
         var finalVD = listAbu.length;   
