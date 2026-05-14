@@ -709,7 +709,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
         div.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; align-items:center;';
         div.innerHTML = `
             <div style="flex:2;"><input type="text" class="form-control r_item_name" placeholder="Nama Menu Lainnya"></div>
-            <div style="flex:1;"><input type="number" class="form-control r_item_price" placeholder="Harga (Rp)" oninput="hitungTotalResto()"></div>
+            <div style="flex:1;"><input type="tel" class="form-control r_item_price" placeholder="Harga (Rp)" oninput="hitungTotalResto()"></div>
             <div style="cursor:pointer; color:red; padding:5px; font-size:16px; font-weight:bold;" onclick="this.parentElement.remove(); hitungTotalResto();">❌</div>
         `;
         document.getElementById('resto_list').appendChild(div);
@@ -1027,7 +1027,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                 <div id="resto_list">
                     <div class="resto-row" style="display:flex; gap:10px; margin-bottom:10px;">
                         <div style="flex:2;"><input type="text" class="form-control r_item_name" placeholder="Nama Menu (Misal: Nasi Goreng)"></div>
-                        <div style="flex:1;"><input type="number" class="form-control r_item_price" placeholder="Harga (Rp)" oninput="hitungTotalResto()"></div>
+                        <div style="flex:1;"><input type="tel" class="form-control r_item_price" placeholder="Harga (Rp)" oninput="hitungTotalResto()"></div>
                     </div>
                 </div>
                 
