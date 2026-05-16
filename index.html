@@ -212,15 +212,17 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
 
                         var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
                         
-                        bukuKas.harian = { 
-                            tgl: realTglHarian, uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, kamar: 0, 
-                            rincianKeluar: [], transaksiResto: [], jualBill: [],
-                            pagi: Object.assign({}, defShift), 
-                            malam: Object.assign({}, defShift), 
-                            billPagi: {awal:null, akhir:null, count:0}, 
-                            billMalam: {awal:null, akhir:null, count:0}, 
-                            last_reset: new Date().getTime() 
-                        };
+                                        bukuKas.harian = { 
+                    tgl: getTanggalHarian(), uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, 
+                    rincianKeluar: [], transaksiResto: [], jualBill: [],
+                    pagi: Object.assign({}, def), 
+                    malam: Object.assign({}, def), 
+                    billPagi: {awal:null, akhir:null, count:0}, 
+                    billMalam: {awal:null, akhir:null, count:0}, 
+                    dep_jaminan: 0, dep_pending: 0, // Besok pagi otomatis bersih kembali ke 0
+                    last_reset: new Date().getTime() 
+                }; 
+
                         bukuKas.bulanan = b;
 
                         var safeKamarKotor = toArr(freshData.kamarKotor);
@@ -250,7 +252,7 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                     keluar: dbKasHarian.keluar || 0, kamar: dbKasHarian.kamar || 0, rincianKeluar: toArr(dbKasHarian.rincianKeluar), transaksiResto: toArr(dbKasHarian.transaksiResto), jualBill: toArr(dbKasHarian.jualBill),
                     pagi: Object.assign({ cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 }, dbKasHarian.pagi || {}), 
                     malam: Object.assign({ cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 }, dbKasHarian.malam || {}),
-                    billPagi: dbKasHarian.billPagi || {awal:null, akhir:null, count:0}, billMalam: dbKasHarian.billMalam || {awal:null, akhir:null, count:0}, last_reset: dbKasHarian.last_reset || new Date().getTime()
+                    billPagi: dbKasHarian.billPagi || {awal:null, akhir:null, count:0}, billMalam: dbKasHarian.billMalam || {awal:null, akhir:null, count:0}, dep_jaminan: dbKasHarian.dep_jaminan || 0, dep_pending: dbKasHarian.dep_pending || 0, last_reset: dbKasHarian.last_reset || new Date().getTime()
                 }, 
                 bulanan: cloudData.bukuKas.bulanan || { bln: getTanggalBulanan(), uang: 0, kamar: 0, keluar: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0 }
             };
@@ -1826,15 +1828,17 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
                 var def = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
                 
-                bukuKas.harian = { 
+                                bukuKas.harian = { 
                     tgl: getTanggalHarian(), uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, 
                     rincianKeluar: [], transaksiResto: [], jualBill: [],
                     pagi: Object.assign({}, def), 
                     malam: Object.assign({}, def), 
                     billPagi: {awal:null, akhir:null, count:0}, 
                     billMalam: {awal:null, akhir:null, count:0}, 
+                    dep_jaminan: 0, dep_pending: 0, // Besok pagi otomatis bersih kembali ke 0
                     last_reset: new Date().getTime() 
                 }; 
+
 
                 // 🔥 WAJIB 0 MUTLAK: Hapus Riwayat CO & Daftar VD
                                 // 🔥 PERTAHANKAN DATA TAMU VD AGAR BISA MASUK ARSIP DENGAN SEMPURNA
@@ -2536,7 +2540,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         }
 
 
-        var sisaLaci = totalUangCash - uangKeluarShift;
+         var displayTotalCash = totalUangCash + (activeKas.harian.dep_pending || 0);         var sisaLaci = displayTotalCash - uangKeluarShift;
 
 
                 var noBillLast = "-";
@@ -2551,7 +2555,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         function safeFormatRp(val) { return typeof formatRp === 'function' ? formatRp(val) : val; }
 
         var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + safeFormatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto_c) + " cash / Rp " + safeFormatRp(resto_t) + " tf<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill_c) + " cash / Rp " + safeFormatRp(jBill_t) + " tf<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) +
-  "<br>ttl uang deposit/jaminan👉🏽Rp " + safeFormatRp(activeKas.harian.dep_jaminan || 0) + "<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp " + safeFormatRp(activeKas.harian.dep_pending || 0) + "<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(totalUangCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
+  "<br>ttl uang deposit/jaminan👉🏽Rp " + safeFormatRp(activeKas.harian.dep_jaminan || 0) + "<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp " + safeFormatRp(activeKas.harian.dep_pending || 0) + "<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(displayTotalCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
 
         if(isForArsip) return textBlock;
 
