@@ -894,14 +894,14 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
             out += `<div style="background:#eaf2f8; padding:12px; border-radius:8px; margin-bottom:15px; border:1px dashed var(--blue);">
                 <b style="font-size:11px; color:#27ae60;">☀️ DEPOSIT SHIFT PAGI</b>
                 <div style="display:flex; gap:10px; margin-top:8px; margin-bottom:15px;">
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">Jaminan Aktif (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.pagi.dep_jaminan||0}" onchange="bukuKas.harian.pagi.dep_jaminan=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--primary);"></div>
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">Pending/Sisa (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.pagi.dep_pending||0}" onchange="bukuKas.harian.pagi.dep_pending=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--red);"></div>
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">TTL Deposit/jaminan (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.pagi.dep_jaminan||0}" onchange="bukuKas.harian.pagi.dep_jaminan=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--primary);"></div>
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">Deposit Pending (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.pagi.dep_pending||0}" onchange="bukuKas.harian.pagi.dep_pending=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--red);"></div>
                 </div>
                 
                 <b style="font-size:11px; color:#34495e;">🌙 DEPOSIT SHIFT MALAM</b>
                 <div style="display:flex; gap:10px; margin-top:8px;">
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">Jaminan Aktif (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.malam.dep_jaminan||0}" onchange="bukuKas.harian.malam.dep_jaminan=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--primary);"></div>
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">Pending/Sisa (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.malam.dep_pending||0}" onchange="bukuKas.harian.malam.dep_pending=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--red);"></div>
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">TTL Deposit/Jaminan (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.malam.dep_jaminan||0}" onchange="bukuKas.harian.malam.dep_jaminan=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--primary);"></div>
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">Deposit Pending (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.malam.dep_pending||0}" onchange="bukuKas.harian.malam.dep_pending=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--red);"></div>
                 </div>
             </div>`;
 
