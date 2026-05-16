@@ -885,14 +885,25 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
                     <div class="btn-mewah" onclick="pindahHalaman('ALL_INFO_BULANAN')"><span>📅 2. Laporan Bulanan (Ringkasan)</span><span>➔</span></div>
                     <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali ke Dashboard</div></div>`;
         }
-        else if (state === "ALL_INFO_HARIAN") {
+                else if (state === "ALL_INFO_HARIAN") {
             out += `<div class="card"><span class="section-title" style="color:#1abc9c;">📋 LAPORAN HARIAN SHIFT</span>`;
+            
+            // KOTAK INPUT DEPOSIT
+            out += `<div style="background:#eaf2f8; padding:12px; border-radius:8px; margin-bottom:15px; border:1px dashed var(--blue);">
+                <b style="font-size:11px; color:var(--blue);">💡 INPUT DEPOSIT (Ubah angka di sini, Laporan WA otomatis update)</b>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">total deposit<div (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.dep_jaminan||0}" onchange="bukuKas.harian.dep_jaminan=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--primary);"></div>
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">Deposit Pending/Belum di ambil (Rp)</label><input type="tel" class="form-control" value="${bukuKas.harian.dep_pending||0}" onchange="bukuKas.harian.dep_pending=parseInt(this.value)||0; simpanKeCloud(); renderScreen();" style="padding:8px; font-size:13px; font-weight:bold; color:var(--red);"></div>
+                </div>
+            </div>`;
+
             out += generateLaporanShift("Pagi", bukuKas.harian.pagi);
             out += `<hr style="margin:20px 0; border:1px dashed #ccc;">`;
             out += generateLaporanShift("Malam", bukuKas.harian.malam);
             out += `<p style="font-size:10px; color:#777; text-align:center; margin-top:15px;">*Shift Pagi & Malam akan otomatis dihapus dan dipindah ke Arsip saat Tutup Buku Global dilakukan.</p>`;
             out += `<div class="btn-mewah" onclick="pindahHalaman('ALL_INFO_MENU')" style="justify-content:center; margin-top:5px;">🔙 Kembali</div></div>`;
         }
+
         else if (state === "ALL_INFO_BULANAN") {
             var b = bukuKas.bulanan;
             var tBlock = "<b>LAPORAN BULANAN " + b.bln + "</b><br><br>" +
@@ -2540,8 +2551,8 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         function safeFormatRp(val) { return typeof formatRp === 'function' ? formatRp(val) : val; }
 
         var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + safeFormatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto_c) + " cash / Rp " + safeFormatRp(resto_t) + " tf<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill_c) + " cash / Rp " + safeFormatRp(jBill_t) + " tf<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) +
- "<br>ttl uang deposit/jaminan👉🏽Rp 0<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp 0<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(totalUangCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
-        
+  "<br>ttl uang deposit/jaminan👉🏽Rp " + safeFormatRp(activeKas.harian.dep_jaminan || 0) + "<br>ttl uang deposit pending/<br>Belum di ambil👉🏽Rp " + safeFormatRp(activeKas.harian.dep_pending || 0) + "<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(totalUangCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast;
+
         if(isForArsip) return textBlock;
 
         return `<div style="background:#fef9e7; padding:15px; border-radius:10px; border:2px solid #27ae60; font-family:monospace; font-size:13px; line-height: 1.6; margin-bottom:20px;"><button onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText.replace(/<br>/g, '\\n')); alert('✅ Laporan WA berhasil di-copy!')" style="margin-bottom:15px; padding:12px; background:#25D366; color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer; width:100%;">📋 COPY KE WHATSAPP</button><div style="user-select:all; word-wrap:break-word;">${textBlock}</div></div>`;
