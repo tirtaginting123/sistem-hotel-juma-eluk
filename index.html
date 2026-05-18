@@ -50,25 +50,25 @@
 
         #printArea { display: none; }
 
-               /* 🔥 JAMU PELANCAR PRINT THERMAL (BIAR NGEBUT) 🔥 */
+                       /* 🔥 PENGATURAN PRINT ASLI + JAMU DOT MATRIX 🔥 */
         @media print {
-            * {
-                /* Paksa printer tidak memproses warna latar belakang dan bayangan berat */
-                background: transparent !important;
-                box-shadow: none !important;
-                text-shadow: none !important;
-                
-                /* Paksa pakai font bawaan mesin kasir yang paling ringan sedunia */
-                font-family: 'Courier New', Courier, monospace, sans-serif !important;
-                
-                /* Hilangkan animasi apa pun saat masuk mode print */
-                transition: none !important;
-                animation: none !important;
+            /* 1. Sembunyikan tombol & menu website */
+            .navbar, #mainContainer, #loadingBar { 
+                display: none !important; 
+            }
+            
+            /* 2. Tampilkan hanya area Invoice asli tanpa mengubah ukurannya */
+            #printArea { 
+                display: block !important; 
             }
 
-            /* Sembunyikan elemen-elemen hiasan yang bikin berat rendering */
-            .btn-mewah, .card-header, i {
-                display: none !important;
+            /* 3. Suntikan Jamu Penebal Huruf Khusus untuk Dot Matrix */
+            #printArea * {
+                color: #000000 !important; /* Paksa hitam pekat */
+                font-weight: 900 !important; /* Paksa tebal maksimal */
+                font-family: 'Courier New', Courier, monospace, sans-serif !important; /* Huruf mesin tik */
+                -webkit-font-smoothing: none !important; /* Matikan efek blur/halus */
+                text-rendering: crispEdges !important; /* Bikin pinggiran huruf tajam/kotak */
             }
         }
 
