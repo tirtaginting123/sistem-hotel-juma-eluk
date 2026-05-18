@@ -50,13 +50,35 @@
 
         #printArea { display: none; }
 
+                /* 🔥 JAMU PRINT DOT MATRIX (CEPAT & TAJAM) 🔥 */
         @media print {
-            @page { margin: 0; size: 240mm 140mm; } 
-            body { background: white; color: black; font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; }
-            #screen, #topSearchArea, #loadingBar, .navbar, .container { display: none !important; }
-            #printArea { display: block !important; width: 240mm; height: 140mm; box-sizing: border-box; overflow: hidden; page-break-after: avoid; padding: 5mm; }
-            table { border-collapse: collapse; }
+            * {
+                /* 1. Paksa warna mutlak HITAM PEKAT (Bukan abu-abu) */
+                color: #000000 !important;
+                
+                /* 2. Paksa tebal maksimal agar jarum printer memukul lebih rapat */
+                font-weight: 900 !important;
+                
+                /* 3. MATIKAN efek halus/blur browser (Ini kunci ketajamannya!) */
+                -webkit-font-smoothing: none !important;
+                text-rendering: crispEdges !important;
+                
+                /* 4. Font murni bawaan mesin */
+                font-family: 'Courier New', Courier, monospace, sans-serif !important;
+                
+                background: transparent !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+                transition: none !important;
+                animation: none !important;
+            }
+
+            /* Sembunyikan elemen hiasan */
+            .btn-mewah, .card-header, i {
+                display: none !important;
+            }
         }
+
     </style>
 </head>
 <body>
