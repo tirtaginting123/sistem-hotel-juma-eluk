@@ -2076,9 +2076,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         pindahHalaman("PESAN_SUKSES");
     };
 
-    window.prosesFormCheckIn = function() {
+        window.prosesFormCheckIn = function() {
+        d.room = tempRoom; // 🔥 Ini penyembuhnya! Memaksa struk membaca kamar yg baru diklik
         d.nama = document.getElementById('f_nama').value || "-"; d.alamat = document.getElementById('f_alamat').value || "-"; 
         d.warga = document.getElementById('f_warga').value || "-"; d.ktp = document.getElementById('f_ktp').value || "-"; 
+
         d.hp = document.getElementById('f_hp').value || "-"; d.malam = document.getElementById('f_malam').value || "1"; 
         d.extrabed = document.getElementById('f_extrabed').value || "0"; d.transport = document.getElementById('f_transport').value || "-"; 
         d.trip = document.getElementById('f_trip').value || "-";
