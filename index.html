@@ -50,33 +50,35 @@
 
         #printArea { display: none; }
 
-                /* 🔥 JAMU PRINT DOT MATRIX (CEPAT & TAJAM) 🔥 */
+                /* 🔥 JAMU PRINT DOT MATRIX (CEPAT, TAJAM & RAPI) 🔥 */
         @media print {
-            * {
-                /* 1. Paksa warna mutlak HITAM PEKAT (Bukan abu-abu) */
+            /* 1. SEMBUNYIKAN SEMUA MENU WEBSITE SAAT PRINT */
+            .navbar, #mainContainer, #loadingBar { 
+                display: none !important; 
+            }
+            
+            /* 2. MUNCULKAN HANYA KERTAS INVOICE SAAT PRINT */
+            #printArea { 
+                display: block !important; 
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 3. PAKSA HURUF JADI TEBAL, HITAM PEKAT & COCOK UNTUK JARUM PRINTER */
+            #printArea * {
                 color: #000000 !important;
-                
-                /* 2. Paksa tebal maksimal agar jarum printer memukul lebih rapat */
                 font-weight: 900 !important;
-                
-                /* 3. MATIKAN efek halus/blur browser (Ini kunci ketajamannya!) */
                 -webkit-font-smoothing: none !important;
                 text-rendering: crispEdges !important;
-                
-                /* 4. Font murni bawaan mesin */
                 font-family: 'Courier New', Courier, monospace, sans-serif !important;
-                
                 background: transparent !important;
                 box-shadow: none !important;
                 text-shadow: none !important;
-                transition: none !important;
-                animation: none !important;
             }
-
-            /* Sembunyikan elemen hiasan */
-            .btn-mewah, .card-header, i {
-                display: none !important;
-            }
+            
+            /* Hilangkan sisa margin kertas dari browser */
+            @page { margin: 0.5cm; }
         }
 
     </style>
