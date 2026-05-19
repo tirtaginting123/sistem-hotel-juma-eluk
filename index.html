@@ -1668,19 +1668,26 @@ var teksMalam = generateLaporanShift("Malam", oldBukuKas.harian.malam, true, ars
             }
             out += `<div class="btn-mewah" onclick="history.back()" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
-                else if (state === "FORM_JUAL_BILL") {
-            out += `<div class="card"><span class="section-title" style="color:#d35400;">🏷️ Form Jual Bill (Struk Kosong)</span>
+               else if (state === "FORM_JUAL_BILL") {
+            out += `<div class="card"><span class="section-title" style="color:#d35400;">🏷️ Form Jual Bill (Struk Corporate)</span>
                 <div style="background:#fff3e0; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #f39c12; font-size:12px; color:#d35400;">
-                    <b>💡 Mode Jual Bill:</b><br>Kamar asli tidak akan terganggu (tamu fisik tidak masuk), tapi uang langsung tercatat di Laporan dan Invoice bisa dicetak. Harga mutlak <b>Rp 100.000 / malam</b>.
+                    <b>💡 Info Sistem:</b><br>Kamar asli tidak akan terganggu. Uang yang masuk Kas Laci dan Laporan WA <b>mutlak otomatis Rp 100.000/malam</b>, berapapun Harga/Malam yang Anda cetak di Struk.
                 </div>
                 <div class="form-group"><label class="form-label">Nomor Kamar</label><input type="text" id="jb_kamar" class="form-control" placeholder="Contoh: 1a, 2av, 5b..." autocomplete="off"></div>
-                <div class="form-group"><label class="form-label">Nama Tamu (Hanya untuk di Struk)</label><input type="text" id="jb_nama" class="form-control" placeholder="Boleh dikosongkan" autocomplete="off"></div>
-                <div class="form-group"><label class="form-label">Berapa Malam?</label><input type="number" id="jb_malam" class="form-control" value="1" oninput="document.getElementById('jb_harga').value = formatRp(this.value * 100000);"></div>
-                <div class="form-group"><label class="form-label">Total Harga (Otomatis)</label><input type="text" id="jb_harga" class="form-control" value="100.000" style="font-weight:bold; color:var(--red); background:#fdf2e9;" readonly></div>
-                <div class="form-group"><label class="form-label">Metode Pembayaran</label><select id="jb_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select></div>
-                <button class="btn-submit" style="background:#d35400;" onclick="prosesJualBill()">💾 Proses Bill & Cetak Struk</button>
+                <div class="form-group"><label class="form-label">Nama Tamu</label><input type="text" id="jb_nama" class="form-control" placeholder="Boleh dikosongkan" autocomplete="off"></div>
+                
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;"><label class="form-label">Berapa Malam?</label><input type="number" id="jb_malam" class="form-control" value="1" oninput="document.getElementById('jb_harga_struk').value = formatRp(this.value * (parseInt(document.getElementById('jb_harga_malam').value)||0));"></div>
+                    <div class="form-group" style="flex:1;"><label class="form-label">🖨️ Harga Di Struk / Malam (Rp)</label><input type="number" id="jb_harga_malam" class="form-control" value="250000" oninput="document.getElementById('jb_harga_struk').value = formatRp((parseInt(document.getElementById('jb_malam').value)||1) * this.value);"></div>
+                </div>
+
+                <div class="form-group"><label class="form-label">Total Angka Di Struk Dot Matrix</label><input type="text" id="jb_harga_struk" class="form-control" value="250.000" style="font-weight:bold; color:var(--red); background:#fdf2e9;" readonly></div>
+                <div class="form-group"><label class="form-label">Metode Pembayaran (Laci)</label><select id="jb_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select></div>
+                
+                <button class="btn-submit" style="background:#d35400;" onclick="prosesJualBill()">💾 Masukkan Kasir & Cetak Struk</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
         }
+
 
         else if (state === "FORM_ROMBONGAN") {
             out += `<div class="card"><span class="section-title" style="color:#9b59b6;">🚌 Formulir Tamu Rombongan (Multi-Kamar)</span>
@@ -2134,25 +2141,30 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
     };
 
 
-
-
     window.prosesJualBill = function() {
         var kamar = document.getElementById('jb_kamar').value.trim();
         var nama = document.getElementById('jb_nama').value || "Tamu Jual Bill";
         var malam = parseInt(document.getElementById('jb_malam').value) || 1;
+        var hargaStrukMalam = parseInt(document.getElementById('jb_harga_malam').value) || 250000;
         var bayar = document.getElementById('jb_bayar').value;
-        var hargaTotal = malam * 100000;
+        
+        var uangMasukLaci = malam * 100000; // 🔥 MUTLAK 100K MASUK SISTEM
+        var totalDiStruk = malam * hargaStrukMalam; // 🔥 HARGA UNTUK KERTAS PRINTER
 
         if (kamar === "") { alert("❌ Nomor Kamar harus diisi!"); return; }
+
+        var conf = confirm("🚨 KONFIRMASI JUAL BILL:\n\n1. Struk Tercetak: Rp " + formatRp(totalDiStruk) + "\n2. Uang Masuk Komputer (Laci): Rp " + formatRp(uangMasukLaci) + "\n\nLanjutkan & Cetak?");
+        if (!conf) return;
 
         var jamAsli = new Date().getHours();
         var shiftNow = (jamAsli >= 7 && jamAsli < 17) ? "Pagi" : "Malam";
         var sb = shiftNow.toLowerCase();
 
-        bukuKas.harian.uang += hargaTotal; bukuKas.bulanan.uang += hargaTotal;
-                if (bayar === "CASH") { bukuKas.harian.uangCash += hargaTotal; bukuKas.bulanan.uangCash += hargaTotal; bukuKas.harian[sb].cash += hargaTotal; bukuKas.harian[sb].jual_bill_cash = (bukuKas.harian[sb].jual_bill_cash || 0) + hargaTotal; bukuKas.bulanan.jual_bill_cash = (bukuKas.bulanan.jual_bill_cash || 0) + hargaTotal; }
-        else if (bayar === "TRANSFER") { bukuKas.harian.uangTransfer += hargaTotal; bukuKas.bulanan.uangTransfer += hargaTotal; bukuKas.harian[sb].tf += hargaTotal; bukuKas.harian[sb].jual_bill_tf = (bukuKas.harian[sb].jual_bill_tf || 0) + hargaTotal; bukuKas.bulanan.jual_bill_tf = (bukuKas.bulanan.jual_bill_tf || 0) + hargaTotal; }
-        else if (bayar === "DEBIT") { bukuKas.harian.uangDebit += hargaTotal; bukuKas.bulanan.uangDebit += hargaTotal; bukuKas.harian[sb].db += hargaTotal; bukuKas.harian[sb].jual_bill_db = (bukuKas.harian[sb].jual_bill_db || 0) + hargaTotal; bukuKas.bulanan.jual_bill_db = (bukuKas.bulanan.jual_bill_db || 0) + hargaTotal; }
+        // 1. MASUKKAN UANG KE LACI (CUMA 100k/Malam)
+        bukuKas.harian.uang += uangMasukLaci; bukuKas.bulanan.uang += uangMasukLaci;
+        if (bayar === "CASH") { bukuKas.harian.uangCash += uangMasukLaci; bukuKas.bulanan.uangCash += uangMasukLaci; bukuKas.harian[sb].cash += uangMasukLaci; bukuKas.harian[sb].jual_bill_cash = (bukuKas.harian[sb].jual_bill_cash || 0) + uangMasukLaci; bukuKas.bulanan.jual_bill_cash = (bukuKas.bulanan.jual_bill_cash || 0) + uangMasukLaci; }
+        else if (bayar === "TRANSFER") { bukuKas.harian.uangTransfer += uangMasukLaci; bukuKas.bulanan.uangTransfer += uangMasukLaci; bukuKas.harian[sb].tf += uangMasukLaci; bukuKas.harian[sb].jual_bill_tf = (bukuKas.harian[sb].jual_bill_tf || 0) + uangMasukLaci; bukuKas.bulanan.jual_bill_tf = (bukuKas.bulanan.jual_bill_tf || 0) + uangMasukLaci; }
+        else if (bayar === "DEBIT") { bukuKas.harian.uangDebit += uangMasukLaci; bukuKas.bulanan.uangDebit += uangMasukLaci; bukuKas.harian[sb].db += uangMasukLaci; bukuKas.harian[sb].jual_bill_db = (bukuKas.harian[sb].jual_bill_db || 0) + uangMasukLaci; bukuKas.bulanan.jual_bill_db = (bukuKas.bulanan.jual_bill_db || 0) + uangMasukLaci; }
 
         lastInv++; var inv = String(lastInv).padStart(4, '0');
         if(shiftNow === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = inv; bukuKas.harian.billPagi.akhir = inv; bukuKas.harian.billPagi.count++; }
@@ -2169,16 +2181,59 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         dateOut.setDate(dateOut.getDate() + malam);
         var tglOutFormat = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
+        // Simpan log di history agar terbaca oleh Laporan WA
         d = {
             room: kamar, nama: nama, alamat: "-", warga: "Indonesia", ktp: "-", hp: "-",
             malam: malam, extrabed: 0, transport: "-", trip: "Travelling", bayar: bayar,
-            total_tagihan: hargaTotal, sudah_dibayar: hargaTotal, tgl: tglInFormat, tgl_out: tglOutFormat, inv: inv
+            total_tagihan: uangMasukLaci, sudah_dibayar: uangMasukLaci, tgl: tglInFormat, tgl_out: tglOutFormat, inv: inv
         };
 
         simpanKeCloud();
-        alert("✅ BILL BERHASIL DIBUAT!\nKamar: " + kamar + "\nTotal Harga: Rp " + formatRp(hargaTotal) + "\n\nInvoice siap dicetak!");
-        pindahHalaman("PESAN_SUKSES");
+
+        // 2. CETAK STRUK DOT MATRIX (HARGA PALSU/KANTOR)
+        var tglPesan = getTanggalHarian();
+        var printArea = document.getElementById("printArea");
+        
+        var htmlStruk = `
+        <div style="font-family: 'Courier New', Courier, monospace; color: #000; width: 100%; font-size: 14px; font-weight: bold; padding: 10px;">
+            <div style="text-align: center; font-size: 16px; margin-bottom: 2px;">HOTEL TERMINAL JUMA ELUK</div>
+            <div style="text-align: center; font-size: 11px; margin-bottom: 10px;">Jl. Letjen Jamin Ginting, Kabanjahe</div>
+            <div style="border-bottom: 2px dashed #000; margin-bottom: 10px;"></div>
+            <table style="width: 100%; font-size: 13px; font-weight: bold; border-collapse: collapse;">
+                <tr><td style="padding: 2px 0;">Tanggal</td><td>: ${tglPesan}</td></tr>
+                <tr><td style="padding: 2px 0;">Nama Tamu</td><td>: ${nama.toUpperCase()}</td></tr>
+                <tr><td style="padding: 2px 0;">Kamar</td><td>: Jual Bill (${kamar})</td></tr>
+                <tr><td style="padding: 2px 0;">Lama Inap</td><td>: ${malam} Malam</td></tr>
+            </table>
+            <div style="border-bottom: 2px dashed #000; margin-top: 10px; margin-bottom: 10px;"></div>
+            <table style="width: 100%; font-size: 13px; font-weight: bold; border-collapse: collapse;">
+                <tr><td style="padding: 2px 0;">Harga / Malam</td><td style="text-align: right;">Rp ${hargaStrukMalam.toLocaleString('id-ID')}</td></tr>
+                <tr><td style="padding: 4px 0; font-size: 15px;">TOTAL TAGIHAN</td><td style="text-align: right; font-size: 15px;">Rp ${totalDiStruk.toLocaleString('id-ID')}</td></tr>
+                <tr><td style="padding: 2px 0; color: #000;">Status Pembayaran</td><td style="text-align: right;">LUNAS (${bayar})</td></tr>
+            </table>
+            <div style="border-bottom: 2px dashed #000; margin-top: 10px; margin-bottom: 10px;"></div>
+            <div style="text-align: center; font-size: 11px; font-style: italic; margin-top: 5px;">Terima Kasih Atas Kunjungan Anda<br>Reception Incharge</div>
+        </div>`;
+        
+        printArea.innerHTML = htmlStruk;
+        
+        // Sembunyikan layar website utama biar printer fokus ke struk
+        document.getElementById("mainContainer").style.display = "none";
+        document.querySelector(".navbar").style.display = "none";
+        document.getElementById("printArea").style.display = "block";
+        
+        window.print();
+        
+        // Kembalikan layar utama website setelah 1 detik proses print selesai
+        setTimeout(function(){ 
+            document.getElementById("mainContainer").style.display = "block"; 
+            document.querySelector(".navbar").style.display = "flex";
+            document.getElementById("printArea").style.display = "none";
+            printArea.innerHTML = ""; 
+            pindahHalaman("MENU");
+        }, 1000);
     };
+
 
             window.prosesFormCheckIn = function() {
         // 1. Ambil semua inputan ke variabel sementara agar aman
