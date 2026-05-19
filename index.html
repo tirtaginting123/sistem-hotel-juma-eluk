@@ -2089,7 +2089,9 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             if (jenis === "PENDING") {
                 tamuPending.push({ room: kmr, nama: nama + (arrKamar.length > 1 ? " (Grup)" : ""), hp: hp, dp: myBayar, bayar: myMetode, shift: shiftNow, isLengkap: true, rencana_in: tglMasuk, malam: malam, transport: "Rombongan" });
             } else {
-                lastInv++; var inv = String(lastInv).padStart(4, '0');
+                   lastInv++; 
+        var inv = String(lastInv).padStart(4, '0');
+        simpanKeCloud();
                 if(shiftNow === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = inv; bukuKas.harian.billPagi.akhir = inv; bukuKas.harian.billPagi.count++; } 
                 else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = inv; bukuKas.harian.billMalam.akhir = inv; bukuKas.harian.billMalam.count++; }
                 
@@ -2167,6 +2169,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         else if (bayar === "DEBIT") { bukuKas.harian.uangDebit += uangMasukLaci; bukuKas.bulanan.uangDebit += uangMasukLaci; bukuKas.harian[sb].db += uangMasukLaci; bukuKas.harian[sb].jual_bill_db = (bukuKas.harian[sb].jual_bill_db || 0) + uangMasukLaci; bukuKas.bulanan.jual_bill_db = (bukuKas.bulanan.jual_bill_db || 0) + uangMasukLaci; }
 
         lastInv++; var inv = String(lastInv).padStart(4, '0');
+        simpanKeCloud();
         if(shiftNow === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = inv; bukuKas.harian.billPagi.akhir = inv; bukuKas.harian.billPagi.count++; }
         else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = inv; bukuKas.harian.billMalam.akhir = inv; bukuKas.harian.billMalam.count++; }
 
@@ -2260,6 +2263,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var tglInput = tglHari + "-" + tglBln + "-" + tglThn + ", " + tglJam + "." + tglMnt;
 
         lastInv++; var invInput = String(lastInv).padStart(4, '0');
+        simpanKeCloud();
         var dateOut = new Date(dateObj); if (dateObj.getHours() >= 0 && dateObj.getHours() < 7) { dateOut.setDate(dateOut.getDate() - 1); }
         dateOut.setDate(dateOut.getDate() + parseInt(malamInput)); 
         var tglOutInput = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
