@@ -50,7 +50,7 @@
 
         #printArea { display: none; }
 
-                       /* 🔥 PENGATURAN PRINT ASLI + JAMU DOT MATRIX 🔥 */
+        /* 🔥 PENGATURAN PRINT ASLI + JAMU DOT MATRIX 🔥 */
         @media print {
             /* 1. Sembunyikan tombol & menu website */
             .navbar, #mainContainer, #loadingBar { 
@@ -71,6 +71,7 @@
                 text-rendering: crispEdges !important; /* Bikin pinggiran huruf tajam/kotak */
             }
         }
+c
 
     </style>
 </head>
@@ -2253,10 +2254,12 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         setTimeout(() => { rahasiaCounter = 0; }, 2000);
     };
 
+    
     window.bukaKoreksiLaci = function() {
         // Tarik data asli saat ini agar form terisi otomatis
         var p = bukuKas.harian.pagi;
         var m = bukuKas.harian.malam;
+        var b = bukuKas.bulanan || {};
 
         var out = `<div class="card" style="background:#1a1a2e; border: 2px solid #e94560;">
             <span class="section-title" style="color:#e94560; text-align:center; display:block; font-size:16px;">🛠️ KOREKSI BUKU KAS (GOD MODE)</span>
@@ -2265,9 +2268,18 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
             <div style="display:flex; flex-wrap:wrap; justify-content:space-between; color:#fff;">
                 
-                <!-- KOLOM GLOBAL -->
+                <div style="width:100%; margin-bottom:15px; background:#4a235a; padding:12px; border-radius:8px; border:1px dashed #d2b4de;">
+                    <h4 style="color:#d2b4de; border-bottom:1px solid #d2b4de; margin-top:0; padding-bottom:5px;">📅 PEMULIHAN LAPORAN BULANAN</h4>
+                    <p style="font-size:10px; color:#f1c40f; margin-top:0;">*Ketik manual angka pendapatan bulan ini yang sempat hilang (kembali ke 0) untuk memulihkannya.</p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total Pendapatan (Kotor)</label><input type="number" id="kor_bln_uang" class="form-control" value="${b.uang||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total Pengeluaran</label><input type="number" id="kor_bln_keluar" class="form-control" value="${b.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total Kamar Terjual</label><input type="number" id="kor_bln_kamar" class="form-control" value="${b.kamar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                    </div>
+                </div>
+
                 <div style="width:100%; margin-bottom:15px; background:#0f2027; padding:12px; border-radius:8px;">
-                    <h4 style="color:#4db8ff; border-bottom:1px solid #4db8ff; margin-top:0; padding-bottom:5px;">💰 TOTAL GLOBAL HARI INI</h4>
+                    <h4 style="color:#4db8ff; border-bottom:1px solid #4db8ff; margin-top:0; padding-bottom:5px;">💰 TOTAL KAS HARIAN</h4>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total Cash Laci</label><input type="number" id="kor_uangCash" class="form-control" value="${bukuKas.harian.uangCash||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
                         <div class="form-group" style="flex:1; min-width:120px;"><label style="color:#aaa;">Total TF</label><input type="number" id="kor_uangTransfer" class="form-control" value="${bukuKas.harian.uangTransfer||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
@@ -2276,7 +2288,6 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     </div>
                 </div>
 
-                <!-- KOLOM PAGI -->
                 <div style="width:100%; margin-bottom:15px; background:#0b2e13; padding:12px; border-radius:8px;">
                     <h4 style="color:#00ff88; border-bottom:1px solid #00ff88; margin-top:0; padding-bottom:5px;">☀️ RINCIAN SHIFT PAGI</h4>
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
@@ -2289,18 +2300,16 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                         <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Panjar/DP (Cash | TF)</label>
                             <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_panjarCash" class="form-control" value="${p.panjar_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_panjarTf" class="form-control" value="${p.panjar_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
                         </div>
-                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Charge/Denda (Cash|TF)</label>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Charge (Cash|TF)</label>
                             <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_chargeCash" class="form-control" value="${p.charge_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_chargeTf" class="form-control" value="${p.charge_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
                         </div>
-                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Jual Bill (Cash | TF)</label>
-    <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_jualBillCash" class="form-control" value="${p.jual_bill_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_jualBillTf" class="form-control" value="${p.jual_bill_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
-</div>
-
-                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Pengeluaran Pagi</label><input type="number" id="kor_pagi_keluar" class="form-control" value="${p.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">J.Bill (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_pagi_jualBillCash" class="form-control" value="${p.jual_bill_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_pagi_jualBillTf" class="form-control" value="${p.jual_bill_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Keluar Pagi</label><input type="number" id="kor_pagi_keluar" class="form-control" value="${p.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
                     </div>
                 </div>
 
-                <!-- KOLOM MALAM -->
                 <div style="width:100%; background:#2c2c00; padding:12px; border-radius:8px;">
                     <h4 style="color:#ffcc00; border-bottom:1px solid #ffcc00; margin-top:0; padding-bottom:5px;">🌙 RINCIAN SHIFT MALAM</h4>
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
@@ -2313,14 +2322,13 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                         <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Panjar/DP (Cash | TF)</label>
                             <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_panjarCash" class="form-control" value="${m.panjar_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_panjarTf" class="form-control" value="${m.panjar_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
                         </div>
-                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Charge/Denda (Cash|TF)</label>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Charge (Cash|TF)</label>
                             <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_chargeCash" class="form-control" value="${m.charge_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_chargeTf" class="form-control" value="${m.charge_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
                         </div>
-                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">Jual Bill (Cash | TF)</label>
-    <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_jualBillCash" class="form-control" value="${m.jual_bill_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_jualBillTf" class="form-control" value="${m.jual_bill_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
-</div>
-
-                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Pengeluaran Malam</label><input type="number" id="kor_mlm_keluar" class="form-control" value="${m.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        <div class="form-group" style="flex:1; min-width:140px;"><label style="color:#aaa;">J.Bill (Cash | TF)</label>
+                            <div style="display:flex; gap:5px;"><input type="number" id="kor_mlm_jualBillCash" class="form-control" value="${m.jual_bill_cash||0}" style="background:#222; color:#fff; border:1px solid #555;"><input type="number" id="kor_mlm_jualBillTf" class="form-control" value="${m.jual_bill_tf||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label style="color:#aaa;">Keluar Malam</label><input type="number" id="kor_mlm_keluar" class="form-control" value="${m.keluar||0}" style="background:#222; color:#fff; border:1px solid #555;"></div>
                     </div>
                 </div>
 
@@ -2334,11 +2342,16 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         window.scrollTo(0,0);
     };
 
-        window.simpanKoreksiGodMode = function() {
+    window.simpanKoreksiGodMode = function() {
         var pin = prompt("🔐 Masukkan PIN Admin (1234) untuk melanjutkan:");
-        if(pin !== "1234") { alert("❌ PIN SALAH!"); return; } // Ganti 1234 dengan PIN rahasia Bosku
+        if(pin !== "1234") { alert("❌ PIN SALAH!"); return; }
 
-        // AMBIL DATA GLOBAL
+        // AMBIL DATA BULANAN
+        bukuKas.bulanan.uang = parseInt(document.getElementById('kor_bln_uang').value) || 0;
+        bukuKas.bulanan.keluar = parseInt(document.getElementById('kor_bln_keluar').value) || 0;
+        bukuKas.bulanan.kamar = parseInt(document.getElementById('kor_bln_kamar').value) || 0;
+
+        // AMBIL DATA GLOBAL HARIAN
         bukuKas.harian.uangCash = parseInt(document.getElementById('kor_uangCash').value) || 0;
         bukuKas.harian.uangTransfer = parseInt(document.getElementById('kor_uangTransfer').value) || 0;
         bukuKas.harian.uangDebit = parseInt(document.getElementById('kor_uangDebit').value) || 0;
