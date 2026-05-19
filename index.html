@@ -577,31 +577,46 @@ let tempIndex = -1; window.isCheckInNormal = true;
     window.tandaiDeposit = function(index) { if(confirm("Tandai deposit / jaminan sudah kembali?")) { tamuIn[index].deposit_kembali = true; simpanKeCloud(); renderScreen(); } };
     window.tandaiDepositOut = function(index) { if(confirm("Tandai deposit / jaminan sudah kembali?")) { tamuOut[index].deposit_kembali = true; simpanKeCloud(); renderScreen(); } };
 
-    window.editPembayaran = function(index) {
-        var t = tamuIn[index]; var opsiBaru = prompt("Ketik 'CASH', 'TRANSFER', 'DEBIT', atau 'D.Pending':", t.bayar);
-        if (opsiBaru !== null) {
-            opsiBaru = opsiBaru.trim();
-            if(opsiBaru.toLowerCase() === "belum bayar") opsiBaru = "D.Pending"; else opsiBaru = opsiBaru.toUpperCase();
+        window.editPembayaran = function(index) {
+        tempIndex = index;
+        pindahHalaman("FORM_EDIT_PEMBAYARAN");
+    };
 
-            if (["CASH","TRANSFER","DEBIT","D.PENDING"].includes(opsiBaru)) {
-                if (opsiBaru !== t.bayar) {
-                    var sub = t.sudah_dibayar || 0;
-                    var ts = t.shift ? t.shift.toLowerCase() : "pagi";
+    window.prosesUbahPembayaran = function() {
+        var t = tamuIn[tempIndex];
+        var opsiBaru = document.getElementById('ubah_bayar_baru').value;
 
-                    if(sub > 0 && t.bayar !== "LUNAS LAMA") {
-                        if (t.bayar === "CASH") { bukuKas.harian.uangCash -= sub; bukuKas.bulanan.uangCash -= sub; bukuKas.harian[ts].cash -= sub; bukuKas.harian[ts].room_cash -= sub; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) - sub; }
-                        else if (t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer -= sub; bukuKas.bulanan.uangTransfer -= sub; bukuKas.harian[ts].tf -= sub; bukuKas.harian[ts].room_tf -= sub; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) - sub; }
-                        else if (t.bayar === "DEBIT") { bukuKas.harian.uangDebit -= sub; bukuKas.bulanan.uangDebit -= sub; bukuKas.harian[ts].db -= sub; bukuKas.harian[ts].room_db -= sub; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) - sub; }
+        if (opsiBaru !== t.bayar) {
+            var sub = t.sudah_dibayar || 0;
+            var ts = t.shift ? t.shift.toLowerCase() : "pagi";
 
-                        if (opsiBaru === "CASH") { bukuKas.harian.uangCash += sub; bukuKas.bulanan.uangCash += sub; bukuKas.harian[ts].cash += sub; bukuKas.harian[ts].room_cash += sub; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) + sub; }
-                        else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += sub; bukuKas.bulanan.uangTransfer += sub; bukuKas.harian[ts].tf += sub; bukuKas.harian[ts].room_tf += sub; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) + sub; }
-                        else if (opsiBaru === "DEBIT") { bukuKas.harian.uangDebit += sub; bukuKas.bulanan.uangDebit += sub; bukuKas.harian[ts].db += sub; bukuKas.harian[ts].room_db += sub; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) + sub; }
-                    }
-                    tamuIn[index].bayar = opsiBaru; simpanKeCloud(); renderScreen();
-                }
-            } else { alert("❌ Pilihan tidak valid."); }
+            // 1. KELUARKAN UANG DARI LACI JIKA PEMBAYARAN SEBELUMNYA ADALAH UANG FISIK
+            if(sub > 0 && t.bayar !== "LUNAS LAMA" && t.bayar !== "D.Pending" && t.bayar !== "BELUM BAYAR") {
+                if (t.bayar === "CASH") { bukuKas.harian.uangCash -= sub; bukuKas.bulanan.uangCash -= sub; bukuKas.harian[ts].cash -= sub; bukuKas.harian[ts].room_cash -= sub; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) - sub; }
+                else if (t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer -= sub; bukuKas.bulanan.uangTransfer -= sub; bukuKas.harian[ts].tf -= sub; bukuKas.harian[ts].room_tf -= sub; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) - sub; }
+                else if (t.bayar === "DEBIT") { bukuKas.harian.uangDebit -= sub; bukuKas.bulanan.uangDebit -= sub; bukuKas.harian[ts].db -= sub; bukuKas.harian[ts].room_db -= sub; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) - sub; }
+                
+                bukuKas.harian.uang -= sub; bukuKas.bulanan.uang -= sub; // Kurangi total kotor
+            }
+
+            // 2. MASUKKAN UANG KE LACI JIKA PEMBAYARAN BARU ADALAH UANG FISIK
+            if(sub > 0 && opsiBaru !== "LUNAS LAMA" && opsiBaru !== "D.Pending") {
+                if (opsiBaru === "CASH") { bukuKas.harian.uangCash += sub; bukuKas.bulanan.uangCash += sub; bukuKas.harian[ts].cash += sub; bukuKas.harian[ts].room_cash += sub; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) + sub; }
+                else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += sub; bukuKas.bulanan.uangTransfer += sub; bukuKas.harian[ts].tf += sub; bukuKas.harian[ts].room_tf += sub; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) + sub; }
+                else if (opsiBaru === "DEBIT") { bukuKas.harian.uangDebit += sub; bukuKas.bulanan.uangDebit += sub; bukuKas.harian[ts].db += sub; bukuKas.harian[ts].room_db += sub; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) + sub; }
+                
+                bukuKas.harian.uang += sub; bukuKas.bulanan.uang += sub; // Tambah total kotor
+            }
+            
+            tamuIn[tempIndex].bayar = opsiBaru; 
+            simpanKeCloud(); 
+            alert("✅ Pembayaran berhasil diubah menjadi " + opsiBaru + "!");
+            pindahHalaman("DAFTAR_TAMU");
+        } else {
+            pindahHalaman("DAFTAR_TAMU");
         }
     };
+
         window.bayarCicilan = function(index) {
         var t = tamuIn[index]; var sisa = (t.total_tagihan||0) - (t.sudah_dibayar||0);
         if (sisa <= 0) { alert("Tagihan lunas!"); return; }
@@ -1425,6 +1440,27 @@ let tempIndex = -1; window.isCheckInNormal = true;
             }
             out += `<br><div class="btn-mewah" onclick="pindahHalaman('MENU')" style="justify-content:center;">🔙 Kembali</div></div>`;
         }
+                else if (state === "FORM_EDIT_PEMBAYARAN") {
+            var t = tamuIn[tempIndex];
+            out += `<div class="card"><span class="section-title" style="color:var(--orange);">✏️ Ubah Metode Pembayaran</span>
+                <div style="background:#fff3e0; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #f39c12; font-size:13px;">
+                    <b style="color:#d35400;">🚪 Kamar: ${t.room}</b><br>Tamu: ${t.nama}<br>Pembayaran Saat Ini: <b style="color:red;">${t.bayar}</b>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pilih Metode Pembayaran Baru:</label>
+                    <select id="ubah_bayar_baru" class="form-control" style="font-weight:bold; color:var(--primary);">
+                        <option value="CASH" ${t.bayar === 'CASH' ? 'selected' : ''}>CASH</option>
+                        <option value="TRANSFER" ${t.bayar === 'TRANSFER' ? 'selected' : ''}>TRANSFER</option>
+                        <option value="DEBIT" ${t.bayar === 'DEBIT' ? 'selected' : ''}>DEBIT</option>
+                        <option value="LUNAS LAMA" ${t.bayar === 'LUNAS LAMA' ? 'selected' : ''}>LUNAS LAMA (Uang Tidak Masuk Laci)</option>
+                        <option value="D.Pending" ${t.bayar === 'D.Pending' ? 'selected' : ''}>D.Pending (Belum Bayar)</option>
+                    </select>
+                </div>
+                <button class="btn-submit" style="background:var(--orange)" onclick="prosesUbahPembayaran()">💾 Simpan & Sesuaikan Kas</button>
+                <div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div>
+            </div>`;
+        }
+
         else if (state === "FORM_EDIT_TAMU") {
             var t = tamuIn[editIndex]; var curDep = t.jenis_deposit || 'Uang 100k';
             out += `<div class="card"><span class="section-title" style="color:var(--blue);">✏️ Edit / Pindah Kamar Tamu</span>
