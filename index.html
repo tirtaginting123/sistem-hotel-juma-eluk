@@ -831,20 +831,17 @@ let tempIndex = -1; window.isCheckInNormal = true;
     };
 
 
-        window.siapkanInvoice = function() {
+            window.siapkanInvoice = function() {
         var cetakKelas = tempKelas; var cetakBed = tempBed;
         for (var i=0; i<dataHotel.length; i++) { if (dataHotel[i].nomor.indexOf(d.room) !== -1) { cetakKelas = dataHotel[i].kelas; cetakBed = dataHotel[i].tipe; break; } }
         var tripHTML = `<div>${d.trip === 'Meeting' ? '☑' : '☐'} Meeting<br>${d.trip === 'Invitation' ? '☑' : '☐'} Invitation<br>${d.trip === 'Exhibition' ? '☑' : '☐'} Exhibition</div><div>${d.trip === 'Leisure' ? '☑' : '☐'} Leisure<br>${d.trip === 'Convention' ? '☑' : '☐'} Convention<br>${d.trip === 'Travelling' ? '☑' : '☐'} Travelling</div>`;
         
-        // 🔥 HITUNGAN UTK NOTA: HARGA DASAR KAMAR & TOTAL (KAMAR x MALAM)
+        // Harga dasar per kamar untuk kolom PRICE
         var hargaDasarKamar = getHarga(d.room);
-        var totalNotaBersih = hargaDasarKamar * (parseInt(d.malam) || 1);
+        if (hargaDasarKamar === 0) hargaDasarKamar = Math.floor(d.total_tagihan / (parseInt(d.malam) || 1));
         
-        // Antisipasi jika rombongan / kode kamar gabungan agar tidak memunculkan angka 0
-        if (hargaDasarKamar === 0) {
-            totalNotaBersih = d.total_tagihan;
-            hargaDasarKamar = Math.floor(d.total_tagihan / (parseInt(d.malam) || 1));
-        }
+        // Total keseluruhan mengambil dari sistem agar Extra Bed otomatis dijumlahkan!
+        var totalNotaBersih = d.total_tagihan; 
 
         document.getElementById('printArea').innerHTML = `
             <div style="width:100%; height:100%; box-sizing:border-box;">
@@ -861,7 +858,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 <div style="font-size:14px; font-weight:bold; margin-bottom: 8px;">NO : ${d.inv}</div>
                 <table style="width:100%; border-collapse:collapse; font-size:12px; border:2px solid #000;">
                     <tr><td style="border:2px solid #000; padding:6px 8px;"><b>NAME</b><br>${d.nama}</td><td style="border:2px solid #000; padding:6px 8px;"><b>ADDRESS</b><br>${d.alamat}</td><td style="border:2px solid #000; padding:6px 8px;"><b>NATIONALITY</b><br>${d.warga}</td><td style="border:2px solid #000; padding:6px 8px;"><b>ID NUMBER</b><br>${d.ktp}</td></tr>
-                    <tr><td style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF ROOM :</b><br>${cetakKelas} ${cetakBed} (${d.room})</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>EXTRA BED :</b><br>${d.extrabed} Kasur</td><td style="border:2px solid #000; padding:6px 8px;"><b>PRICE :</b><br>Rp ${formatRp(hargaDasarKamar)}</td></tr>
+                    <tr><td style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF ROOM :</b><br>${cetakKelas} ${cetakBed} (${d.room})</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>EXTRA BED :</b><br>${d.extrabed} Kasur</td><td style="border:2px solid #000; padding:6px 8px;"><b>PRICE :</b><br>Rp ${formatRp(hargaDasarKamar)} /room</td></tr>
                     <tr><td style="border:2px solid #000; padding:6px 8px;"><b>CHECK IN DATE :</b><br>${d.tgl}</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>CHECK OUT DATE :</b><br>${d.tgl_out}</td><td rowspan="3" style="border:2px solid #000; padding:6px 8px; vertical-align:top;"><b>TYPE OF Trip</b><br><div style="display:flex; justify-content:space-between; margin-top:3px; font-size:10px; line-height:1.5;">${tripHTML}</div></td></tr>
                     <tr><td style="border:2px solid #000; padding:6px 8px;"><b>TRANFORTATION BY :</b><br>${d.transport}</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF PAYMENT :</b><br>${d.bayar}</td></tr>
                     <tr><td colspan="3" style="border:2px solid #000; padding:6px 8px;"><b>MOBILE NUMBER :</b><br>${d.hp}</td></tr>
@@ -870,6 +867,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
             </div>
         `;
     };
+
 
 
 
