@@ -522,6 +522,23 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 if (bukuKas.harian.kamar > 0) bukuKas.harian.kamar -= 1;
                 if (bukuKas.bulanan.kamar > 0) bukuKas.bulanan.kamar -= 1;
             }
+                        // 🔥 FITUR PENGEMBALIAN NOMOR BILL (MINUS 1) JIKA DIBATALKAN 🔥
+            if (t.inv !== "BELUM CETAK" && t.inv !== "-" && t.inv !== "") {
+                var invAngka = parseInt(String(t.inv).replace(/\D/g, '')) || 0;
+                // Hanya mundurkan angka jika bill yang dibatalkan adalah bill terakhir yang tercetak
+                if (invAngka === lastInv) {
+                    lastInv--;
+                    if (ts === "pagi" && bukuKas.harian.billPagi.count > 0) { 
+                        bukuKas.harian.billPagi.count--; 
+                        bukuKas.harian.billPagi.akhir = (lastInv > 0 ? String(lastInv).padStart(4, '0') : null); 
+                    }
+                    if (ts === "malam" && bukuKas.harian.billMalam.count > 0) { 
+                        bukuKas.harian.billMalam.count--; 
+                        bukuKas.harian.billMalam.akhir = (lastInv > 0 ? String(lastInv).padStart(4, '0') : null); 
+                    }
+                }
+            }
+
 
             tamuIn.splice(index, 1); simpanKeCloud(); renderScreen(); alert("✅ Data berhasil dihapus dan hitungan kas dikurangi!");
         } else if (s !== null) { alert("❌ Sandi salah!"); }
