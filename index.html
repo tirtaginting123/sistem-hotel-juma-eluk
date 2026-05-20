@@ -155,7 +155,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     var freshData = cekSnapshot.val();
                     var freshTgl = ((freshData.bukuKas || {}).harian || {}).tgl;
                     var freshBulan = ((freshData.bukuKas || {}).bulanan || {}).bln;
-                    
+
                     if (freshTgl === realTglHarian && freshBulan === realBulanHarian) {
                         console.log("Aman! Tutup buku sudah dikerjakan.");
                         document.getElementById('loadingBar').style.display = "none";
@@ -170,7 +170,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     arsipLaporanBulanan = toArr(freshData.arsipLaporanBulanan); // <-- TAMBAHAN BULANAN
                     riwayatHarian = toArr(freshData.riwayatHarian); lastInv = freshData.last_inv || 0;
                     lastRestoInv = freshData.last_resto_inv || 0; catatanHotel = freshData.catatan || "";
-                    
+
                     var oldBukuKas = freshData.bukuKas; 
 
                     // 1. EKSEKUSI TUTUP BUKU HARIAN DULU (JIKA GANTI HARI)
@@ -187,7 +187,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         var h = oldBukuKas.harian; var b = oldBukuKas.bulanan || {};
                         var fields = ["uang", "uangCash", "uangTransfer", "uangDebit", "keluar", "kamar", "room_cash", "room_tf", "room_db", "resto_cash", "resto_tf", "resto_db", "charge_cash", "charge_tf", "charge_db", "panjar_cash", "panjar_tf", "panjar_db", "jual_bill_cash"];
                         fields.forEach(function(f) { b[f] = (b[f] || 0) + (h[f] || 0); });
-                        
+
                         if(h.uang > 0) { riwayatHarian.push({ tgl: h.tgl, uang: h.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
 
                         oldBukuKas.bulanan = b; // Titip sementara
@@ -224,7 +224,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                             "<b>- *SISA PENDAPATAN BERSIH :* Rp " + formatRp((bToArchive.uang||0) - (bToArchive.keluar||0)) + "</b><br>";
 
                         arsipLaporanBulanan.push({ bln: bToArchive.bln, laporan: teksBulanan });
-                        
+
                         bukuKas.bulanan = { 
                             bln: realBulanHarian, uang: 0, kamar: 0, keluar: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, 
                             room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, 
@@ -236,7 +236,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     alert("🌅 AUTO-RESET BERHASIL!\nSistem telah menyesuaikan laporan harian & bulanan.");
                 });
             }, waktuTunggu);
-            
+
             return;
         }
         // >>> AKHIR FITUR ROBOT <<<
@@ -248,7 +248,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
             kamarRusak = toArr(cloudData.maintenance); kamarKotor = toArr(cloudData.kamarKotor); arsipTamu = toArr(cloudData.arsip); arsipLaporanHarian = toArr(cloudData.arsipLaporanHarian); arsipResto = toArr(cloudData.arsipResto);
             lastInv = cloudData.last_inv || 0; lastRestoInv = cloudData.last_resto_inv || 0; riwayatHarian = toArr(cloudData.riwayatHarian);
             catatanHotel = cloudData.catatan || "";
-            
+
             bukuKas = { 
                 harian: { 
                     tgl: realTglHarian, 
@@ -332,7 +332,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
             var txtSisa = document.getElementById('txt_sisa_kurang');
             if(txtSisa) txtSisa.innerText = "Rp " + (typeof formatRp === 'function' ? formatRp(sisa) : sisa);
         }
-        
+
         // 🔥 TAMBAHAN: Update juga angka di Form Basic agar tidak nge-bug saat ubah jumlah malam
         var elBasicDisplay = document.getElementById('f_basic_total_display');
         if(elBasicDisplay) {
@@ -357,21 +357,21 @@ let tempIndex = -1; window.isCheckInNormal = true;
             var tglPad = String(dOp.getDate()).padStart(2, '0');
             var blnArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
             var target = tglPad + "-" + blnArr[dOp.getMonth()] + "-" + dOp.getFullYear();
-            
+
             // NORMALISASI STRING
             var cleanStr = tglStr.trim().replace(/ /g, '-').replace(/\//g, '-');
             var parts = cleanStr.split(",");
             var tglBersih = parts[0];
-            
+
             var jam = 12; // default jam
             if (parts.length >= 2) jam = parseInt(parts[1].trim().replace(':', '.').split(".")[0]);
-            
+
             if (tglBersih === target && jam >= 7) return true;
-            
+
             var dN = new Date(dOp); dN.setDate(dN.getDate() + 1);
             var targetN = String(dN.getDate()).padStart(2, '0') + "-" + blnArr[dN.getMonth()] + "-" + dN.getFullYear();
             if (tglBersih === targetN && jam < 7) return true;
-            
+
             return false;
         }
 
@@ -394,7 +394,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
             var adaPay = false;
             if (tamu.history_bayar) tamu.history_bayar.forEach(h => { if(cekWaktu(h.tgl)) adaPay = true; });
             var outToday = tamu.jam_out_aktual && cekWaktu(tamu.jam_out_aktual);
-            
+
             var masuk = false; var bs = (tamu.shift || "pagi").toLowerCase();
             if (isBaru) masuk = true;
             else if (jamSekarang >= 12 || adaPay || outToday) { masuk = true; bs = "pagi"; }
@@ -432,18 +432,18 @@ let tempIndex = -1; window.isCheckInNormal = true;
     };
 
 
-    
+
             window.resetKeNol = function() {
         var conf1 = confirm("⚠️ RESET HARIAN (TUTUP BUKU) ⚠️\nBosku yakin ingin menghapus semua laporan keuangan menjadi 0 dan memulai hari operasional baru?");
         if(!conf1) return;
-        
+
         var conf2 = confirm("Data tamu yang belum Check-Out akan dipertahankan dan otomatis dimasukkan ke Laporan Shift Pagi dengan status NYAMBUNG. Lanjut?");
         if(!conf2) return;
 
         // 1. KOSONGKAN LACI
         bukuKas.harian.uang = 0; bukuKas.harian.uangCash = 0; bukuKas.harian.uangTransfer = 0; bukuKas.harian.uangDebit = 0; bukuKas.harian.keluar = 0;
         bukuKas.harian.kamar = 0; 
-        
+
         var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
         bukuKas.harian.pagi = Object.assign({}, defShift); 
         bukuKas.harian.malam = Object.assign({}, defShift);
@@ -537,7 +537,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
         if(sisaVit !== null) {
             sisaVit = sisaVit.trim();
             if(["0","1","2"].includes(sisaVit)) {
-                
+
                 // 🔥 KUNCI WAKTU MUTLAK CHECK-OUT & DENDA 🔥
                 var jamAsliSistem = new Date().getHours();
                 var shiftOutStr = (jamAsliSistem >= 7 && jamAsliSistem < 17) ? "Pagi" : "Malam";
@@ -561,7 +561,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 tamuIn[index].vit = "vit " + sisaVit; 
                 tamuIn[index].jam_out_aktual = getTanggalSekarang(); 
                 tamuIn[index].shift_out = shiftOutStr; // Stempel Shift Out Permanen
-                
+
                 if (kamarKotor.indexOf(tamuIn[index].room) === -1) { kamarKotor.push(tamuIn[index].room); }
 
                 arsipTamu.push({ room: tamuIn[index].room, nama: tamuIn[index].nama, inv: tamuIn[index].inv, jam_in: tamuIn[index].tgl, jam_out: tamuIn[index].jam_out_aktual, vit: sisaVit, charge: tamuIn[index].charge });
@@ -595,7 +595,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 if (t.bayar === "CASH") { bukuKas.harian.uangCash -= sub; bukuKas.bulanan.uangCash -= sub; bukuKas.harian[ts].cash -= sub; bukuKas.harian[ts].room_cash -= sub; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) - sub; }
                 else if (t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer -= sub; bukuKas.bulanan.uangTransfer -= sub; bukuKas.harian[ts].tf -= sub; bukuKas.harian[ts].room_tf -= sub; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) - sub; }
                 else if (t.bayar === "DEBIT") { bukuKas.harian.uangDebit -= sub; bukuKas.bulanan.uangDebit -= sub; bukuKas.harian[ts].db -= sub; bukuKas.harian[ts].room_db -= sub; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) - sub; }
-                
+
                 bukuKas.harian.uang -= sub; bukuKas.bulanan.uang -= sub; // Kurangi total kotor
             }
 
@@ -604,10 +604,10 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 if (opsiBaru === "CASH") { bukuKas.harian.uangCash += sub; bukuKas.bulanan.uangCash += sub; bukuKas.harian[ts].cash += sub; bukuKas.harian[ts].room_cash += sub; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) + sub; }
                 else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += sub; bukuKas.bulanan.uangTransfer += sub; bukuKas.harian[ts].tf += sub; bukuKas.harian[ts].room_tf += sub; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) + sub; }
                 else if (opsiBaru === "DEBIT") { bukuKas.harian.uangDebit += sub; bukuKas.bulanan.uangDebit += sub; bukuKas.harian[ts].db += sub; bukuKas.harian[ts].room_db += sub; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) + sub; }
-                
+
                 bukuKas.harian.uang += sub; bukuKas.bulanan.uang += sub; // Tambah total kotor
             }
-            
+
             tamuIn[tempIndex].bayar = opsiBaru; 
             simpanKeCloud(); 
             alert("✅ Pembayaran berhasil diubah menjadi " + opsiBaru + "!");
@@ -629,7 +629,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 if(via) {
                     via = via.toUpperCase().trim();
                     if(["CASH", "TRANSFER", "DEBIT"].includes(via)) {
-                        
+
                         // 🔥 KUNCI WAKTU MUTLAK EXTEND / CICILAN 🔥
                         var jamAsliSistem = new Date().getHours(); 
                         var shiftNow = (jamAsliSistem >= 7 && jamAsliSistem < 17) ? "Pagi" : "Malam"; 
@@ -642,13 +642,13 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
                         tamuIn[index].sudah_dibayar = (t.sudah_dibayar||0) + bayar;
                         if (tamuIn[index].sudah_dibayar >= t.total_tagihan) { tamuIn[index].bayar = via; } else { tamuIn[index].bayar = "D.Pending"; }
-                        
+
                         // STEMPEL WAKTU KE HISTORY (Biar dibaca oleh Laporan WA sebagai uang hari ini)
                         var waktuAsli = new Date();
                         var mmArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
                                 var tglAkuratC = String(waktuAsli.getDate()).padStart(2, '0') + "-" + mmArr[waktuAsli.getMonth()] + "-" + waktuAsli.getFullYear() + ", " + String(waktuAsli.getHours()).padStart(2, '0') + "." + String(waktuAsli.getMinutes()).padStart(2, '0');
 
-                        
+
                         if(!tamuIn[index].history_bayar) tamuIn[index].history_bayar = [];
                         tamuIn[index].history_bayar.push({ nominal: bayar, via: via, shift: shiftNow, tgl: tglAkuratC });
 
@@ -667,7 +667,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
         var addMalamInput = parseInt(document.getElementById('e_malam').value) || 0;
         var addExtrabedInput = parseInt(document.getElementById('e_extrabed').value) || 0; // 🔥 FITUR EXTRA BED BARU
         var depositInput = document.getElementById('e_deposit').value; 
-        
+
         var oldRoom = t.room; var newRoom = newRoomInput === "" ? oldRoom : newRoomInput;
         var oldMalam = parseInt(t.malam) || 1;
 
@@ -691,7 +691,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
         if (newRoom !== oldRoom) { if(kamarKotor.indexOf(oldRoom) === -1) kamarKotor.push(oldRoom); tamuIn[editIndex].room = newRoom; }
         if (addMalamInput > 0) { tamuIn[editIndex].malam = oldMalam + addMalamInput; tamuIn[editIndex].tgl_out = t.tgl_out + " (+" + addMalamInput + "mlm)"; }
-        
+
         // 🔥 Update jumlah kasur & Laporan Shift WA
         if (addExtrabedInput > 0) {
             tamuIn[editIndex].extrabed = (parseInt(t.extrabed) || 0) + addExtrabedInput;
@@ -718,7 +718,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
             bukuKas.bulanan.keluar += harga; 
             bukuKas.harian[sb].keluar += harga;
             bukuKas.harian.rincianKeluar.push({ ket: deskripsi, nominal: harga, shift: shiftNow });
-            
+
             simpanKeCloud(); alert("✅ Pengeluaran shift " + shiftNow + " dicatat!"); pindahHalaman("TUTUP_BUKU");
         }
     };
@@ -745,11 +745,11 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
     window.prosesResto = function() {
         var kamar = document.getElementById('r_kamar') ? document.getElementById('r_kamar').value || "Tamu Luar" : "Tamu Luar";
-        
+
         var names = document.querySelectorAll('.r_item_name');
         var prices = document.querySelectorAll('.r_item_price');
         var arrItems = [];
-        
+
         for(var i=0; i<names.length; i++) {
             var n = names[i].value.trim();
             var p = parseInt(prices[i].value) || 0;
@@ -757,7 +757,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 arrItems.push("• " + n + " <b>(Rp " + formatRp(p) + ")</b>");
             }
         }
-        
+
         var item = arrItems.join("<br>"); 
         var harga = parseInt(document.getElementById('r_harga').value) || 0; 
         var bayar = document.getElementById('r_bayar').value;
@@ -769,12 +769,12 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
             lastRestoInv++; var invR = "R" + String(lastRestoInv).padStart(4, '0');
             bukuKas.harian.transaksiResto.push({ kamar: kamar, item: item, nominal: harga, bayar: bayar, shift: shiftNow, inv: invR, timestamp: new Date().getTime() });
-            
+
             bukuKas.harian.uang += harga; bukuKas.bulanan.uang += harga;
             if(bayar === "CASH") { bukuKas.harian.uangCash += harga; bukuKas.bulanan.uangCash += harga; bukuKas.harian[sb].cash += harga; bukuKas.harian[sb].resto_cash += harga; bukuKas.bulanan.resto_cash = (bukuKas.bulanan.resto_cash||0) + harga; }
             else if(bayar === "TRANSFER") { bukuKas.harian.uangTransfer += harga; bukuKas.bulanan.uangTransfer += harga; bukuKas.harian[sb].tf += harga; bukuKas.harian[sb].resto_tf += harga; bukuKas.bulanan.resto_tf = (bukuKas.bulanan.resto_tf||0) + harga; }
             else if(bayar === "DEBIT") { bukuKas.harian.uangDebit += harga; bukuKas.bulanan.uangDebit += harga; bukuKas.harian[sb].db += harga; bukuKas.harian[sb].resto_db += harga; bukuKas.bulanan.resto_db = (bukuKas.bulanan.resto_db||0) + harga; }
-            
+
             simpanKeCloud(); alert("✅ Pesanan Resto shift " + shiftNow + " berhasil dicatat!"); pindahHalaman("MENU_RESTO");
         } else {
             alert("❌ Masukkan minimal 1 menu pesanan beserta harganya!");
@@ -798,7 +798,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
     };
 
     window.simpanCatatan = function() { catatanHotel = document.getElementById('txt_catatan').value; simpanKeCloud(); alert("✅ Catatan disimpan!"); pindahHalaman('MENU'); };
-    
+
     window.aturNomorBill = function() {
         var nextBill = prompt("🎫 PENGATURAN NOMOR BILL 🎫\nBerapa angka nomor bill SELANJUTNYA yang mau dipakai?\n(Contoh: Jika di buku fisik bill berikutnya adalah 1200, ketik 1200)", "");
         if (nextBill !== null && nextBill.trim() !== "") {
@@ -818,7 +818,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
             }
         }
     };
-    
+
     let billCounter = 0;
     window.klikAturBill = function() {
         billCounter++;
@@ -831,10 +831,21 @@ let tempIndex = -1; window.isCheckInNormal = true;
     };
 
 
-    window.siapkanInvoice = function() {
+        window.siapkanInvoice = function() {
         var cetakKelas = tempKelas; var cetakBed = tempBed;
         for (var i=0; i<dataHotel.length; i++) { if (dataHotel[i].nomor.indexOf(d.room) !== -1) { cetakKelas = dataHotel[i].kelas; cetakBed = dataHotel[i].tipe; break; } }
         var tripHTML = `<div>${d.trip === 'Meeting' ? '☑' : '☐'} Meeting<br>${d.trip === 'Invitation' ? '☑' : '☐'} Invitation<br>${d.trip === 'Exhibition' ? '☑' : '☐'} Exhibition</div><div>${d.trip === 'Leisure' ? '☑' : '☐'} Leisure<br>${d.trip === 'Convention' ? '☑' : '☐'} Convention<br>${d.trip === 'Travelling' ? '☑' : '☐'} Travelling</div>`;
+        
+        // 🔥 HITUNGAN UTK NOTA: HARGA DASAR KAMAR & TOTAL (KAMAR x MALAM)
+        var hargaDasarKamar = getHarga(d.room);
+        var totalNotaBersih = hargaDasarKamar * (parseInt(d.malam) || 1);
+        
+        // Antisipasi jika rombongan / kode kamar gabungan agar tidak memunculkan angka 0
+        if (hargaDasarKamar === 0) {
+            totalNotaBersih = d.total_tagihan;
+            hargaDasarKamar = Math.floor(d.total_tagihan / (parseInt(d.malam) || 1));
+        }
+
         document.getElementById('printArea').innerHTML = `
             <div style="width:100%; height:100%; box-sizing:border-box;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px;">
@@ -850,18 +861,36 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 <div style="font-size:14px; font-weight:bold; margin-bottom: 8px;">NO : ${d.inv}</div>
                 <table style="width:100%; border-collapse:collapse; font-size:12px; border:2px solid #000;">
                     <tr><td style="border:2px solid #000; padding:6px 8px;"><b>NAME</b><br>${d.nama}</td><td style="border:2px solid #000; padding:6px 8px;"><b>ADDRESS</b><br>${d.alamat}</td><td style="border:2px solid #000; padding:6px 8px;"><b>NATIONALITY</b><br>${d.warga}</td><td style="border:2px solid #000; padding:6px 8px;"><b>ID NUMBER</b><br>${d.ktp}</td></tr>
-                    <tr><td style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF ROOM :</b><br>${cetakKelas} ${cetakBed} (${d.room})</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>EXTRA BED :</b><br>${d.extrabed} Kasur</td><td style="border:2px solid #000; padding:6px 8px;"><b>PRICE :</b><br>Rp ${formatRp(d.total_tagihan)}</td></tr>
+                    <tr><td style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF ROOM :</b><br>${cetakKelas} ${cetakBed} (${d.room})</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>EXTRA BED :</b><br>${d.extrabed} Kasur</td><td style="border:2px solid #000; padding:6px 8px;"><b>PRICE :</b><br>Rp ${formatRp(hargaDasarKamar)}</td></tr>
                     <tr><td style="border:2px solid #000; padding:6px 8px;"><b>CHECK IN DATE :</b><br>${d.tgl}</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>CHECK OUT DATE :</b><br>${d.tgl_out}</td><td rowspan="3" style="border:2px solid #000; padding:6px 8px; vertical-align:top;"><b>TYPE OF Trip</b><br><div style="display:flex; justify-content:space-between; margin-top:3px; font-size:10px; line-height:1.5;">${tripHTML}</div></td></tr>
                     <tr><td style="border:2px solid #000; padding:6px 8px;"><b>TRANFORTATION BY :</b><br>${d.transport}</td><td colspan="2" style="border:2px solid #000; padding:6px 8px;"><b>TYPE OF PAYMENT :</b><br>${d.bayar}</td></tr>
                     <tr><td colspan="3" style="border:2px solid #000; padding:6px 8px;"><b>MOBILE NUMBER :</b><br>${d.hp}</td></tr>
-                    <tr><td colspan="2" style="border:2px solid #000; padding:6px 8px; height:45px; vertical-align:bottom; text-align:center;"><b>GUEST SIGNATURE</b></td><td colspan="2" style="border:2px solid #000; padding:6px 8px; vertical-align:top;"><div style="display:flex; justify-content:space-between; width:100%;"><div><b>TOTAL ACCOUNT :</b><br><b style="font-size:16px;">Rp ${formatRp(d.total_tagihan)}</b></div><div style="text-align:right; margin-top:15px;">..................................<br>RECEPTION INCHARGE</div></div></td></tr>
+                    <tr><td colspan="2" style="border:2px solid #000; padding:6px 8px; height:45px; vertical-align:bottom; text-align:center;"><b>GUEST SIGNATURE</b></td><td colspan="2" style="border:2px solid #000; padding:6px 8px; vertical-align:top;"><div style="display:flex; justify-content:space-between; width:100%;"><div><b>TOTAL ACCOUNT :</b><br><b style="font-size:16px;">Rp ${formatRp(totalNotaBersih)}</b></div><div style="text-align:right; margin-top:15px;">..................................<br>RECEPTION INCHARGE</div></div></td></tr>
                 </table>
             </div>
         `;
     };
 
 
+
     function renderScreen() {
+              // 🔥 MESIN PENGURUT OTOMATIS BERDASARKAN NO BILL (TERBARU KE TERLAMA)
+        if (tamuIn && tamuIn.length > 0) {
+            tamuIn.sort(function(a, b) {
+                var invA = parseInt(String(a.inv).replace(/\D/g, '')) || 0;
+                var invB = parseInt(String(b.inv).replace(/\D/g, '')) || 0;
+                return invB - invA; // Urutan Menurun
+            });
+        }
+
+        if (tamuOut && tamuOut.length > 0) {
+            tamuOut.sort(function(a, b) {
+                var invA = parseInt(String(a.inv).replace(/\D/g, '')) || 0;
+                var invB = parseInt(String(b.inv).replace(/\D/g, '')) || 0;
+                return invB - invA; // Urutan Menurun
+            });
+        }
+
         var out = ""; document.getElementById('topSearchArea').style.display = "block";
 
               // 🔥 MESIN WAKTU VISUAL 16:30 🔥
@@ -915,7 +944,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
         }
                                 else if (state === "ALL_INFO_HARIAN") {
             out += `<div class="card"><span class="section-title" style="color:#1abc9c;">📋 LAPORAN HARIAN SHIFT</span>`;
-            
+
             // --- ☀️ RENDER SHIFT PAGI BESERTA INPUTNYA ---
             out += generateLaporanShift("Pagi", bukuKas.harian.pagi);
             out += `<div style="background:#eafaf1; padding:12px; border-radius:8px; margin-top:-5px; margin-bottom:20px; border:1px dashed #27ae60;">
@@ -1058,7 +1087,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
 <button onclick="resetKeNol()" style="margin-top:10px; padding:12px; background:#e74c3c; color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:14px; width:100%; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🗑️ RESET HARIAN (TUTUP BUKU MANUAL)</button>
 
                 <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:10px; justify-content:center;">🔙 Kembali</div></div>`;
-                
+
         }
         else if (state === "FORM_PENGELUARAN") {
             out += `<div class="card"><span class="section-title">📉 Catat Pengeluaran Baru</span>
@@ -1073,7 +1102,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     <div class="btn-mewah" onclick="pindahHalaman('INFO_RESTO')"><span>📋 b. Info Penjualan Resto Hari Ini</span><span>➔</span></div>
                     <div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali ke Dashboard</div></div>`;
         }
-        
+
                 else if (state === "FORM_CHARGE") {
             var t = tamuIn[tempIndex];
             out += `<div class="card"><span class="section-title" style="color:#e67e22;">⚠️ Form Pembayaran Denda / Charge</span>
@@ -1105,18 +1134,18 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 <div class="form-group"><label class="form-label">Pembayaran via</label><select id="r_bayar" class="form-control"><option value="CASH">CASH</option><option value="TRANSFER">TRANSFER</option><option value="DEBIT">DEBIT</option></select></div>
                 <button class="btn-submit" style="background:var(--orange)" onclick="prosesResto()">💾 Simpan & Catat Ke Kas</button>
                 <div class="btn-mewah" onclick="pindahHalaman('MENU_RESTO')" style="margin-top:10px; justify-content:center;">🔙 Batal</div></div>`;
-        
+
 
         } if (state === "INFO_RESTO") {
             out += `<div class="card"><span class="section-title" style="color:var(--orange);">📋 Info Penjualan Resto</span>`;
-            
+
             var tResto = bukuKas.harian.transaksiResto || [];
             if(tResto.length === 0) {
                 out += `<p style="text-align:center; opacity:0.6; font-size:12px; margin:30px 0;">Belum ada penjualan resto hari ini.</p>`;
             } else {
                 var shiftPagiHtml = "";
                 var shiftMalamHtml = "";
-                
+
                 tResto.forEach(function(r) {
                     var html = `<div style="border-bottom:1px solid #eee; padding:10px 0; font-size:12px;">
                                     <div style="display:flex; justify-content:space-between; margin-bottom:4px; align-items:center;">
@@ -1132,7 +1161,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     if(r.shift && r.shift.toLowerCase() === "pagi") shiftPagiHtml += html;
                     else shiftMalamHtml += html;
                 });
-                
+
                 if(shiftPagiHtml) {
                     out += `<div style="background:#eafaf1; padding:12px; border-radius:8px; border:1px solid #27ae60; margin-bottom:15px;">
                             <b style="color:#27ae60; font-size:13px; border-bottom:1px solid #ccc; display:block; padding-bottom:5px; margin-bottom:5px;">☀️ PESANAN SHIFT PAGI</b>
@@ -1147,14 +1176,14 @@ let tempIndex = -1; window.isCheckInNormal = true;
             out += `<div class="btn-mewah" onclick="pindahHalaman('MENU_RESTO')" style="justify-content:center; margin-top:15px;">🔙 Kembali</div></div>`;
         }
 
-              
+
         else if (state === "TOTAL_KAMAR") {
             var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
             var headerTgl = String(dOp.getDate()).padStart(2, '0') + " " + ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][dOp.getMonth()] + " " + dOp.getFullYear();
 
             var htmlUtama = `<div class="card"><span class="section-title">🧮 Rekap Kamar Terjual</span>
                 <div style="background:#fff; padding:15px; border-radius:10px; border:2px solid var(--primary); font-family:monospace; font-size:13px; line-height:1.6; white-space:pre-wrap; color:#000;">`;
-            
+
             htmlUtama += `🔥 ${headerTgl} 🔥\n\n`;
 
             var hitungPagi = 0, hitungMalam = 0, hitungVD = 0;
@@ -1212,9 +1241,9 @@ let tempIndex = -1; window.isCheckInNormal = true;
                                 else if (isKotor) {
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
                     if (lastT && lastT.jam_out_aktual) { if (!isKmrBaruGlobal(lastT.jam_out_aktual)) return; } else if (!lastT) { return; }
-                    
+
                     hitungVD++;
-                    
+
                     // 🔥 SINKRONISASI LOGIKA VD DENGAN LAPORAN WA 🔥
                     var sOut = "pagi";
                     var ketOut = "nyb";
@@ -1227,7 +1256,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         if (!isBaruVD) sOut = "pagi"; // Tamu nyambung selalu masuk Pagi
 
                         ketOut = isBaruVD ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
-                        
+
                         if (!isBaruVD && lastT.history_bayar) {
                             var hvO = 0, vvO = "", adaExtOut = false;
                             lastT.history_bayar.forEach(function(h) { if(isKmrBaruGlobal(h.tgl)){ adaExtOut=true; hvO += parseInt(h.nominal); vvO = (h.via||"").toLowerCase(); }});
@@ -1546,7 +1575,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     labelStatus = "KOTOR (VD)" + ikonKotor; 
                 }
                                 else if (rm.isRusak) { sClass = "status-orange"; }
-                
+
                 // 🔥 TAMBAHAN UNTUK MEMUNCULKAN WARNA BIRU (PENDING/BOOKING) 🔥
                 else if (rm.pending) { 
                     sClass = "status-blue"; 
@@ -1556,7 +1585,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 var inner = (sClass === "status-gray" && labelStatus === "BERSIHKAN!") ? 
 
 
-              
+
                     `<div style="font-size:18px; font-weight:900;">${rm.no}</div><div style="font-size:10px; font-weight:800;">${labelStatus}</div>` :
                     `<div style="font-size:16px;">${rm.no}</div><div style="font-size:9px; font-weight:800;">${labelStatus}</div><div style="font-size:9px; font-weight:400;">${rm.tip}</div>`;
                 return `<div class="room-box ${sClass}" ${action}>${inner}</div>`;
@@ -1637,7 +1666,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING_LENGKAP')" style="border-left: 4px solid var(--blue);">📝 Form  Pending Bookingan</div>`; 
                     } else { 
                         out += `<div class="btn-mewah" onclick="window.isCheckInNormal=true; pindahHalaman('FORM_CHECKIN')">📝 Lakukan Check-In Normal</div>`; 
-                        
+
                         if (window.dariPencarian) {
                             out += `<div class="btn-mewah" onclick="pindahHalaman('FORM_PENDING_LENGKAP')" style="border-left: 4px solid var(--blue);">📝 Pending Bookingan</div>`;
                         }
@@ -1870,7 +1899,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 simpanKeCloud(); if(state === "DAFTAR_TAMU" || state === "RINGKASAN_KAMAR" || state === "HASIL_CARI") { renderScreen(); } else { pindahHalaman("MENU"); }
             }
         }
-                        
+
         else if (val === "RESET_HARIAN") { 
             var s = prompt("Sandi Tutup Buku Global (jumaeluk1234):"); 
             if(s && s.trim() === "jumaeluk1234") { 
@@ -1890,7 +1919,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     lapPagi: teksPagi, 
                     lapMalam: teksMalam 
                 });
-                
+
                 if(!arsipResto) arsipResto = [];
                 var oldResto = toArr(oldBukuKas.harian.transaksiResto);
                 if(oldResto.length > 0) arsipResto.push({ tgl: oldBukuKas.harian.tgl, data: oldResto });
@@ -1903,7 +1932,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 if(h.uang > 0) { riwayatHarian.push({ tgl: h.tgl, uang: h.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
 
                 var def = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
-                
+
                                 bukuKas.harian = { 
                     tgl: getTanggalHarian(), uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, 
                     rincianKeluar: [], transaksiResto: [], jualBill: [],
@@ -1920,7 +1949,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                                 // 🔥 PERTAHANKAN DATA TAMU VD AGAR BISA MASUK ARSIP DENGAN SEMPURNA
                 tamuOut = tamuOut.filter(function(t) { return kamarKotor.includes(t.room); });
 
-                
+
 
                 simpanKeCloud(); 
                 alert("✅ TUTUP BUKU MANUAL BERHASIL!\nData aman di Arsip. Hitungan VD dan Laci kembali 0.");
@@ -1945,10 +1974,10 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     "<b>- *TOTAL PENDAPATAN KOTOR :* Rp " + formatRp(bToArchive.uang||0) + "</b><br><br>" +
                     "ttl uang keluar 👉🏽 Rp " + formatRp(bToArchive.keluar||0) + "<br>" +
                     "<b>- *SISA PENDAPATAN BERSIH :* Rp " + formatRp((bToArchive.uang||0) - (bToArchive.keluar||0)) + "</b><br>";
-                
+
                 if(!arsipLaporanBulanan) arsipLaporanBulanan = [];
                 arsipLaporanBulanan.push({ bln: bToArchive.bln, laporan: teksBulanan });
-                
+
                 bukuKas.bulanan = { 
                     bln: getTanggalBulanan(), uang: 0, kamar: 0, keluar: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, 
                     room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, 
@@ -2000,27 +2029,27 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var kamarStr = document.getElementById('rom_kamar').value.toLowerCase().replace(/\s/g, '');
         var arrKamarRaw = kamarStr.split(',').filter(function(k) { return k !== ""; });
         if(arrKamarRaw.length === 0) { alert("❌ Masukkan minimal 1 nomor kamar!"); return; }
-        
+
         var semuaKamarValid = [];
         dataHotel.forEach(function(k) { k.nomor.forEach(function(no) { semuaKamarValid.push(no); }); });
-        
+
         // 🔥 MODIFIKASI: Sistem mengecek "Jenis Tindakan" lebih dulu
         var jenis = document.getElementById('rom_jenis').value;
-        
+
         var arrKamar = [];
         for(var i=0; i<arrKamarRaw.length; i++) {
             var k = arrKamarRaw[i];
             if(semuaKamarValid.indexOf(k) === -1) { alert("❌ GAGAL: Kamar " + k + " tidak ada di database!"); return; }
-            
+
             // 🔥 MODIFIKASI: Hanya blokir jika Bosku milih "Langsung Check-In"
             if (jenis === "CHECKIN") {
                 if(tamuIn.some(function(t) { return String(t.room) === k; })) { alert("❌ GAGAL: Kamar " + k + " sedang terisi untuk Check-In! (Ubah ke PENDING jika untuk tanggal depan)"); return; }
                 if(kamarKotor.indexOf(k) !== -1) { alert("❌ GAGAL: Kamar " + k + " masih KOTOR (VD)! Bersihkan dulu."); return; }
             }
-            
+
             arrKamar.push(k);
         }
-        
+
         var nama = document.getElementById('rom_nama').value || "Tamu Rombongan";
         var hp = document.getElementById('rom_hp').value || "-";
         var malam = parseInt(document.getElementById('rom_malam').value) || 1;
@@ -2028,18 +2057,18 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var totalTagihan = parseInt(document.getElementById('rom_total').value) || 0;
         var bayarNow = parseInt(document.getElementById('rom_bayar_now').value) || 0;
         var metode = document.getElementById('rom_metode').value;
-        
+
         if (metode === "BELUM BAYAR") { bayarNow = 0; metode = "D.Pending"; }
-        
+
         var jamAsli = new Date().getHours();
         var shiftNow = (jamAsli >= 7 && jamAsli < 17) ? "Pagi" : "Malam";
         var sb = shiftNow.toLowerCase();
-        
+
         var hargaPerKamar = Math.floor(totalTagihan / arrKamar.length);
         var bayarPerKamar = Math.floor(bayarNow / arrKamar.length);
         var sisaTagihan = totalTagihan - (hargaPerKamar * arrKamar.length); 
         var sisaBayar = bayarNow - (bayarPerKamar * arrKamar.length);
-        
+
         if (bayarNow > 0 && metode !== "D.Pending" && metode !== "LUNAS LAMA") {
             bukuKas.harian.uang += bayarNow; bukuKas.bulanan.uang += bayarNow;
             if(metode === "CASH") { bukuKas.harian.uangCash += bayarNow; bukuKas.bulanan.uangCash += bayarNow; bukuKas.harian[sb].cash += bayarNow; }
@@ -2055,7 +2084,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 else if(metode === "DEBIT") { bukuKas.harian[sb].room_db = (bukuKas.harian[sb].room_db||0) + bayarNow; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) + bayarNow; }
             }
         }
-        
+
         var waktuAsli = new Date();
         var mmArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
         var tglAkuratC = String(waktuAsli.getDate()).padStart(2, '0') + " " + mmArr[waktuAsli.getMonth()] + " " + waktuAsli.getFullYear();
@@ -2063,15 +2092,15 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var dateOut = new Date(waktuAsli); if (waktuAsli.getHours() >= 0 && waktuAsli.getHours() < 7) { dateOut.setDate(dateOut.getDate() - 1); }
         dateOut.setDate(dateOut.getDate() + malam);
         var tglOutFormat = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-        
+
         arrKamar.forEach(function(kmr, idx) {
             var myHarga = hargaPerKamar + (idx === 0 ? sisaTagihan : 0);
             var myBayar = bayarPerKamar + (idx === 0 ? sisaBayar : 0);
-            
+
             var myMetode = myBayar >= myHarga ? metode : (myBayar > 0 ? "D.Pending" : "D.Pending");
             if (metode === "D.Pending") myMetode = "D.Pending";
             if (metode === "LUNAS LAMA") myMetode = "LUNAS LAMA"; 
-            
+
             tamuPending = tamuPending.filter(function(t) { return t.room !== kmr; });
             if (jenis === "PENDING") {
                 tamuPending.push({ room: kmr, nama: nama + (arrKamar.length > 1 ? " (Grup)" : ""), hp: hp, dp: myBayar, bayar: myMetode, shift: shiftNow, isLengkap: true, rencana_in: tglMasuk, malam: malam, transport: "Rombongan" });
@@ -2079,12 +2108,12 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 lastInv++; var inv = String(lastInv).padStart(4, '0');
                 if(shiftNow === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = inv; bukuKas.harian.billPagi.akhir = inv; bukuKas.harian.billPagi.count++; } 
                 else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = inv; bukuKas.harian.billMalam.akhir = inv; bukuKas.harian.billMalam.count++; }
-                
+
                 var hist = []; 
                 if(myBayar > 0 && metode !== "D.Pending" && metode !== "LUNAS LAMA") { 
                     hist.push({ nominal: myBayar, via: metode, shift: shiftNow, tgl: tglAkuratC }); 
                 }
-                
+
                 tamuIn.push({ room: kmr, nama: nama + (arrKamar.length > 1 ? " (Grup)" : ""), hp: hp, alamat: "Tamu Rombongan", warga: "Indonesia", ktp: "-", malam: malam, extrabed: 0, transport: "Mobil Rombongan", trip: "Travelling", jenis_deposit: "Uang 100k", dilaporkan: false, shift: shiftNow, tgl: tglInFormat, tgl_hotel: tglInFormat, tgl_out: tglOutFormat, inv: inv, total_tagihan: myHarga, sudah_dibayar: myBayar, bayar: myMetode, history_bayar: hist });
                 bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1; bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1; bukuKas.harian[sb].kamar_in = (bukuKas.harian[sb].kamar_in || 0) + 1;
             }
@@ -2111,7 +2140,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 tgl: tglInFormat,
                 tgl_out: tglOutFormat
             };
-            
+
             // Memanipulasi nama kelas di Invoice agar tidak error
             tempKelas = "Rombongan";
             tempBed = arrKamar.length + " Kamar";
@@ -2157,7 +2186,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var waktuAsli = new Date();
         var tglHari = String(waktuAsli.getDate()).padStart(2, '0'); var bulanArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
         var tglInFormat = tglHari + "-" + bulanArr[waktuAsli.getMonth()] + "-" + waktuAsli.getFullYear() + ", " + String(waktuAsli.getHours()).padStart(2, '0') + "." + String(waktuAsli.getMinutes()).padStart(2, '0');
-        
+
         var dateOut = new Date(waktuAsli); if (waktuAsli.getHours() >= 0 && waktuAsli.getHours() < 7) { dateOut.setDate(dateOut.getDate() - 1); }
         dateOut.setDate(dateOut.getDate() + malam);
         var tglOutFormat = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -2184,7 +2213,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         var inputTglIn = document.getElementById('f_tgl_in');
         var dateObj = new Date(); if (inputTglIn && inputTglIn.value) { dateObj = new Date(inputTglIn.value); }
-        
+
         var jamAsliSistem = new Date().getHours(); 
         d.shift = (jamAsliSistem >= 7 && jamAsliSistem < 17) ? "Pagi" : "Malam"; 
         var bucketShift = d.shift.toLowerCase();
@@ -2225,7 +2254,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             var met = document.getElementById('f_metode_adv').value;
 
             d.sudah_dibayar = dpPending + bayarSekarang; 
-            
+
             if (met === "BELUM BAYAR" || (bayarSekarang === 0 && d.sudah_dibayar < d.total_tagihan)) { 
                 d.bayar = "D.Pending"; metodeSetoran = "BELUM BAYAR"; setoranLaporanKas = 0; 
             } 
@@ -2237,9 +2266,9 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             d.total_tagihan = sub; 
             var bayarSekarang = sub - dpPending; if(bayarSekarang < 0) bayarSekarang = 0;
             d.sudah_dibayar = dpPending + bayarSekarang;
-            
+
             d.bayar = document.getElementById('f_bayar_basic').value;
-            
+
             if(d.bayar === "LUNAS LAMA") { 
                 setoranLaporanKas = 0; metodeSetoran = "LUNAS LAMA"; 
             } else if (d.bayar === "D.Pending") {
@@ -2269,11 +2298,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         if(setoranLaporanKas > 0 && metodeSetoran !== "BELUM BAYAR" && metodeSetoran !== "D.Pending" && metodeSetoran !== "LUNAS LAMA") {
             // 1. Catat ke riwayat tamu
             d.history_bayar.push({ nominal: setoranLaporanKas, via: metodeSetoran, shift: d.shift, tgl: tglAkuratC });
-            
+
             // 2. MASUKKAN UANGNYA KE LACI KASIR (Ini yang kemarin terhapus)
             bukuKas.harian.uang += setoranLaporanKas;
             bukuKas.bulanan.uang += setoranLaporanKas;
-            
+
             if(metodeSetoran === "CASH") { 
                 bukuKas.harian.uangCash += setoranLaporanKas; 
                 bukuKas.bulanan.uangCash += setoranLaporanKas; 
@@ -2300,7 +2329,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         tamuIn.push(Object.assign({}, d, { room: tempRoom })); 
         if(pdg) { tamuPending = tamuPending.filter(function(t) { return t.room !== tempRoom; }); }
-        
+
         if(metodeSetoran !== "LUNAS LAMA" && !isJualBillMode) { 
             bukuKas.harian.kamar = (bukuKas.harian.kamar||0) + 1; 
             bukuKas.bulanan.kamar = (bukuKas.bulanan.kamar||0) + 1; 
@@ -2378,7 +2407,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             <button class="btn" style="background:#27ae60; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; box-shadow:0 4px 10px rgba(39, 174, 96, 0.3);" onclick="simpanKoreksiGodMode()">💾 SIMPAN KOREKSI LAPORAN</button>
             <button class="btn" style="background:#7f8c8d; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer;" onclick="pindahHalaman('MENU')">🔙 BATAL</button>
         </div>`;
-        
+
         document.getElementById('screen').innerHTML = out;
         window.scrollTo(0,0);
     };
@@ -2390,17 +2419,17 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         function simpanShift(shiftName) {
             var obj = bukuKas.harian[shiftName];
-            
+
             // Override Manual Jumlah C-In dan VD (Jika dikosongkan, sistem akan kembali hitung otomatis)
             var cIn = document.getElementById('kor_' + shiftName + '_cin').value;
             if(cIn !== "") obj.manual_cin = parseInt(cIn); else delete obj.manual_cin;
-            
+
             var cVd = document.getElementById('kor_' + shiftName + '_vd').value;
             if(cVd !== "") obj.manual_vd = parseInt(cVd); else delete obj.manual_vd;
 
             // Extrabed otomatis dibagi 150.000 untuk dapat jumlah kasurnya
             obj.extrabed_in = Math.floor((parseInt(document.getElementById('kor_' + shiftName + '_extrabed').value) || 0) / 150000);
-            
+
             obj.room_cash = parseInt(document.getElementById('kor_' + shiftName + '_roomCash').value) || 0;
             obj.room_tf = parseInt(document.getElementById('kor_' + shiftName + '_roomTf').value) || 0;
             obj.room_db = parseInt(document.getElementById('kor_' + shiftName + '_roomDb').value) || 0;
@@ -2455,10 +2484,10 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
     window.onload = function() { history.replaceState({ page: "MENU" }, "", ""); renderScreen(); };
 
-                  
+
                 function generateLaporanShift(shiftLabel, bucketObj, isForArsip = false, customDate = null, snapBukuKas = null) {     var activeKas = snapBukuKas || bukuKas;
         var s = shiftLabel.toLowerCase();
-        
+
         // 🔥 MESIN WAKTU ARSIP: Kalau buat arsip, sistem dipaksa pakai tanggal kemarin
         var dOp = customDate ? new Date(customDate.getTime()) : new Date(); 
         if (!customDate && dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
@@ -2468,12 +2497,12 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             var dd = String(dOp.getDate()).padStart(2, '0');
             var blnArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
             var target = dd + "-" + blnArr[dOp.getMonth()] + "-" + dOp.getFullYear();
-            
+
             var parts = tglStr.split(",");
             var tglBersih = parts[0].trim().replace(/ /g, '-').replace(/\//g, '-'); 
             var jam = 12; 
             if (parts.length >= 2) jam = parseInt(parts[1].trim().replace(':', '.').split(".")[0]);
-            
+
             if (tglBersih === target && jam >= 7) return true;
             var dN = new Date(dOp); dN.setDate(dN.getDate() + 1);
             var targetN = String(dN.getDate()).padStart(2, '0') + "-" + blnArr[dN.getMonth()] + "-" + dN.getFullYear();
@@ -2483,7 +2512,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         var tStr = String(dOp.getDate()).padStart(2, '0') + " " + ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"][dOp.getMonth()] + " " + dOp.getFullYear();
 
-        var listMerah = []; var listUngu = []; var listAbu = []; var kamarBB = [];
+            var listMerahObj = []; var listUnguObj = []; var listAbuObj = []; var kamarBB = [];
         
         // 🔥 KUNCI ARSIP: Waktu dipaksa mentok (24) supaya semua tamu sah masuk arsip
         var timeFloat = 24; 
@@ -2498,14 +2527,8 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         var semuaKamar = [];
         if (typeof dataHotel !== 'undefined') { dataHotel.forEach(function(k) { k.nomor.forEach(function(no) { semuaKamar.push(no); }); }); }
-        semuaKamar.sort(function(x, y) {
-            var nx = parseInt((x.match(/\d+/) || ["0"])[0]), ny = parseInt((y.match(/\d+/) || ["0"])[0]);
-            var lx = x.replace(/\d+/, ''), ly = y.replace(/\d+/, '');
-            var urutan = ['a', 'av', 'b', 'bv'];
-            var ix = urutan.indexOf(lx), iy = urutan.indexOf(ly);
-            if (ix !== iy) return ix - iy; return nx - ny;
-        });
-
+        
+        // Tidak disortir berdasarkan nomor kamar lagi di awal karena nanti disortir by Invoice
         semuaKamar.forEach(function(kmr) {
             var t = safeTamuIn.find(x => x.room === kmr);
             var isKotor = safeKamarKotor.includes(kmr);
@@ -2520,29 +2543,28 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     t.history_bayar.forEach(function(h){ if(isKamarBaru(h.tgl)) { adaExtend = true; hv += parseInt(h.nominal); vv = (h.via||"").toLowerCase(); }});
                 }
 
-                                if (baru) {
+                if (baru) {
                     ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
                     var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : "";
                     if (shiftKamar === s) {
-                        listMerah.push(kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️") + ` ${jT}`);
+                        var noInvP = parseInt(String(t.inv).replace(/\D/g, '')) || 0; // Ambil angka bill
+                        listMerahObj.push({ inv: noInvP, text: kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️") + ` ${jT}` });
                         if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
                 } else {
-                                // 🔥 LOGIKA NYAMBUNG: Hanya muncul di Pagi, Kebal Bug Begadang 🔥
                     var isSahNyambung = adaExtend || (timeFloat >= 16.5 || timeFloat < 7);
                     if (isSahNyambung && s === "pagi") { 
                         ket = "nyb"; 
                         if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
                         var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : "";
-                        
-                        listUngu.push(kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`);
+                        var noInvU = parseInt(String(t.inv).replace(/\D/g, '')) || 0; // Ambil angka bill
+                        listUnguObj.push({ inv: noInvU, text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}` });
                         if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
-                } // PENTING: Kurung kurawal ini yang tadi hilang
-            } // PENTING: Kurung kurawal ini juga tadi hilang
+                } 
+            } 
             else if (isKotor) {
                 var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
-                // 🔥 MESIN WAKTU VD: Sembunyikan VD kemarin agar di laporan WA hari ini jadi 0
                 if (lastT && lastT.jam_out_aktual) {
                     if (!isKamarBaru(lastT.jam_out_aktual)) return; 
                 } else if (!lastT) { return; }
@@ -2565,12 +2587,22 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
                 if (sOut === s) {
                     var jOut = (lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
-                    listAbu.push(kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + ` ${jOut} (OUT-VD)`);
+                    var noInvA = parseInt(String(invOut).replace(/\D/g, '')) || 0; // Ambil angka bill
+                    listAbuObj.push({ inv: noInvA, text: kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + ` ${jOut} (OUT-VD)` });
                     if (lastT && (lastT.bayar === "D.Pending" || lastT.bayar === "BELUM BAYAR")) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                 }
-            } // PENTING: Dan kurung kurawal ini yang tadi hilang
+            } 
         });
 
+        // 🔥 SORTING DESCENDING BERDASARKAN INVOICE (No Bill Terbaru di Atas) 🔥
+        listMerahObj.sort(function(a, b) { return b.inv - a.inv; });
+        listUnguObj.sort(function(a, b) { return b.inv - a.inv; });
+        listAbuObj.sort(function(a, b) { return b.inv - a.inv; });
+
+        // Mengembalikan dari format Objek ke format Teks (String)
+        var listMerah = listMerahObj.map(function(o) { return o.text; });
+        var listUngu = listUnguObj.map(function(o) { return o.text; });
+        var listAbu = listAbuObj.map(function(o) { return o.text; });
 
         var finalCIN = listMerah.length + listUngu.length; 
         var finalVD = listAbu.length;   
@@ -2579,6 +2611,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         if (listMerah.length > 0) { gabunganKamarVisual.push("🔴 *TAMU BARU (C.IN):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listMerah); }
         if (listUngu.length > 0) { gabunganKamarVisual.push("🟣 *TAMU NYAMBUNG (STAY):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listUngu); }
         if (listAbu.length > 0) { gabunganKamarVisual.push("⚪ *KAMAR KOTOR (VD):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listAbu); }
+
 
         var finalKamarStr = gabunganKamarVisual.length > 0 ? "<br>" + gabunganKamarVisual.join("<br>") : "-";
         var bbStr = kamarBB.length > 0 ? kamarBB.join(", ") : "-";
@@ -2623,7 +2656,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var rDb = totalUangDb - resto_d - charge_d - panjar_d - jBill_d;
 
         var uangKeluarShift = bShift ? (bShift.keluar || 0) : 0;
-        
+
         var teksKeluarShift = "";
         function safeFormatRp(val) { return typeof formatRp === 'function' ? formatRp(val) : val; }
         if(activeKas && activeKas.harian && activeKas.harian.rincianKeluar) {
@@ -2726,4 +2759,4 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 </script>
 
 </body>
-</html>
+</html
