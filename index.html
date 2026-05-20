@@ -2383,10 +2383,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 <b style="font-size:14px; color:#27ae60;">📋 REKAYASA LAPORAN SHIFT ${shiftName.toUpperCase()}</b><br><br>
                 
                 total room c in 👉🏽 <input type="number" id="kor_${shiftName}_cin" value="${obj.manual_cin !== undefined ? obj.manual_cin : ''}" placeholder="Auto" style="${styleInputL}"><br>
-                room c out yg vd 👉🏽 <input type="number" id="kor_${shiftName}_vd" value="${obj.manual_vd !== undefined ? obj.manual_vd : ''}" placeholder="Auto" style="${styleInputL}"><br>
+                                room c out yg vd 👉🏽 <input type="number" id="kor_${shiftName}_vd" value="${obj.manual_vd !== undefined ? obj.manual_vd : ''}" placeholder="Auto" style="${styleInputL}"><br>
                 room c out yg vr 👉🏽 0<br>
-                total uang extrabat 👉🏽 Rp <input type="number" id="kor_${shiftName}_extrabed" value="${(obj.extrabed_in||0)*150000}" style="${styleInput}"><br>
+                total uang extrabat 👉🏽 Rp <input type="number" id="kor_${shiftName}_ebCash" value="${obj.extrabed_cash !== undefined ? obj.extrabed_cash : ((obj.extrabed_in||0)*150000)}" style="${styleInput}" title="Cash"> cash / Rp <input type="number" id="kor_${shiftName}_ebTf" value="${obj.extrabed_tf||0}" style="${styleInput}" title="Transfer"> tf / Rp <input type="number" id="kor_${shiftName}_ebDb" value="${obj.extrabed_db||0}" style="${styleInput}" title="Debit"> db<br>
                 room yg bb 👉🏽 <i>(Auto Deteksi)</i><br>
+
                 total uang room cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomCash" value="${obj.room_cash||0}" style="${styleInput}"><br>
                 ttl uang room tf 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomTf" value="${obj.room_tf||0}" style="${styleInput}"><br>
                 ttl uang room debit 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomDb" value="${obj.room_db||0}" style="${styleInput}"><br>
@@ -2465,12 +2466,16 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             var cIn = document.getElementById('kor_' + shiftName + '_cin').value;
             if(cIn !== "") obj.manual_cin = parseInt(cIn); else delete obj.manual_cin;
 
-            var cVd = document.getElementById('kor_' + shiftName + '_vd').value;
+                        var cVd = document.getElementById('kor_' + shiftName + '_vd').value;
             if(cVd !== "") obj.manual_vd = parseInt(cVd); else delete obj.manual_vd;
 
-            obj.extrabed_in = Math.floor((parseInt(document.getElementById('kor_' + shiftName + '_extrabed').value) || 0) / 150000);
+            // Memisahkan metode bayar Extra Bed
+            obj.extrabed_cash = parseInt(document.getElementById('kor_' + shiftName + '_ebCash').value) || 0;
+            obj.extrabed_tf = parseInt(document.getElementById('kor_' + shiftName + '_ebTf').value) || 0;
+            obj.extrabed_db = parseInt(document.getElementById('kor_' + shiftName + '_ebDb').value) || 0;
 
             obj.room_cash = parseInt(document.getElementById('kor_' + shiftName + '_roomCash').value) || 0;
+
             obj.room_tf = parseInt(document.getElementById('kor_' + shiftName + '_roomTf').value) || 0;
             obj.room_db = parseInt(document.getElementById('kor_' + shiftName + '_roomDb').value) || 0;
 
@@ -2496,10 +2501,10 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             obj.keluar = parseInt(document.getElementById('kor_' + shiftName + '_keluar').value) || 0;
             obj.catatan = document.getElementById('kor_' + shiftName + '_catatan').value;
 
-            // KALKULASI RUMUS OTOMATIS ASLI
-            var autoCash = obj.room_cash + obj.resto_cash + obj.panjar_cash + obj.charge_cash + obj.jual_bill_cash;
-            var autoTf = obj.room_tf + obj.resto_tf + obj.panjar_tf + obj.charge_tf + obj.jual_bill_tf;
-            var autoDb = obj.room_db + obj.resto_db + obj.panjar_db + obj.charge_db + obj.jual_bill_db;
+            // KALKULASI RUMUS OTOMATIS ASLI (Ditambah Extra Bed)
+            var autoCash = obj.room_cash + obj.extrabed_cash + obj.resto_cash + obj.panjar_cash + obj.charge_cash + obj.jual_bill_cash;
+            var autoTf = obj.room_tf + obj.extrabed_tf + obj.resto_tf + obj.panjar_tf + obj.charge_tf + obj.jual_bill_tf;
+            var autoDb = obj.room_db + obj.extrabed_db + obj.resto_db + obj.panjar_db + obj.charge_db + obj.jual_bill_db;
 
             // OVERRIDE TOTAL AKHIR JIKA MANAJER MENGISI KOLOM MANUAL
             var manCash = document.getElementById('kor_' + shiftName + '_totalCash').value;
@@ -2721,13 +2726,17 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var jBill_c = bShift ? (bShift.jual_bill_cash || 0) : 0;
         var jBill_t = bShift ? (bShift.jual_bill_tf || 0) : 0;
         var jBill_d = bShift ? (bShift.jual_bill_db || 0) : 0;
-        var jBill = jBill_c + jBill_t + jBill_d;
-        var uangExtBed = (bShift ? (bShift.extrabed_in || 0) : 0) * 150000;
+                var jBill = jBill_c + jBill_t + jBill_d;
+        
+        var eb_c = bShift ? (bShift.extrabed_cash !== undefined ? bShift.extrabed_cash : ((bShift.extrabed_in || 0) * 150000)) : 0;
+        var eb_t = bShift ? (bShift.extrabed_tf || 0) : 0;
+        var eb_d = bShift ? (bShift.extrabed_db || 0) : 0;
 
-        // SISTEM MENGALAH: Room Cash = Total Cash dikurangi Resto & Charge (Agar Math WA selalu imbang)
-        var rCash = totalUangCash - resto_c - charge_c - panjar_c - jBill_c;
-        var rTf = totalUangTf - resto_t - charge_t - panjar_t - jBill_t;
-        var rDb = totalUangDb - resto_d - charge_d - panjar_d - jBill_d;
+        // SISTEM MENGALAH: Room Cash = Total Cash dikurangi yang lain (Agar Math WA selalu imbang)
+        var rCash = totalUangCash - resto_c - charge_c - panjar_c - jBill_c - eb_c;
+        var rTf = totalUangTf - resto_t - charge_t - panjar_t - jBill_t - eb_t;
+        var rDb = totalUangDb - resto_d - charge_d - panjar_d - jBill_d - eb_d;
+
 
         var uangKeluarShift = bShift ? (bShift.keluar || 0) : 0;
 
@@ -2761,7 +2770,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var valDepPending = bShift ? (bShift.dep_pending || 0) : 0;
         var valDepJaminan = bShift ? (bShift.dep_jaminan || 0) : 0;
 
-        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + safeFormatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto_c) + " cash / Rp " + safeFormatRp(resto_t) + " tf<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill_c) + " cash / Rp " + safeFormatRp(jBill_t) + " tf<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) +
+        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + safeFormatRp(eb_c) + " cash / Rp " + safeFormatRp(eb_t) + " tf / Rp " + safeFormatRp(eb_d) + " db<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto_c) + " cash / Rp " + safeFormatRp(resto_t) + " tf<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill_c) + " cash / Rp " + safeFormatRp(jBill_t) + " tf<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) +
   "<br>ttl uang deposit/jaminan👉🏽Rp " + safeFormatRp(valDepJaminan) + "<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(bShift && bShift.manual_cash !== undefined ? bShift.manual_cash : displayTotalCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(bShift && bShift.manual_tf !== undefined ? bShift.manual_tf : totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast + "<br><br>Deposit pending👉🏽Rp " + safeFormatRp(valDepPending) + "<br>Catatan:<br>" + textCatatan;
 
                 if(isForArsip) return textBlock;
