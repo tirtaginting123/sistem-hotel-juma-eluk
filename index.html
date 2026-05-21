@@ -992,9 +992,16 @@ let tempIndex = -1; window.isCheckInNormal = true;
         else if (state === "ARSIP_TAMU") {
             out += `<div class="card"><span class="section-title" style="color:#34495e;">👥 Arsip Tamu Check-Out</span><div style="overflow-x:auto;">
                     <table class="arsip-table" style="width:100%;"><tr><th>Kamar</th><th>Nama</th><th>Bill</th><th>In</th><th>Out</th><th>Sisa Vit</th><th>Charge</th></tr>`;
-            arsipTamu.slice().reverse().forEach(function(a) { out += `<tr><td><b>${a.room||'-'}</b></td><td>${a.nama}</td><td>${a.inv}</td><td>${a.jam_in}</td><td>${a.jam_out}</td><td>${a.vit}</td><td>${a.charge}</td></tr>`; });
+            
+            // 🔥 Urutkan arsip murni berdasarkan Nomor Bill dari yang paling besar (terbaru) ke terkecil (terlama)
+            var sortedArsip = arsipTamu.slice().sort(function(a, b) { 
+                return (parseInt(String(b.inv).replace(/\D/g, '')) || 0) - (parseInt(String(a.inv).replace(/\D/g, '')) || 0); 
+            });
+            
+            sortedArsip.forEach(function(a) { out += `<tr><td><b>${a.room||'-'}</b></td><td>${a.nama}</td><td>${a.inv}</td><td>${a.jam_in}</td><td>${a.jam_out}</td><td>${a.vit}</td><td>${a.charge}</td></tr>`; });
             out += `</table></div><div class="btn-mewah" onclick="pindahHalaman('ARSIP')" style="margin-top:15px; justify-content:center;">🔙 Kembali</div></div>`;
         }
+
                 else if (state === "ARSIP_LAPORAN") {
             out += `<div class="card"><span class="section-title" style="color:#34495e;">📋 Arsip Laporan Harian Permanen</span>`;
             if (!arsipLaporanHarian || arsipLaporanHarian.length === 0) out += `<p style="text-align:center; opacity:0.5;">Belum ada arsip laporan tersimpan.</p>`;
@@ -1161,8 +1168,8 @@ let tempIndex = -1; window.isCheckInNormal = true;
             var vdPagi = 0, vdMalam = 0; 
             var cMerah = 0, cUngu = 0;
 
-            var listPagiIn = "", listPagiNyb = "", listPagiVD = "";
-            var listMalamIn = "", listMalamVD = "";
+                        var arrPagiIn = [], arrPagiNyb = [], arrPagiVD = [];
+            var arrMalamIn = [], arrMalamVD = [];
 
             var dNow = new Date();
             var timeFloat = dNow.getHours() + (dNow.getMinutes() / 60);
@@ -1182,7 +1189,6 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 var isKotor = kamarKotor.includes(kmr);
 
                 if (t) {
-                    // 🔥 PAKAI MESIN WAKTU GLOBAL AGAR KAMAR JAM 1 PAGI TERBACA
                     var baru = isKmrBaruGlobal(t.tgl_hotel || t.tgl);
                     var shiftKamar = (t.shift || "pagi").toLowerCase(); 
                     var ket = "";
@@ -1191,40 +1197,43 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         t.history_bayar.forEach(function(h){ if(isKmrBaruGlobal(h.tgl)) { adaExtend = true; hv += parseInt(h.nominal); vv = (h.via||"").toLowerCase(); }});
                     }
 
-                                        if (baru) {
+                    if (baru) {
                         ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
-                        var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : ""; // Ambil Jam
+                        var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : ""; 
                         cMerah++;
-                        if (shiftKamar === "pagi") { hitungPagi++; listPagiIn += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}\n`; } 
-                        else { hitungMalam++; listMalamIn += kmr + ` ✅ ${ket} ${t.inv||"-"} ❤️ ${jT}\n`; }
+                        var noInv = parseInt(String(t.inv||"0").replace(/\D/g, '')) || 0;
+                        if (shiftKamar === "pagi") { 
+                            hitungPagi++; 
+                            arrPagiIn.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: noInv }); 
+                        } else { 
+                            hitungMalam++; 
+                            arrMalamIn.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} ❤️ ${jT}`, inv: noInv }); 
+                        }
                     } else {
-                        // Untuk yang NYAMBUNG
                         var isSahNyambung = adaExtend || (timeFloat >= 16.5 || timeFloat < 7);
                         if (isSahNyambung) {
                             ket = "nyb";
                             if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
                             var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : ""; 
                             hitungPagi++; cUngu++;
-                            listPagiNyb += kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}\n`;
+                            var noInv = parseInt(String(t.inv||"0").replace(/\D/g, '')) || 0;
+                            arrPagiNyb.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: noInv });
                         }
                     }
                 } 
-                                else if (isKotor) {
+                else if (isKotor) {
                     var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
                     if (lastT && lastT.jam_out_aktual) { if (!isKmrBaruGlobal(lastT.jam_out_aktual)) return; } else if (!lastT) { return; }
                     
                     hitungVD++;
                     
-                    // 🔥 SINKRONISASI LOGIKA VD DENGAN LAPORAN WA 🔥
-                    var sOut = "pagi";
-                    var ketOut = "nyb";
-                    var invOut = "-";
+                    var sOut = "pagi"; var ketOut = "nyb"; var invOut = "-";
 
                     if (lastT) {
                         sOut = (lastT.shift || "pagi").toLowerCase();
                         invOut = lastT.inv || "-";
                         var isBaruVD = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
-                        if (!isBaruVD) sOut = "pagi"; // Tamu nyambung selalu masuk Pagi
+                        if (!isBaruVD) sOut = "pagi"; 
 
                         ketOut = isBaruVD ? (parseInt(lastT.sudah_dibayar)/1000 + " " + (lastT.bayar||"").toLowerCase()) : "nyb";
                         
@@ -1237,11 +1246,28 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         }
                     }
 
-                                        var jOut = (lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
-                    if (sOut === "pagi") { vdPagi++; listPagiVD += kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 ${jOut} (OUT-VD)\n`; } 
-                    else { vdMalam++; listMalamVD += kmr + ` ✅ ${ketOut} ${invOut} ❤️ ${jOut} (OUT-VD)\n`; }
+                    var jOut = (lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
+                    var noInvOut = parseInt(String(invOut||"0").replace(/\D/g, '')) || 0;
+                    if (sOut === "pagi") { 
+                        vdPagi++; 
+                        arrPagiVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 ${jOut} (OUT-VD)`, inv: noInvOut }); 
+                    } else { 
+                        vdMalam++; 
+                        arrMalamVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ❤️ ${jOut} (OUT-VD)`, inv: noInvOut }); 
+                    }
                 }
             });
+
+            // 🔥 LOGIKA PENGURUTAN (SORTING) BILL TERBARU -> TERLAMA 🔥
+            var urutkan = function(a, b) { return b.inv - a.inv; };
+            
+            var listPagiIn = arrPagiIn.sort(urutkan).map(x => x.text).join("\n") + (arrPagiIn.length > 0 ? "\n" : "");
+            var listPagiNyb = arrPagiNyb.sort(urutkan).map(x => x.text).join("\n") + (arrPagiNyb.length > 0 ? "\n" : "");
+            var listPagiVD = arrPagiVD.sort(urutkan).map(x => x.text).join("\n") + (arrPagiVD.length > 0 ? "\n" : "");
+            
+            var listMalamIn = arrMalamIn.sort(urutkan).map(x => x.text).join("\n") + (arrMalamIn.length > 0 ? "\n" : "");
+            var listMalamVD = arrMalamVD.sort(urutkan).map(x => x.text).join("\n") + (arrMalamVD.length > 0 ? "\n" : "");
+
 
             var htmlPagi = "";
             if (listPagiIn || listPagiNyb || listPagiVD) {
@@ -1365,10 +1391,14 @@ let tempIndex = -1; window.isCheckInNormal = true;
         else if (state === "DAFTAR_TAMU") {
             out += `<div class="card"><span class="section-title">👥 Monitoring & Check-Out</span>`;
 
-                        // 🔥 Terapkan Mesin Waktu 16:30 di Monitoring 🔥
-            var tBaru = tamuIn.filter(function(t) { return isKmrVisualBaru(t); });
-            var tLama = tamuIn.filter(function(t) { return !isKmrVisualBaru(t); });
-
+            // 🔥 Terapkan Mesin Waktu 16:30 di Monitoring & Urutkan Bill Terbaru ke Terlama 🔥
+            var tBaru = tamuIn.filter(function(t) { return isKmrVisualBaru(t); }).sort(function(a, b) { 
+                return (parseInt(String(b.inv).replace(/\D/g, '')) || 0) - (parseInt(String(a.inv).replace(/\D/g, '')) || 0); 
+            });
+            var tLama = tamuIn.filter(function(t) { return !isKmrVisualBaru(t); }).sort(function(a, b) { 
+                return (parseInt(String(b.inv).replace(/\D/g, '')) || 0) - (parseInt(String(a.inv).replace(/\D/g, '')) || 0); 
+            });
+ 
 
             function renderItemTamu(t) {
                 var i = tamuIn.indexOf(t);
@@ -2332,50 +2362,66 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         setTimeout(() => { rahasiaCounter = 0; }, 2000);
     };
 
-        window.bukaKoreksiLaci = function() {
+         window.bukaKoreksiLaci = function() {
         var p = bukuKas.harian.pagi;
         var m = bukuKas.harian.malam;
 
-        var styleInput = "background:#fff; border:1px solid #bdc3c7; border-radius:4px; padding:4px 6px; font-family:monospace; font-weight:bold; color:#c0392b; width:75px; text-align:right;";
-        var styleInputL = "background:#fff; border:1px solid #bdc3c7; border-radius:4px; padding:4px 6px; font-family:monospace; font-weight:bold; color:#c0392b; width:50px; text-align:center;";
+        var styleInput = "background:#fff; border:1px solid #bdc3c7; border-radius:4px; padding:4px 6px; font-family:monospace; font-weight:bold; color:#c0392b; width:75px; text-align:right; font-size:12px;";
+        var styleInputL = "background:#fff; border:1px solid #bdc3c7; border-radius:4px; padding:4px 6px; font-family:monospace; font-weight:bold; color:#c0392b; width:65px; text-align:center; font-size:12px;";
 
         function buatFormShift(shiftName, obj) {
             return `
-            <div style="background:#fef9e7; border:2px dashed #27ae60; padding:15px; border-radius:8px; margin-bottom:15px; font-family:monospace; font-size:12px; color:#000; overflow-x:auto;">
-                <b style="font-size:14px; color:#27ae60;">📋 LAPORAN SHIFT ${shiftName.toUpperCase()}</b><br><br>
+            <div style="background:#fef9e7; border:2px dashed #27ae60; padding:15px; border-radius:8px; margin-bottom:15px; font-family:monospace; font-size:12px; color:#000; overflow-x:auto; line-height: 1.8;">
+                <b style="font-size:14px; color:#27ae60;">📋 GOD MODE SHIFT ${shiftName.toUpperCase()} (KUASA MUTLAK)</b><br><br>
+                
+                Kamar Terjual/Dijaga:<br>
+                <textarea id="kor_${shiftName}_kamar" placeholder="Ketik atau Paste susunan daftar kamar dari Laporan WA ke sini untuk mengubah isinya. Kosongkan jika ingin sistem hitung otomatis." style="width:100%; height:150px; font-family:monospace; font-size:11px; padding:8px; border:1px solid #27ae60; border-radius:5px; margin-bottom:10px;">${obj.manual_kamar !== undefined ? obj.manual_kamar : ''}</textarea>
                 
                 total room c in 👉🏽 <input type="number" id="kor_${shiftName}_cin" value="${obj.manual_cin !== undefined ? obj.manual_cin : ''}" placeholder="Auto" style="${styleInputL}"><br>
                 room c out yg vd 👉🏽 <input type="number" id="kor_${shiftName}_vd" value="${obj.manual_vd !== undefined ? obj.manual_vd : ''}" placeholder="Auto" style="${styleInputL}"><br>
+                room c out yg vr 👉🏽 0<br>
                 total uang extrabat 👉🏽 Rp <input type="number" id="kor_${shiftName}_extrabed" value="${(obj.extrabed_in||0)*150000}" style="${styleInput}"><br>
-                <br>
+                room yg bb 👉🏽 <input type="text" id="kor_${shiftName}_bb" value="${obj.manual_bb !== undefined ? obj.manual_bb : ''}" placeholder="Auto" style="${styleInputL}"><br>
+                
                 total uang room cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomCash" value="${obj.room_cash||0}" style="${styleInput}"><br>
                 ttl uang room tf 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomTf" value="${obj.room_tf||0}" style="${styleInput}"><br>
                 ttl uang room debit 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomDb" value="${obj.room_db||0}" style="${styleInput}"><br>
-                <br>
-                ttl uang resto 👉🏽 Rp <input type="number" id="kor_${shiftName}_restoCash" value="${obj.resto_cash||0}" style="${styleInput}" title="Cash"> cash / Rp <input type="number" id="kor_${shiftName}_restoTf" value="${obj.resto_tf||0}" style="${styleInput}" title="Transfer"> tf / Rp <input type="number" id="kor_${shiftName}_restoDb" value="${obj.resto_db||0}" style="${styleInput}" title="Debit"> db<br>
                 
-                ttl uang jual bill 👉🏽 Rp <input type="number" id="kor_${shiftName}_jbCash" value="${obj.jual_bill_cash||0}" style="${styleInput}" title="Cash"> cash / Rp <input type="number" id="kor_${shiftName}_jbTf" value="${obj.jual_bill_tf||0}" style="${styleInput}" title="Transfer"> tf / Rp <input type="number" id="kor_${shiftName}_jbDb" value="${obj.jual_bill_db||0}" style="${styleInput}" title="Debit"> db<br>
+                ttl uang resto 👉🏽 Rp <input type="number" id="kor_${shiftName}_restoCash" value="${obj.resto_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_restoTf" value="${obj.resto_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_restoDb" value="${obj.resto_db||0}" style="${styleInput}"> db<br>
                 
-                ttl uang charge 👉🏽 Rp <input type="number" id="kor_${shiftName}_chargeCash" value="${obj.charge_cash||0}" style="${styleInput}" title="Cash"> cash / Rp <input type="number" id="kor_${shiftName}_chargeTf" value="${obj.charge_tf||0}" style="${styleInput}" title="Transfer"> tf / Rp <input type="number" id="kor_${shiftName}_chargeDb" value="${obj.charge_db||0}" style="${styleInput}" title="Debit"> db<br>
-                <br>
+                ttl uang jual bill 👉🏽 Rp <input type="number" id="kor_${shiftName}_jbCash" value="${obj.jual_bill_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_jbTf" value="${obj.jual_bill_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_jbDb" value="${obj.jual_bill_db||0}" style="${styleInput}"> db<br>
+                
+                ttl uang charge 👉🏽 Rp <input type="number" id="kor_${shiftName}_chargeCash" value="${obj.charge_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_chargeTf" value="${obj.charge_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_chargeDb" value="${obj.charge_db||0}" style="${styleInput}"> db<br>
+                
                 ttl uang deposit/jaminan 👉🏽 Rp <input type="number" id="kor_${shiftName}_depJaminan" value="${obj.dep_jaminan||0}" style="${styleInput}"><br>
-                ttl uang deposit pending 👉🏽 Rp <input type="number" id="kor_${shiftName}_depPending" value="${obj.dep_pending||0}" style="${styleInput}"><br>
-                ttl uang panjar 👉🏽 Rp <input type="number" id="kor_${shiftName}_panjarCash" value="${obj.panjar_cash||0}" style="${styleInput}" title="Cash"> cash / Rp <input type="number" id="kor_${shiftName}_panjarTf" value="${obj.panjar_tf||0}" style="${styleInput}" title="Transfer"> tf / Rp <input type="number" id="kor_${shiftName}_panjarDb" value="${obj.panjar_db||0}" style="${styleInput}" title="Debit"> db<br>
-                <br>
+                ttl uang panjar 👉🏽 Rp <input type="number" id="kor_${shiftName}_panjarCash" value="${obj.panjar_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_panjarTf" value="${obj.panjar_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_panjarDb" value="${obj.panjar_db||0}" style="${styleInput}"> db<br>
+                
+                ttl pembayaran bb 👉🏽 Rp 0<br>
+                
+                <div style="background:#e8f8f5; padding:5px; border-radius:5px; margin:5px 0;">
+                - *TOTAL UANG CASH :* (Dihitung Otomatis oleh Sistem)<br>
+                - *TOTAL UANG TRANSFER :* (Dihitung Otomatis oleh Sistem)<br>
+                </div>
+
                 ttl uang keluar 👉🏽 Rp <input type="number" id="kor_${shiftName}_keluar" value="${obj.keluar||0}" style="${styleInput}"><br>
+                
+                sisa stor uang cash 👉🏽 (Dihitung Otomatis oleh Sistem)<br>
+                no bill terakhir 👉🏽 <input type="text" id="kor_${shiftName}_bill" value="${obj.manual_bill !== undefined ? obj.manual_bill : ''}" placeholder="Auto" style="${styleInput}"><br>
+                no bill resto terakhir 👉🏽 <input type="text" id="kor_${shiftName}_billResto" value="${obj.manual_bill_resto !== undefined ? obj.manual_bill_resto : ''}" placeholder="Auto" style="${styleInput}"><br>
+                Deposit pending 👉🏽 Rp <input type="number" id="kor_${shiftName}_depPending" value="${obj.dep_pending||0}" style="${styleInput}"><br>
             </div>
             `;
         }
 
         var out = `<div class="card" style="background:#f4f6f7; border: 2px solid #2c3e50;">
             <span class="section-title" style="color:#2c3e50; text-align:center; display:block; font-size:16px;">🛠️ EDITOR LAPORAN WA (GOD MODE)</span>
-            <p style="text-align:center; font-size:11px; color:#555;">Silakan ubah angka di bawah ini. Tampilannya sudah dibuat persis mengikuti kerangka Laporan WA, Bosku!</p>
+            <p style="text-align:center; font-size:11px; color:#555;">Tampilan ini dibuat PERSIS seperti Laporan WA. Apapun yang Bosku ganti di sini, Laporan WA akan 100% meniru!</p>
             <hr style="border-color:#bdc3c7; margin-bottom:15px;">
 
             ${buatFormShift('pagi', p)}
             ${buatFormShift('malam', m)}
 
-            <button class="btn" style="background:#27ae60; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; box-shadow:0 4px 10px rgba(39, 174, 96, 0.3);" onclick="simpanKoreksiGodMode()">💾 SIMPAN KOREKSI LAPORAN</button>
+            <button class="btn" style="background:#27ae60; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; box-shadow:0 4px 10px rgba(39, 174, 96, 0.3);" onclick="simpanKoreksiGodMode()">💾 SIMPAN REKAYASA MUTLAK</button>
             <button class="btn" style="background:#7f8c8d; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer;" onclick="pindahHalaman('MENU')">🔙 BATAL</button>
         </div>`;
         
@@ -2383,15 +2429,27 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         window.scrollTo(0,0);
     };
 
-
-            window.simpanKoreksiGodMode = function() {
+    window.simpanKoreksiGodMode = function() {
         var pin = prompt("🔐 Masukkan Sandi Master (vipjumaeluk1234) untuk menerapkan koreski:");
         if(pin !== "vipjumaeluk1234") { alert("❌ SANDI SALAH!"); return; }
 
         function simpanShift(shiftName) {
             var obj = bukuKas.harian[shiftName];
             
-            // Override Manual Jumlah C-In dan VD (Jika dikosongkan, sistem akan kembali hitung otomatis)
+            // Override Manual Teks Kamar, BB, & Bill
+            var cKamar = document.getElementById('kor_' + shiftName + '_kamar').value;
+            if(cKamar !== "") obj.manual_kamar = cKamar; else delete obj.manual_kamar;
+
+            var cBb = document.getElementById('kor_' + shiftName + '_bb').value;
+            if(cBb !== "") obj.manual_bb = cBb; else delete obj.manual_bb;
+
+            var cBill = document.getElementById('kor_' + shiftName + '_bill').value;
+            if(cBill !== "") obj.manual_bill = cBill; else delete obj.manual_bill;
+
+            var cBillResto = document.getElementById('kor_' + shiftName + '_billResto').value;
+            if(cBillResto !== "") obj.manual_bill_resto = cBillResto; else delete obj.manual_bill_resto;
+            
+            // Override Jumlah C-In dan VD
             var cIn = document.getElementById('kor_' + shiftName + '_cin').value;
             if(cIn !== "") obj.manual_cin = parseInt(cIn); else delete obj.manual_cin;
             
@@ -2447,7 +2505,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         bukuKas.harian.uang = bukuKas.harian.uangCash + bukuKas.harian.uangTransfer + bukuKas.harian.uangDebit;
 
         simpanKeCloud();
-        alert("✅ REKAYASA LAPORAN BERHASIL!\nBuku Kas Global dan Laporan WA telah disinkronkan sepenuhnya mengikuti angka yang Bosku masukkan.");
+        alert("✅ REKAYASA MUTLAK BERHASIL!\nLaporan WA telah tunduk dan disinkronkan sepenuhnya mengikuti angka yang Bosku masukkan.");
         pindahHalaman('MENU');
     };
 
@@ -2506,7 +2564,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             if (ix !== iy) return ix - iy; return nx - ny;
         });
 
-        semuaKamar.forEach(function(kmr) {
+                semuaKamar.forEach(function(kmr) {
             var t = safeTamuIn.find(x => x.room === kmr);
             var isKotor = safeKamarKotor.includes(kmr);
 
@@ -2520,29 +2578,29 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     t.history_bayar.forEach(function(h){ if(isKamarBaru(h.tgl)) { adaExtend = true; hv += parseInt(h.nominal); vv = (h.via||"").toLowerCase(); }});
                 }
 
-                                if (baru) {
+                if (baru) {
                     ket = (parseInt(t.sudah_dibayar)/1000 + " " + (t.bayar||"").toLowerCase());
                     var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : "";
                     if (shiftKamar === s) {
-                        listMerah.push(kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️") + ` ${jT}`);
+                        // 🔥 Simpan sebagai Objek agar bisa diurutkan berdasarkan No Bill
+                        listMerah.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} ` + ((shiftKamar === "pagi") ? "👍🏽" : "❤️") + ` ${jT}`, inv: parseInt(String(t.inv||"0").replace(/\D/g, '')) || 0 });
                         if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
                 } else {
-                                // 🔥 LOGIKA NYAMBUNG: Hanya muncul di Pagi, Kebal Bug Begadang 🔥
                     var isSahNyambung = adaExtend || (timeFloat >= 16.5 || timeFloat < 7);
                     if (isSahNyambung && s === "pagi") { 
                         ket = "nyb"; 
                         if (adaExtend) ket += " " + (hv/1000) + " " + vv; else ket += " day " + (t.malam || 1) + " lunas";
                         var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : "";
                         
-                        listUngu.push(kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`);
+                        // 🔥 Simpan sebagai Objek agar bisa diurutkan
+                        listUngu.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: parseInt(String(t.inv||"0").replace(/\D/g, '')) || 0 });
                         if (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
-                } // PENTING: Kurung kurawal ini yang tadi hilang
-            } // PENTING: Kurung kurawal ini juga tadi hilang
+                } 
+            } 
             else if (isKotor) {
                 var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
-                // 🔥 MESIN WAKTU VD: Sembunyikan VD kemarin agar di laporan WA hari ini jadi 0
                 if (lastT && lastT.jam_out_aktual) {
                     if (!isKamarBaru(lastT.jam_out_aktual)) return; 
                 } else if (!lastT) { return; }
@@ -2565,31 +2623,45 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
                 if (sOut === s) {
                     var jOut = (lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
-                    listAbu.push(kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + ` ${jOut} (OUT-VD)`);
+                    // 🔥 Simpan sebagai Objek agar bisa diurutkan
+                    listAbu.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ` + ((sOut === "pagi") ? "👍🏽" : "❤️") + ` ${jOut} (OUT-VD)`, inv: parseInt(String(invOut||"0").replace(/\D/g, '')) || 0 });
                     if (lastT && (lastT.bayar === "D.Pending" || lastT.bayar === "BELUM BAYAR")) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                 }
-            } // PENTING: Dan kurung kurawal ini yang tadi hilang
+            } 
         });
 
+        // 🔥 LOGIKA PENGURUTAN (SORTING) DARI BILL TERBESAR KE TERKECIL 🔥
+        listMerah.sort(function(a, b) { return b.inv - a.inv; });
+        listUngu.sort(function(a, b) { return b.inv - a.inv; });
+        listAbu.sort(function(a, b) { return b.inv - a.inv; });
+
+        // 🔥 EKSTRAK KEMBALI HANYA TEKS NYA SAJA UNTUK DICETAK DI WA 🔥
+        listMerah = listMerah.map(function(x) { return x.text; });
+        listUngu = listUngu.map(function(x) { return x.text; });
+        listAbu = listAbu.map(function(x) { return x.text; });
 
         var finalCIN = listMerah.length + listUngu.length; 
         var finalVD = listAbu.length;   
+
         
         var gabunganKamarVisual = [];
         if (listMerah.length > 0) { gabunganKamarVisual.push("🔴 *TAMU BARU (C.IN):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listMerah); }
         if (listUngu.length > 0) { gabunganKamarVisual.push("🟣 *TAMU NYAMBUNG (STAY):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listUngu); }
         if (listAbu.length > 0) { gabunganKamarVisual.push("⚪ *KAMAR KOTOR (VD):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listAbu); }
 
-        var finalKamarStr = gabunganKamarVisual.length > 0 ? "<br>" + gabunganKamarVisual.join("<br>") : "-";
+                var finalKamarStr = gabunganKamarVisual.length > 0 ? "<br>" + gabunganKamarVisual.join("<br>") : "-";
         var bbStr = kamarBB.length > 0 ? kamarBB.join(", ") : "-";
 
         var bShift = (bucketObj) ? bucketObj : null;
 
         if (bShift) {
-            if (bShift.manual_kamar && bShift.manual_kamar.trim() !== "") { finalKamarStr = "<br>" + bShift.manual_kamar.replace(/,/g, "<br>"); }
-            if (bShift.manual_cin && bShift.manual_cin !== "") finalCIN = bShift.manual_cin;
-            if (bShift.manual_vd && bShift.manual_vd !== "") finalVD = bShift.manual_vd;
+            // 🔥 Menerima Overrides dari GOD MODE
+            if (bShift.manual_kamar !== undefined && bShift.manual_kamar.trim() !== "") { finalKamarStr = "<br>" + bShift.manual_kamar.replace(/\n/g, "<br>"); }
+            if (bShift.manual_cin !== undefined && bShift.manual_cin !== "") finalCIN = bShift.manual_cin;
+            if (bShift.manual_vd !== undefined && bShift.manual_vd !== "") finalVD = bShift.manual_vd;
+            if (bShift.manual_bb !== undefined && bShift.manual_bb !== "") bbStr = bShift.manual_bb;
         }
+
 
         // 🔥 PERBAIKAN BUG DOUBLE COUNTING LACI & WA REPORT 🔥
         var totalUangCash = bShift ? (bShift.cash || 0) : 0;
@@ -2637,15 +2709,16 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var displayTotalCash = totalUangCash + (bShift ? (bShift.dep_pending || 0) : 0);
         var sisaLaci = displayTotalCash - uangKeluarShift;
 
-
-
-                var noBillLast = "-";
+                        var noBillLast = "-";
         if (activeKas && activeKas.harian) {
             if (s === "pagi" && activeKas.harian.billPagi) noBillLast = activeKas.harian.billPagi.akhir || "-";
             else if (s === "malam" && activeKas.harian.billMalam) noBillLast = activeKas.harian.billMalam.akhir || "-";
         }
+        if (bShift && bShift.manual_bill !== undefined && bShift.manual_bill !== "") noBillLast = bShift.manual_bill; // Ambil dari God Mode
+
         var restoThisShift = (activeKas && activeKas.harian && activeKas.harian.transaksiResto) ? activeKas.harian.transaksiResto.filter(function(r) { return r.shift && r.shift.toLowerCase() === s; }) : [];
         var noBillRestoLast = restoThisShift.length > 0 ? restoThisShift[restoThisShift.length-1].inv : "-";
+        if (bShift && bShift.manual_bill_resto !== undefined && bShift.manual_bill_resto !== "") noBillRestoLast = bShift.manual_bill_resto; // Ambil dari God Mode
 
 
         function safeFormatRp(val) { return typeof formatRp === 'function' ? formatRp(val) : val; }
