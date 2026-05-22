@@ -2441,66 +2441,52 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         setTimeout(() => { rahasiaCounter = 0; }, 2000);
     };
 
-         window.bukaKoreksiLaci = function() {
+             window.bukaKoreksiLaci = function() {
         var p = bukuKas.harian.pagi;
         var m = bukuKas.harian.malam;
 
         var styleInput = "background:#fff; border:1px solid #bdc3c7; border-radius:4px; padding:4px 6px; font-family:monospace; font-weight:bold; color:#c0392b; width:75px; text-align:right; font-size:12px;";
-        var styleInputL = "background:#fff; border:1px solid #bdc3c7; border-radius:4px; padding:4px 6px; font-family:monospace; font-weight:bold; color:#c0392b; width:65px; text-align:center; font-size:12px;";
 
         function buatFormShift(shiftName, obj) {
             return `
             <div style="background:#fef9e7; border:2px dashed #27ae60; padding:15px; border-radius:8px; margin-bottom:15px; font-family:monospace; font-size:12px; color:#000; overflow-x:auto; line-height: 1.8;">
-                <b style="font-size:14px; color:#27ae60;">📋 GOD MODE SHIFT ${shiftName.toUpperCase()} (KUASA MUTLAK)</b><br><br>
+                <b style="font-size:14px; color:#27ae60;">🛠️ KOREKSI KAS LACI - SHIFT ${shiftName.toUpperCase()}</b><br><br>
+                Total Uang Kamar Cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomCash" value="${obj.room_cash||0}" style="${styleInput}"><br>
+                Total Uang Kamar TF 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomTf" value="${obj.room_tf||0}" style="${styleInput}"><br>
+                Total Uang Kamar Debit 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomDb" value="${obj.room_db||0}" style="${styleInput}"><br><br>
                 
-                Kamar Terjual/Dijaga:<br>
-                <textarea id="kor_${shiftName}_kamar" placeholder="Ketik atau Paste susunan daftar kamar dari Laporan WA ke sini untuk mengubah isinya. Kosongkan jika ingin sistem hitung otomatis." style="width:100%; height:150px; font-family:monospace; font-size:11px; padding:8px; border:1px solid #27ae60; border-radius:5px; margin-bottom:10px;">${obj.manual_kamar !== undefined ? obj.manual_kamar : ''}</textarea>
-                
-                total room c in 👉🏽 <input type="number" id="kor_${shiftName}_cin" value="${obj.manual_cin !== undefined ? obj.manual_cin : ''}" placeholder="Auto" style="${styleInputL}"><br>
-                room c out yg vd 👉🏽 <input type="number" id="kor_${shiftName}_vd" value="${obj.manual_vd !== undefined ? obj.manual_vd : ''}" placeholder="Auto" style="${styleInputL}"><br>
-                room c out yg vr 👉🏽 0<br>
-                total uang extrabat 👉🏽 Rp <input type="number" id="kor_${shiftName}_extrabed" value="${(obj.extrabed_in||0)*150000}" style="${styleInput}"><br>
-                room yg bb 👉🏽 <input type="text" id="kor_${shiftName}_bb" value="${obj.manual_bb !== undefined ? obj.manual_bb : ''}" placeholder="Auto" style="${styleInputL}"><br>
-                
-                total uang room cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomCash" value="${obj.room_cash||0}" style="${styleInput}"><br>
-                ttl uang room tf 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomTf" value="${obj.room_tf||0}" style="${styleInput}"><br>
-                ttl uang room debit 👉🏽 Rp <input type="number" id="kor_${shiftName}_roomDb" value="${obj.room_db||0}" style="${styleInput}"><br>
-                
-                ttl uang resto 👉🏽 Rp <input type="number" id="kor_${shiftName}_restoCash" value="${obj.resto_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_restoTf" value="${obj.resto_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_restoDb" value="${obj.resto_db||0}" style="${styleInput}"> db<br>
-                
-                ttl uang jual bill 👉🏽 Rp <input type="number" id="kor_${shiftName}_jbCash" value="${obj.jual_bill_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_jbTf" value="${obj.jual_bill_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_jbDb" value="${obj.jual_bill_db||0}" style="${styleInput}"> db<br>
-                
-                ttl uang charge 👉🏽 Rp <input type="number" id="kor_${shiftName}_chargeCash" value="${obj.charge_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_chargeTf" value="${obj.charge_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_chargeDb" value="${obj.charge_db||0}" style="${styleInput}"> db<br>
-                
-                ttl uang deposit/jaminan 👉🏽 Rp <input type="number" id="kor_${shiftName}_depJaminan" value="${obj.dep_jaminan||0}" style="${styleInput}"><br>
-                ttl uang panjar 👉🏽 Rp <input type="number" id="kor_${shiftName}_panjarCash" value="${obj.panjar_cash||0}" style="${styleInput}"> cash / Rp <input type="number" id="kor_${shiftName}_panjarTf" value="${obj.panjar_tf||0}" style="${styleInput}"> tf / Rp <input type="number" id="kor_${shiftName}_panjarDb" value="${obj.panjar_db||0}" style="${styleInput}"> db<br>
-                
-                ttl pembayaran bb 👉🏽 Rp 0<br>
-                
-                <div style="background:#e8f8f5; padding:5px; border-radius:5px; margin:5px 0;">
-                - *TOTAL UANG CASH :* (Dihitung Otomatis oleh Sistem)<br>
-                - *TOTAL UANG TRANSFER :* (Dihitung Otomatis oleh Sistem)<br>
-                </div>
+                Total Resto Cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_restoCash" value="${obj.resto_cash||0}" style="${styleInput}"><br>
+                Total Resto TF 👉🏽 Rp <input type="number" id="kor_${shiftName}_restoTf" value="${obj.resto_tf||0}" style="${styleInput}"><br><br>
 
-                ttl uang keluar 👉🏽 Rp <input type="number" id="kor_${shiftName}_keluar" value="${obj.keluar||0}" style="${styleInput}"><br>
+                Total Jual Bill Cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_jbCash" value="${obj.jual_bill_cash||0}" style="${styleInput}"><br>
+                Total Jual Bill TF 👉🏽 Rp <input type="number" id="kor_${shiftName}_jbTf" value="${obj.jual_bill_tf||0}" style="${styleInput}"><br><br>
+
+                Total Charge Cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_chargeCash" value="${obj.charge_cash||0}" style="${styleInput}"><br>
+                Total Charge TF 👉🏽 Rp <input type="number" id="kor_${shiftName}_chargeTf" value="${obj.charge_tf||0}" style="${styleInput}"><br><br>
+
+                Total Panjar/DP Cash 👉🏽 Rp <input type="number" id="kor_${shiftName}_panjarCash" value="${obj.panjar_cash||0}" style="${styleInput}"><br>
+                Total Panjar/DP TF 👉🏽 Rp <input type="number" id="kor_${shiftName}_panjarTf" value="${obj.panjar_tf||0}" style="${styleInput}"><br><br>
+
+                Total Dep/Jaminan 👉🏽 Rp <input type="number" id="kor_${shiftName}_depJaminan" value="${obj.dep_jaminan||0}" style="${styleInput}"><br>
+                Deposit Pending 👉🏽 Rp <input type="number" id="kor_${shiftName}_depPending" value="${obj.dep_pending||0}" style="${styleInput}"><br><br>
+
+                Total Uang Keluar 👉🏽 Rp <input type="number" id="kor_${shiftName}_keluar" value="${obj.keluar||0}" style="${styleInput}"><br><br>
                 
-                sisa stor uang cash 👉🏽 (Dihitung Otomatis oleh Sistem)<br>
-                no bill terakhir 👉🏽 <input type="text" id="kor_${shiftName}_bill" value="${obj.manual_bill !== undefined ? obj.manual_bill : ''}" placeholder="Auto" style="${styleInput}"><br>
-                no bill resto terakhir 👉🏽 <input type="text" id="kor_${shiftName}_billResto" value="${obj.manual_bill_resto !== undefined ? obj.manual_bill_resto : ''}" placeholder="Auto" style="${styleInput}"><br>
-                Deposit pending 👉🏽 Rp <input type="number" id="kor_${shiftName}_depPending" value="${obj.dep_pending||0}" style="${styleInput}"><br>
+                No Bill Terakhir 👉🏽 <input type="text" id="kor_${shiftName}_bill" value="${obj.manual_bill !== undefined ? obj.manual_bill : ''}" placeholder="Auto" style="${styleInput}"><br>
+                No Bill Resto Terakhir 👉🏽 <input type="text" id="kor_${shiftName}_billResto" value="${obj.manual_bill_resto !== undefined ? obj.manual_bill_resto : ''}" placeholder="Auto" style="${styleInput}"><br>
             </div>
             `;
         }
 
         var out = `<div class="card" style="background:#f4f6f7; border: 2px solid #2c3e50;">
-            <span class="section-title" style="color:#2c3e50; text-align:center; display:block; font-size:16px;">🛠️ EDITOR LAPORAN WA (GOD MODE)</span>
-            <p style="text-align:center; font-size:11px; color:#555;">Tampilan ini dibuat PERSIS seperti Laporan WA. Apapun yang Bosku ganti di sini, Laporan WA akan 100% meniru!</p>
+            <span class="section-title" style="color:#2c3e50; text-align:center; display:block; font-size:16px;">⚙️ KOREKSI LACI MANUAL</span>
+            <p style="text-align:center; font-size:11px; color:#555;">Gunakan hanya saat darurat untuk merekayasa atau menyamakan saldo laci.</p>
             <hr style="border-color:#bdc3c7; margin-bottom:15px;">
 
             ${buatFormShift('pagi', p)}
             ${buatFormShift('malam', m)}
 
-            <button class="btn" style="background:#27ae60; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; box-shadow:0 4px 10px rgba(39, 174, 96, 0.3);" onclick="simpanKoreksiGodMode()">💾 SIMPAN REKAYASA MUTLAK</button>
+            <button class="btn" style="background:#27ae60; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer;" onclick="simpanKoreksiGodMode()">💾 SIMPAN KOREKSI KAS</button>
             <button class="btn" style="background:#7f8c8d; color:white; margin-top:10px; padding:15px; width:100%; font-size:16px; font-weight:bold; border:none; border-radius:5px; cursor:pointer;" onclick="pindahHalaman('MENU')">🔙 BATAL</button>
         </div>`;
         
@@ -2508,19 +2494,19 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         window.scrollTo(0,0);
     };
 
-    window.simpanKoreksiGodMode = function() {
-        var pin = prompt("🔐 Masukkan Sandi Master (vipjumaeluk1234) untuk menerapkan koreski:");
+
+        window.simpanKoreksiGodMode = function() {
+        var pin = prompt("🔐 Masukkan Sandi Master (vipjumaeluk1234) untuk menerapkan koreksi:");
         if(pin !== "vipjumaeluk1234") { alert("❌ SANDI SALAH!"); return; }
 
         function simpanShift(shiftName) {
             var obj = bukuKas.harian[shiftName];
             
-            // Override Manual Teks Kamar, BB, & Bill
-            var cKamar = document.getElementById('kor_' + shiftName + '_kamar').value;
-            if(cKamar !== "") obj.manual_kamar = cKamar; else delete obj.manual_kamar;
-
-            var cBb = document.getElementById('kor_' + shiftName + '_bb').value;
-            if(cBb !== "") obj.manual_bb = cBb; else delete obj.manual_bb;
+            // 🔥 SAPU BERSIH OVERRIDE TEKS DARI GOD MODE SEBELUMNYA
+            delete obj.manual_kamar;
+            delete obj.manual_bb;
+            delete obj.manual_cin;
+            delete obj.manual_vd;
 
             var cBill = document.getElementById('kor_' + shiftName + '_bill').value;
             if(cBill !== "") obj.manual_bill = cBill; else delete obj.manual_bill;
@@ -2528,52 +2514,36 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             var cBillResto = document.getElementById('kor_' + shiftName + '_billResto').value;
             if(cBillResto !== "") obj.manual_bill_resto = cBillResto; else delete obj.manual_bill_resto;
             
-            // Override Jumlah C-In dan VD
-            var cIn = document.getElementById('kor_' + shiftName + '_cin').value;
-            if(cIn !== "") obj.manual_cin = parseInt(cIn); else delete obj.manual_cin;
-            
-            var cVd = document.getElementById('kor_' + shiftName + '_vd').value;
-            if(cVd !== "") obj.manual_vd = parseInt(cVd); else delete obj.manual_vd;
-
-            // Extrabed otomatis dibagi 150.000 untuk dapat jumlah kasurnya
-            obj.extrabed_in = Math.floor((parseInt(document.getElementById('kor_' + shiftName + '_extrabed').value) || 0) / 150000);
-            
             obj.room_cash = parseInt(document.getElementById('kor_' + shiftName + '_roomCash').value) || 0;
             obj.room_tf = parseInt(document.getElementById('kor_' + shiftName + '_roomTf').value) || 0;
             obj.room_db = parseInt(document.getElementById('kor_' + shiftName + '_roomDb').value) || 0;
 
             obj.resto_cash = parseInt(document.getElementById('kor_' + shiftName + '_restoCash').value) || 0;
             obj.resto_tf = parseInt(document.getElementById('kor_' + shiftName + '_restoTf').value) || 0;
-            obj.resto_db = parseInt(document.getElementById('kor_' + shiftName + '_restoDb').value) || 0;
 
             obj.jual_bill_cash = parseInt(document.getElementById('kor_' + shiftName + '_jbCash').value) || 0;
             obj.jual_bill_tf = parseInt(document.getElementById('kor_' + shiftName + '_jbTf').value) || 0;
-            obj.jual_bill_db = parseInt(document.getElementById('kor_' + shiftName + '_jbDb').value) || 0;
 
             obj.charge_cash = parseInt(document.getElementById('kor_' + shiftName + '_chargeCash').value) || 0;
             obj.charge_tf = parseInt(document.getElementById('kor_' + shiftName + '_chargeTf').value) || 0;
-            obj.charge_db = parseInt(document.getElementById('kor_' + shiftName + '_chargeDb').value) || 0;
 
             obj.dep_jaminan = parseInt(document.getElementById('kor_' + shiftName + '_depJaminan').value) || 0;
             obj.dep_pending = parseInt(document.getElementById('kor_' + shiftName + '_depPending').value) || 0;
 
             obj.panjar_cash = parseInt(document.getElementById('kor_' + shiftName + '_panjarCash').value) || 0;
             obj.panjar_tf = parseInt(document.getElementById('kor_' + shiftName + '_panjarTf').value) || 0;
-            obj.panjar_db = parseInt(document.getElementById('kor_' + shiftName + '_panjarDb').value) || 0;
 
             obj.keluar = parseInt(document.getElementById('kor_' + shiftName + '_keluar').value) || 0;
 
-            // KALKULASI OTOMATIS TOTAL PER SHIFT (Cash / Transfer / Debit kotor)
+            // KALKULASI OTOMATIS
             obj.cash = obj.room_cash + obj.resto_cash + obj.panjar_cash + obj.charge_cash + obj.jual_bill_cash;
             obj.tf = obj.room_tf + obj.resto_tf + obj.panjar_tf + obj.charge_tf + obj.jual_bill_tf;
-            obj.db = obj.room_db + obj.resto_db + obj.panjar_db + obj.charge_db + obj.jual_bill_db;
+            obj.db = obj.room_db;
         }
 
-        // Terapkan ke Pagi dan Malam
         simpanShift('pagi');
         simpanShift('malam');
 
-        // RE-KALKULASI OTOMATIS TOTAL LACI BUKU KAS GLOBAL
         var p = bukuKas.harian.pagi;
         var m = bukuKas.harian.malam;
 
@@ -2584,7 +2554,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         bukuKas.harian.uang = bukuKas.harian.uangCash + bukuKas.harian.uangTransfer + bukuKas.harian.uangDebit;
 
         simpanKeCloud();
-        alert("✅ REKAYASA MUTLAK BERHASIL!\nLaporan WA telah tunduk dan disinkronkan sepenuhnya mengikuti angka yang Bosku masukkan.");
+        alert("✅ KOREKSI KAS BERHASIL DISIMPAN!\nSistem Laporan WA kembali ke mode otomatis penuh.");
         pindahHalaman('MENU');
     };
 
