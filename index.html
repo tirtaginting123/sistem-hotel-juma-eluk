@@ -1249,10 +1249,10 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         if (shiftKamar === "pagi") { hitungPagi++; arrPagiIn.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: invNo }); } 
                         else { hitungMalam++; arrMalamIn.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} ❤️ ${jT}`, inv: invNo }); }
                     } else {
-                    // 🔥 BUKA GEMBOK WAKTU: Selalu munculkan Tamu Lama di Laporan Shift Pagi
-                    if (s === "pagi") { 
-                        var dayKe = hitungDayKe(t.tgl_hotel || t.tgl, dOp); 
-
+                        var isSahNyambung = adaExtendHariIni || (timeFloat >= 16.5 || timeFloat < 7);
+                        if (isSahNyambung) {
+                            var dayKe = hitungDayKeM7(t.tgl_hotel || t.tgl, dOpMenu7);
+                            
                             // 🔥 FIX 2: Sembunyikan "nyb day X" di Menu 7 untuk 1 malam standar
                             var totalMalam = parseInt(t.malam) || 1;
                             var adaTambahanExt = (eC > 0 || eTf > 0 || eDb > 0);
@@ -2731,11 +2731,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                         if (sisaTagihan > 0) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
                 } else {
-                    // 🔥 BUKA GEMBOK WAKTU: Selalu munculkan Tamu Lama di Laporan Shift Pagi
-                    if (s === "pagi") { 
+                    var isSahNyambung = adaExtendHariIni || (timeFloat >= 16.5 || timeFloat < 7);
+                    if (isSahNyambung && s === "pagi") { 
                         var dayKe = hitungDayKe(t.tgl_hotel || t.tgl, dOp); 
-
-                        // 🔥 FIX 2: Sembunyikan "nyb day X" jika tamu hanya nginap 1 malam dan tidak ada perpanjangan hari ini
+                        
+                        // 🔥  2: Sembunyikan "nyb day X" jika tamu hanya nginap 1 malam dan tidak ada perpanjangan hari ini
                         var totalMalam = parseInt(t.malam) || 1;
                         var adaTambahanExt = (eC > 0 || eTf > 0 || eDb > 0);
                         var prefixNyb = "nyb day " + dayKe + " ";
