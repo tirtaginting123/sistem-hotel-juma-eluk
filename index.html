@@ -1262,9 +1262,16 @@ let tempIndex = -1; window.isCheckInNormal = true;
                             }
 
                             var ket = prefixNyb + payStr + " " + statusBayarText;
-                            hitungPagi++; cUngu++;
-                            arrPagiNyb.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: invNo });
+                        
+                        // 🔥 DETEKTOR DUE OUT
+                        if (dayKe > totalMalam && !adaTambahanExt) {
+                            ket += " (OUT HARI INI)";
                         }
+
+                        // PASTIKAN HANYA ADA SATU arrPagiNyb.push DI SINI
+                        hitungPagi++; cUngu++;
+                        arrPagiNyb.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: invNo });
+                    }
                     }
                 } 
                 else if (isKotor) {
@@ -2731,23 +2738,31 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                         if (sisaTagihan > 0) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
                 } else {
-                    var isSahNyambung = adaExtendHariIni || (timeFloat >= 16.5 || timeFloat < 7);
-                    if (isSahNyambung && s === "pagi") { 
+                    // 🔥 BUKA GEMBOK WAKTU: Selalu munculkan Tamu Lama di Laporan Shift Pagi
+                    if (s === "pagi") { 
                         var dayKe = hitungDayKe(t.tgl_hotel || t.tgl, dOp); 
                         
-                        // 🔥  2: Sembunyikan "nyb day X" jika tamu hanya nginap 1 malam dan tidak ada perpanjangan hari ini
+                        // 🔥 FIX 2: Sembunyikan "nyb day X" jika tamu hanya nginap 1 malam dan tidak ada perpanjangan hari ini
                         var totalMalam = parseInt(t.malam) || 1;
                         var adaTambahanExt = (eC > 0 || eTf > 0 || eDb > 0);
                         var prefixNyb = "nyb day " + dayKe + " ";
                         if (totalMalam <= 1 && !adaTambahanExt) {
-                            prefixNyb = ""; // Dikosongkan agar tidak muncul
+                            prefixNyb = ""; 
                         }
 
                         var ket = prefixNyb + payStr + " " + statusBayarText;
+                        
+                        // 🔥 DETEKTOR DUE OUT: Teriak otomatis kalau jatah malamnya habis hari ini
+                        if (dayKe > totalMalam && !adaTambahanExt) {
+                            ket += " (OUT HARI INI)";
+                        }
+
+                        // PASTIKAN HANYA ADA SATU listUngu.push DI SINI
                         listUngu.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: invNo });
                         if (sisaTagihan > 0) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
-                } 
+                }
+
             } 
             else if (isKotor) {
                 var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
