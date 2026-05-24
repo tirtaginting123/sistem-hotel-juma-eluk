@@ -1388,7 +1388,8 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         ketOut = isBaruVD ? (payStrOut + " " + statusBayarTextOut) : prefixNybOut + payStrOut + " " + statusBayarTextOut;
                     }
 
-                    var jOut = (lastT && lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
+                    var jOut = (lastT && lastT.tgl && lastT.tgl.includes(",")) ? lastT.tgl.split(",")[1].trim() : "";
+
                     var invNoOut = parseInt(String(invOut||"0").replace(/\D/g, '')) || 0;
                     var isVDBaru = lastT && lastT.jam_out_aktual ? isKmrBaruGlobal(lastT.jam_out_aktual) : false;
                     
@@ -2557,9 +2558,15 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
     };
 
 
-        window.simpanKoreksiGodMode = function() {
+            window.simpanKoreksiGodMode = function() {
         var pin = prompt("🔐 Masukkan Sandi Master (vipjumaeluk1234) untuk menerapkan koreksi:");
         if(pin !== "vipjumaeluk1234") { alert("❌ SANDI SALAH!"); return; }
+
+        // 🔥 FITUR PENYEDOT PINTAR ANTI-CRASH 🔥
+        function getValSafe(id) {
+            var el = document.getElementById(id);
+            return (el && el.value !== "") ? (parseInt(el.value) || 0) : 0;
+        }
 
         function simpanShift(shiftName) {
             var obj = bukuKas.harian[shiftName];
@@ -2567,46 +2574,46 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             // Bersihkan sisa-sisa override teks kamar lama agar tidak bug
             delete obj.manual_kamar; delete obj.manual_bb; delete obj.manual_cin; delete obj.manual_vd;
 
-            var cBill = document.getElementById('kor_' + shiftName + '_bill').value;
-            if(cBill !== "") obj.manual_bill = cBill; else delete obj.manual_bill;
+            var elBill = document.getElementById('kor_' + shiftName + '_bill');
+            if(elBill && elBill.value !== "") obj.manual_bill = elBill.value; else delete obj.manual_bill;
 
-            var cBillResto = document.getElementById('kor_' + shiftName + '_billResto').value;
-            if(cBillResto !== "") obj.manual_bill_resto = cBillResto; else delete obj.manual_bill_resto;
+            var elBillResto = document.getElementById('kor_' + shiftName + '_billResto');
+            if(elBillResto && elBillResto.value !== "") obj.manual_bill_resto = elBillResto.value; else delete obj.manual_bill_resto;
             
-            // Sedot Uang Kamar (Room)
-            obj.room_cash = parseInt(document.getElementById('kor_' + shiftName + '_roomCash').value) || 0;
-            obj.room_tf = parseInt(document.getElementById('kor_' + shiftName + '_roomTf').value) || 0;
-            obj.room_db = parseInt(document.getElementById('kor_' + shiftName + '_roomDb').value) || 0;
+            // Sedot Uang Kamar (Room) dengan aman
+            obj.room_cash = getValSafe('kor_' + shiftName + '_roomCash');
+            obj.room_tf = getValSafe('kor_' + shiftName + '_roomTf');
+            obj.room_db = getValSafe('kor_' + shiftName + '_roomDb');
 
             // Sedot Uang Kasur (Extrabed)
-            obj.extrabed_in = Math.floor((parseInt(document.getElementById('kor_' + shiftName + '_extrabed').value) || 0) / 150000);
+            obj.extrabed_in = Math.floor(getValSafe('kor_' + shiftName + '_extrabed') / 150000);
 
             // Sedot Uang Restoran
-            obj.resto_cash = parseInt(document.getElementById('kor_' + shiftName + '_restoCash').value) || 0;
-            obj.resto_tf = parseInt(document.getElementById('kor_' + shiftName + '_restoTf').value) || 0;
-            obj.resto_db = parseInt(document.getElementById('kor_' + shiftName + '_restoDb').value) || 0;
+            obj.resto_cash = getValSafe('kor_' + shiftName + '_restoCash');
+            obj.resto_tf = getValSafe('kor_' + shiftName + '_restoTf');
+            obj.resto_db = getValSafe('kor_' + shiftName + '_restoDb');
 
             // Sedot Uang Jual Bill
-            obj.jual_bill_cash = parseInt(document.getElementById('kor_' + shiftName + '_jbCash').value) || 0;
-            obj.jual_bill_tf = parseInt(document.getElementById('kor_' + shiftName + '_jbTf').value) || 0;
-            obj.jual_bill_db = parseInt(document.getElementById('kor_' + shiftName + '_jbDb').value) || 0;
+            obj.jual_bill_cash = getValSafe('kor_' + shiftName + '_jbCash');
+            obj.jual_bill_tf = getValSafe('kor_' + shiftName + '_jbTf');
+            obj.jual_bill_db = getValSafe('kor_' + shiftName + '_jbDb');
 
             // Sedot Uang Charge Denda
-            obj.charge_cash = parseInt(document.getElementById('kor_' + shiftName + '_chargeCash').value) || 0;
-            obj.charge_tf = parseInt(document.getElementById('kor_' + shiftName + '_chargeTf').value) || 0;
-            obj.charge_db = parseInt(document.getElementById('kor_' + shiftName + '_chargeDb').value) || 0;
+            obj.charge_cash = getValSafe('kor_' + shiftName + '_chargeCash');
+            obj.charge_tf = getValSafe('kor_' + shiftName + '_chargeTf');
+            obj.charge_db = getValSafe('kor_' + shiftName + '_chargeDb');
 
             // Sedot Uang Panjar/DP
-            obj.panjar_cash = parseInt(document.getElementById('kor_' + shiftName + '_panjarCash').value) || 0;
-            obj.panjar_tf = parseInt(document.getElementById('kor_' + shiftName + '_panjarTf').value) || 0;
-            obj.panjar_db = parseInt(document.getElementById('kor_' + shiftName + '_panjarDb').value) || 0;
+            obj.panjar_cash = getValSafe('kor_' + shiftName + '_panjarCash');
+            obj.panjar_tf = getValSafe('kor_' + shiftName + '_panjarTf');
+            obj.panjar_db = getValSafe('kor_' + shiftName + '_panjarDb');
 
             // Sedot Deposit & Pengeluaran
-            obj.dep_jaminan = parseInt(document.getElementById('kor_' + shiftName + '_depJaminan').value) || 0;
-            obj.dep_pending = parseInt(document.getElementById('kor_' + shiftName + '_depPending').value) || 0;
-            obj.keluar = parseInt(document.getElementById('kor_' + shiftName + '_keluar').value) || 0;
+            obj.dep_jaminan = getValSafe('kor_' + shiftName + '_depJaminan');
+            obj.dep_pending = getValSafe('kor_' + shiftName + '_depPending');
+            obj.keluar = getValSafe('kor_' + shiftName + '_keluar');
 
-            // RE-KALKULASI OTOMATIS AGAR LAPORAN WA DAN DASHBOARD LANGSUNG SINKRON IMBAH
+            // RE-KALKULASI OTOMATIS AGAR LAPORAN WA DAN DASHBOARD LANGSUNG SINKRON
             obj.cash = obj.room_cash + obj.resto_cash + obj.panjar_cash + obj.charge_cash + obj.jual_bill_cash;
             obj.tf = obj.room_tf + obj.resto_tf + obj.panjar_tf + obj.charge_tf + obj.jual_bill_tf;
             obj.db = obj.room_db + obj.resto_db + obj.panjar_db + obj.charge_db + obj.jual_bill_db;
@@ -2635,8 +2642,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
 
         simpanKeCloud();
         alert("✅ REKAYASA FINANSIAL BERHASIL!\nBrankas database, Buku Kas, Laci Fisik, dan Laporan WA telah disinkronkan mengikuti kuasa Bosku.");
-        pindahHalaman('MENU');
+        
+        // 🔥 PELATUK REFRESH AGAR LAYAR LANGSUNG BERUBAH 🔥
+        location.reload(); 
     };
+
 
 
     window.onpopstate = function(e) { state = (e.state && e.state.page) ? e.state.page : "MENU"; renderScreen(); };
@@ -2869,7 +2879,8 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     }
 
                     ketOut = isBaruVD ? (payStrOut + " " + statusBayarTextOut) : prefixNybOut + payStrOut + " " + statusBayarTextOut;
-                    jOut = (lastT.jam_out_aktual && lastT.jam_out_aktual.includes(",")) ? lastT.jam_out_aktual.split(",")[1].trim() : "";
+                    jOut = (lastT.tgl && lastT.tgl.includes(",")) ? lastT.tgl.split(",")[1].trim() : "";
+
                 }
 
                 var isVDBaru = lastT && lastT.jam_out_aktual ? isKamarBaru(lastT.jam_out_aktual) : false;
