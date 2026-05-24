@@ -953,11 +953,11 @@ let tempIndex = -1; window.isCheckInNormal = true;
 
         if (state === "MENU") {
             out += `<div class="card"><span class="section-title">🏠 Reception Dashboard</span>
-                <div class="btn-mewah" onclick="isPendingMode=false; isJualBillMode=false; pindahHalaman('PILIH_KELAS')"><span>🛏️ 1. Booking Kamar Baru</span><span>➔</span></div>
+                <div class="btn-mewah" onclick="isPendingMode=false; isJualBillMode=false; pindahHalaman('PILIH_KELAS')"><span>🛏️ 1.Check-In Kamar Baru</span><span>➔</span></div>
               
 <div class="btn-mewah" onclick="pindahHalaman('FORM_ROMBONGAN')" style="border-left: 4px solid #9b59b6;"><span>🚌 #. Booking & Check-In Rombongan</span><span>➔</span></div>
 
-<div class="btn-mewah" onclick="pindahHalaman('FORM_JUAL_BILL')" style="border-left: 4px solid #f39c12; background:#fef9e7;"><span>🏷️ #. Jual Bill (Struk Kosong)</span><span>➔</span></div>
+<div class="btn-mewah" onclick="pindahHalaman('FORM_JUAL_BILL')" style="border-left: 4px solid #f39c12; background:#fef9e7;"><span>🏷️ #. Jual Bill (Cetak Bill)</span><span>➔</span></div>
 
                 <div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')"><span>👥 2. Monitoring & Check-Out</span><span>➔</span></div>
                 <div class="btn-mewah" onclick="pindahHalaman('TUTUP_BUKU')"><span>💰 3a. Laporan Keuangan</span><span>➔</span></div>
@@ -1261,7 +1261,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 return diffDays > 0 ? diffDays : 1; 
             }
 
-            semuaKamar.forEach(function(kmr) {
+                        semuaKamar.forEach(function(kmr) {
                 var t = tamuIn.find(x => x.room === kmr);
                 var isKotor = kamarKotor.includes(kmr);
 
@@ -1269,7 +1269,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     var baru = isKmrBaruGlobal(t.tgl_hotel || t.tgl);
                     var shiftKamar = (t.shift || "pagi").toLowerCase(); 
                     
-                    var pC = 0, pTf = 0, pDb = 0; var eC = 0, eTf = 0, eDb = 0; var histTotal = 0; var adaExtendHariIni = false;
+                    var pC = 0, pTf = 0, pDb = 0, pLl = 0; var eC = 0, eTf = 0, eDb = 0, eLl = 0; var histTotal = 0; var adaExtendHariIni = false;
                     if (t.history_bayar) {
                         t.history_bayar.forEach(h => { histTotal += (parseInt(h.nominal)||0); if(isKmrBaruGlobal(h.tgl)) adaExtendHariIni = true; });
                     }
@@ -1278,25 +1278,27 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     
                     function kumpulUangM7(nom, via, isToday, isBase) {
                         if (nom <= 0) return;
+                        var v = via.toLowerCase();
                         if (isToday && !isBase) { 
-                            if (via.includes('tf') || via.includes('transfer')) eTf += nom; else if (via.includes('db')) eDb += nom; else eC += nom;
+                            if (v.includes('tf') || v.includes('transfer')) eTf += nom; else if (v.includes('db') || v.includes('debit')) eDb += nom; else if (v.includes('lunas lama')) eLl += nom; else eC += nom;
                         } else { 
-                            if (via.includes('tf') || via.includes('transfer')) pTf += nom; else if (via.includes('db')) pDb += nom; else pC += nom;
+                            if (v.includes('tf') || v.includes('transfer')) pTf += nom; else if (v.includes('db') || v.includes('debit')) pDb += nom; else if (v.includes('lunas lama')) pLl += nom; else pC += nom;
                         }
                     }
                     kumpulUangM7(baseNom, (t.bayar||"").toLowerCase(), isKmrBaruGlobal(t.tgl_hotel || t.tgl), true); 
                     if (t.history_bayar) t.history_bayar.forEach(h => kumpulUangM7(parseInt(h.nominal)||0, (h.via||"").toLowerCase(), isKmrBaruGlobal(h.tgl), false));
 
                     var arrPay = [];
-                    // 🔥 FIX 1: Tamu Baru di Menu 7 tanpa label "ext"
                     if (baru) {
-                        var totalC = pC + eC, totalTf = pTf + eTf, totalDb = pDb + eDb;
-                        if (totalC > 0) arrPay.push((totalC/1000) + " cash");
-                        if (totalTf > 0) arrPay.push((totalTf/1000) + " tf");
-                        if (totalDb > 0) arrPay.push((totalDb/1000) + " db");
+                        var totalLlama = pC + pTf + pDb + pLl + eLl;
+                        if (totalLlama > 0) arrPay.push((totalLlama/1000) + "L.lama");
+                        
+                        if (eC > 0) arrPay.push((eC/1000) + " cash");
+                        if (eTf > 0) arrPay.push((eTf/1000) + " tf");
+                        if (eDb > 0) arrPay.push((eDb/1000) + " db");
                     } else {
-                        if (pC > 0) arrPay.push((pC/1000) + " cash"); if (pTf > 0) arrPay.push((pTf/1000) + " tf"); if (pDb > 0) arrPay.push((pDb/1000) + " db");
-                        if (eC > 0) arrPay.push((eC/1000) + " cash ext"); if (eTf > 0) arrPay.push((eTf/1000) + " tf ext"); if (eDb > 0) arrPay.push((eDb/1000) + " db ext");
+                        if (pC > 0) arrPay.push((pC/1000) + " cash"); if (pTf > 0) arrPay.push((pTf/1000) + " tf"); if (pDb > 0) arrPay.push((pDb/1000) + " db"); if (pLl > 0) arrPay.push((pLl/1000) + " L.lama");
+                        if (eC > 0) arrPay.push((eC/1000) + " cash ext"); if (eTf > 0) arrPay.push((eTf/1000) + " tf ext"); if (eDb > 0) arrPay.push((eDb/1000) + " db ext"); if (eLl > 0) arrPay.push((eLl/1000) + " L.lama ext");
                     }
 
                     var payStr = arrPay.length > 0 ? arrPay.join(" ") : "0";
@@ -1315,25 +1317,17 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         var isSahNyambung = adaExtendHariIni || (timeFloat >= 16.5 || timeFloat < 7);
                         if (isSahNyambung) {
                             var dayKe = hitungDayKeM7(t.tgl_hotel || t.tgl, dOpMenu7);
-                            
-                            // 🔥 FIX 2: Sembunyikan "nyb day X" di Menu 7 untuk 1 malam standar
                             var totalMalam = parseInt(t.malam) || 1;
-                            var adaTambahanExt = (eC > 0 || eTf > 0 || eDb > 0);
+                            var adaTambahanExt = (eC > 0 || eTf > 0 || eDb > 0 || eLl > 0);
                             var prefixNyb = "nyb day " + dayKe + " ";
-                            if (totalMalam <= 1 && !adaTambahanExt) {
-                                prefixNyb = ""; 
-                            }
+                            if (totalMalam <= 1 && !adaTambahanExt) { prefixNyb = ""; }
 
                             var ket = prefixNyb + payStr + " " + statusBayarText;
-                        
-                        // 🔥 DETEKTOR DUE OUT
-                        if (dayKe >= totalMalam && !adaTambahanExt) ket += " (OUT HARI INI)";
+                            if (dayKe >= totalMalam && !adaTambahanExt) { ket += " (OUT HARI INI)"; }
 
-
-                        // PASTIKAN HANYA ADA SATU arrPagiNyb.push DI SINI
-                        hitungPagi++; cUngu++;
-                        arrPagiNyb.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: invNo });
-                    }
+                            hitungPagi++; cUngu++;
+                            arrPagiNyb.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: invNo });
+                        }
                     }
                 } 
                 else if (isKotor) {
@@ -1347,49 +1341,49 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         var isBaruVD = lastT.jam_out_aktual ? isKmrBaruGlobal(lastT.jam_out_aktual) : isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
                         if (!isBaruVD) sOut = "pagi"; 
 
-                        var pCo = 0, pTfo = 0, pDbo = 0; var eCo = 0, eTfo = 0, eDbo = 0; var histTotalO = 0;
+                        var pCo = 0, pTfo = 0, pDbo = 0, pLlo = 0; var eCo = 0, eTfo = 0, eDbo = 0, eLlo = 0; var histTotalO = 0;
                         if (lastT.history_bayar) lastT.history_bayar.forEach(h => histTotalO += (parseInt(h.nominal)||0));
                         var baseNomO = (parseInt(lastT.sudah_dibayar)||0) - histTotalO;
                         if (baseNomO < 0) baseNomO = parseInt(lastT.sudah_dibayar)||0;
                         
                         function kumpulUangOM7(nom, via, isToday, isBase) {
                             if (nom <= 0) return;
-                            if (isToday && !isBase) { if (via.includes('tf') || via.includes('transfer')) eTfo += nom; else if (via.includes('db')) eDbo += nom; else eCo += nom;
-                            } else { if (via.includes('tf') || via.includes('transfer')) pTfo += nom; else if (via.includes('db')) pDbo += nom; else pCo += nom; }
+                            var v = via.toLowerCase();
+                            if (isToday && !isBase) { 
+                                if (v.includes('tf') || v.includes('transfer')) eTfo += nom; else if (v.includes('db') || v.includes('debit')) eDbo += nom; else if (v.includes('lunas lama')) eLlo += nom; else eCo += nom;
+                            } else { 
+                                if (v.includes('tf') || v.includes('transfer')) pTfo += nom; else if (v.includes('db') || v.includes('debit')) pDbo += nom; else if (v.includes('lunas lama')) pLlo += nom; else pCo += nom;
+                            }
                         }
                         kumpulUangOM7(baseNomO, (lastT.bayar||"").toLowerCase(), isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl), true); 
                         if (lastT.history_bayar) lastT.history_bayar.forEach(h => kumpulUangOM7(parseInt(h.nominal)||0, (h.via||"").toLowerCase(), isKmrBaruGlobal(h.tgl), false));
 
                         var arrPayO = [];
                         if (isBaruVD) {
-                            var totCo = pCo + eCo, totTfo = pTfo + eTfo, totDbo = pDbo + eDbo;
-                            if (totCo > 0) arrPayO.push((totCo/1000) + " cash");
-                            if (totTfo > 0) arrPayO.push((totTfo/1000) + " tf");
-                            if (totDbo > 0) arrPayO.push((totDbo/1000) + " db");
+                            var totalLlamaOut = pCo + pTfo + pDbo + pLlo + eLlo;
+                            if (totalLlamaOut > 0) arrPayO.push((totalLlamaOut/1000) + "L.lama");
+                            if (eCo > 0) arrPayO.push((eCo/1000) + " cash");
+                            if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf");
+                            if (eDbo > 0) arrPayO.push((eDbo/1000) + " db");
                         } else {
-                            if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); if (pDbo > 0) arrPayO.push((pDbo/1000) + " db");
-                            if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext");
+                            if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); if (pDbo > 0) arrPayO.push((pDbo/1000) + " db"); if (pLlo > 0) arrPayO.push((pLlo/1000) + " L.lama");
+                            if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext"); if (eLlo > 0) arrPayO.push((eLlo/1000) + " L.lama ext");
                         }
 
                         var payStrOut = arrPayO.length > 0 ? arrPayO.join(" ") : "0";
                         var sisaTagihanOut = (parseInt(lastT.total_tagihan) || 0) - (parseInt(lastT.sudah_dibayar) || 0);
                         var statusBayarTextOut = sisaTagihanOut > 0 ? "pending" : "lunas";
-
                         var dayKeOut = hitungDayKeM7(lastT.tgl_hotel || lastT.tgl, dOpMenu7);
 
-                        // 🔥 FIX 2 VD Menu 7
                         var totalMalamOut = parseInt(lastT.malam) || 1;
-                        var adaTambahanExtO = (eCo > 0 || eTfo > 0 || eDbo > 0);
+                        var adaTambahanExtO = (eCo > 0 || eTfo > 0 || eDbo > 0 || eLlo > 0);
                         var prefixNybOut = "nyb day " + dayKeOut + " ";
-                        if (totalMalamOut <= 1 && !adaTambahanExtO) {
-                            prefixNybOut = ""; 
-                        }
+                        if (totalMalamOut <= 1 && !adaTambahanExtO) { prefixNybOut = ""; }
 
                         ketOut = isBaruVD ? (payStrOut + " " + statusBayarTextOut) : prefixNybOut + payStrOut + " " + statusBayarTextOut;
                     }
 
                     var jOut = (lastT && lastT.tgl && lastT.tgl.includes(",")) ? lastT.tgl.split(",")[1].trim() : "";
-
                     var invNoOut = parseInt(String(invOut||"0").replace(/\D/g, '')) || 0;
                     var isVDBaru = lastT && lastT.jam_out_aktual ? isKmrBaruGlobal(lastT.jam_out_aktual) : false;
                     
@@ -1398,6 +1392,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     else { vdPagi++; arrPagiVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 ${jOut || '07.00'} (OUT-VD)`, inv: invNoOut }); }
                 }
             });
+
 
 
             // 🔥 LOGIKA PENGURUTAN (SORTING) BILL TERBARU -> TERLAMA 🔥
@@ -2731,7 +2726,7 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             return diffDays > 0 ? diffDays : 1; 
         }
 
-        semuaKamar.forEach(function(kmr) {
+                semuaKamar.forEach(function(kmr) {
             var t = safeTamuIn.find(x => x.room === kmr);
             var isKotor = safeKamarKotor.includes(kmr);
 
@@ -2739,27 +2734,23 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 var baru = isKamarBaru(t.tgl_hotel || t.tgl);
                 var shiftKamar = (t.shift || "pagi").toLowerCase(); 
                 
-                var pC = 0, pTf = 0, pDb = 0; 
-                var eC = 0, eTf = 0, eDb = 0; 
-                var histTotal = 0;
-                var adaExtendHariIni = false;
+                var pC = 0, pTf = 0, pDb = 0, pLl = 0; 
+                var eC = 0, eTf = 0, eDb = 0, eLl = 0; 
+                var histTotal = 0; var adaExtendHariIni = false;
 
                 if (t.history_bayar) {
-                    t.history_bayar.forEach(h => {
-                        histTotal += (parseInt(h.nominal)||0);
-                        if(isKamarBaru(h.tgl)) adaExtendHariIni = true;
-                    });
+                    t.history_bayar.forEach(h => { histTotal += (parseInt(h.nominal)||0); if(isKamarBaru(h.tgl)) adaExtendHariIni = true; });
                 }
-                
                 var baseNom = (parseInt(t.sudah_dibayar)||0) - histTotal;
                 if (baseNom < 0) baseNom = parseInt(t.sudah_dibayar)||0;
                 
                 function kumpulUang(nom, via, isToday, isBase) {
                     if (nom <= 0) return;
+                    var v = via.toLowerCase();
                     if (isToday && !isBase) { 
-                        if (via.includes('tf') || via.includes('transfer')) eTf += nom; else if (via.includes('db') || via.includes('debit')) eDb += nom; else eC += nom;
+                        if (v.includes('tf') || v.includes('transfer')) eTf += nom; else if (v.includes('db') || v.includes('debit')) eDb += nom; else if (v.includes('lunas lama')) eLl += nom; else eC += nom;
                     } else { 
-                        if (via.includes('tf') || via.includes('transfer')) pTf += nom; else if (via.includes('db') || via.includes('debit')) pDb += nom; else pC += nom;
+                        if (v.includes('tf') || v.includes('transfer')) pTf += nom; else if (v.includes('db') || v.includes('debit')) pDb += nom; else if (v.includes('lunas lama')) pLl += nom; else pC += nom;
                     }
                 }
 
@@ -2767,27 +2758,21 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 if (t.history_bayar) t.history_bayar.forEach(h => kumpulUang(parseInt(h.nominal)||0, (h.via||"").toLowerCase(), isKamarBaru(h.tgl), false));
 
                 var arrPay = [];
-                // 🔥 FIX 1: Jika Tamu Baru (Check-In Hari Ini), jangan pakai kata "ext". Gabungkan semua uangnya.
                 if (baru) {
-                    var totalC = pC + eC, totalTf = pTf + eTf, totalDb = pDb + eDb;
-                    if (totalC > 0) arrPay.push((totalC/1000) + " cash");
-                    if (totalTf > 0) arrPay.push((totalTf/1000) + " tf");
-                    if (totalDb > 0) arrPay.push((totalDb/1000) + " db");
-                } else {
-                    // Tamu Lama (Nyambung) baru pisahkan mana uang lama dan uang perpanjangan (ext)
-                    if (pC > 0) arrPay.push((pC/1000) + " cash");
-                    if (pTf > 0) arrPay.push((pTf/1000) + " tf");
-                    if (pDb > 0) arrPay.push((pDb/1000) + " db");
+                    var totalLlama = pC + pTf + pDb + pLl + eLl;
+                    if (totalLlama > 0) arrPay.push((totalLlama/1000) + "L.lama");
                     
-                    if (eC > 0) arrPay.push((eC/1000) + " cash ext");
-                    if (eTf > 0) arrPay.push((eTf/1000) + " tf ext");
-                    if (eDb > 0) arrPay.push((eDb/1000) + " db ext");
+                    if (eC > 0) arrPay.push((eC/1000) + " cash");
+                    if (eTf > 0) arrPay.push((eTf/1000) + " tf");
+                    if (eDb > 0) arrPay.push((eDb/1000) + " db");
+                } else {
+                    if (pC > 0) arrPay.push((pC/1000) + " cash"); if (pTf > 0) arrPay.push((pTf/1000) + " tf"); if (pDb > 0) arrPay.push((pDb/1000) + " db"); if (pLl > 0) arrPay.push((pLl/1000) + " L.lama");
+                    if (eC > 0) arrPay.push((eC/1000) + " cash ext"); if (eTf > 0) arrPay.push((eTf/1000) + " tf ext"); if (eDb > 0) arrPay.push((eDb/1000) + " db ext"); if (eLl > 0) arrPay.push((eLl/1000) + " L.lama ext");
                 }
 
                 var payStr = arrPay.length > 0 ? arrPay.join(" ") : "0";
                 var sisaTagihan = (parseInt(t.total_tagihan) || 0) - (parseInt(t.sudah_dibayar) || 0);
                 var statusBayarText = sisaTagihan > 0 ? "pending" : "lunas";
-
                 var jT = (t.tgl && t.tgl.includes(",")) ? t.tgl.split(",")[1].trim() : "";
                 var invNo = parseInt(String(t.inv||"0").replace(/\D/g, '')) || 0;
 
@@ -2798,29 +2783,19 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                         if (sisaTagihan > 0) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
                 } else {
-                    // 🔥 BUKA GEMBOK WAKTU: Selalu munculkan Tamu Lama di Laporan Shift Pagi
                     if (s === "pagi") { 
                         var dayKe = hitungDayKe(t.tgl_hotel || t.tgl, dOp); 
-                        
-                        // 🔥 FIX 2: Sembunyikan "nyb day X" jika tamu hanya nginap 1 malam dan tidak ada perpanjangan hari ini
                         var totalMalam = parseInt(t.malam) || 1;
-                        var adaTambahanExt = (eC > 0 || eTf > 0 || eDb > 0);
+                        var adaTambahanExt = (eC > 0 || eTf > 0 || eDb > 0 || eLl > 0);
                         var prefixNyb = "nyb day " + dayKe + " ";
-                        if (totalMalam <= 1 && !adaTambahanExt) {
-                            prefixNyb = ""; 
-                        }
-
+                        if (totalMalam <= 1 && !adaTambahanExt) prefixNyb = ""; 
                         var ket = prefixNyb + payStr + " " + statusBayarText;
-                        
-                        // 🔥 DETEKTOR DUE OUT: Teriak otomatis kalau jatah malamnya habis hari ini
-                        if (dayKe >= totalMalam && !adaTambahanExt) { ket += " (OUT HARI INI)"; }
+                        if (dayKe >= totalMalam && !adaTambahanExt) ket += " (OUT HARI INI)";
 
-                        // PASTIKAN HANYA ADA SATU listUngu.push DI SINI
                         listUngu.push({ text: kmr + ` ✅ ${ket} ${t.inv||"-"} 👍🏽 ${jT}`, inv: invNo });
                         if (sisaTagihan > 0) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                     }
                 }
-
             } 
             else if (isKotor) {
                 var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
@@ -2832,55 +2807,47 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     var isBaruVD = lastT.jam_out_aktual ? isKamarBaru(lastT.jam_out_aktual) : isKamarBaru(lastT.tgl_hotel || lastT.tgl);
                     if (!isBaruVD) sOut = "pagi";
 
-                    var pCo = 0, pTfo = 0, pDbo = 0; var eCo = 0, eTfo = 0, eDbo = 0; var histTotalO = 0;
+                    var pCo = 0, pTfo = 0, pDbo = 0, pLlo = 0; var eCo = 0, eTfo = 0, eDbo = 0, eLlo = 0; var histTotalO = 0;
                     if (lastT.history_bayar) lastT.history_bayar.forEach(h => histTotalO += (parseInt(h.nominal)||0));
                     var baseNomO = (parseInt(lastT.sudah_dibayar)||0) - histTotalO;
                     if (baseNomO < 0) baseNomO = parseInt(lastT.sudah_dibayar)||0;
                     
                     function kumpulUangO(nom, via, isToday, isBase) {
                         if (nom <= 0) return;
+                        var v = via.toLowerCase();
                         if (isToday && !isBase) { 
-                            if (via.includes('tf') || via.includes('transfer')) eTfo += nom; else if (via.includes('db') || via.includes('debit')) eDbo += nom; else eCo += nom;
+                            if (v.includes('tf') || v.includes('transfer')) eTfo += nom; else if (v.includes('db') || v.includes('debit')) eDbo += nom; else if (v.includes('lunas lama')) eLlo += nom; else eCo += nom;
                         } else { 
-                            if (via.includes('tf') || via.includes('transfer')) pTfo += nom; else if (via.includes('db') || via.includes('debit')) pDbo += nom; else pCo += nom;
+                            if (v.includes('tf') || v.includes('transfer')) pTfo += nom; else if (v.includes('db') || v.includes('debit')) pDbo += nom; else if (v.includes('lunas lama')) pLlo += nom; else pCo += nom;
                         }
                     }
                     kumpulUangO(baseNomO, (lastT.bayar||"").toLowerCase(), isKamarBaru(lastT.tgl_hotel || lastT.tgl), true); 
                     if (lastT.history_bayar) lastT.history_bayar.forEach(h => kumpulUangO(parseInt(h.nominal)||0, (h.via||"").toLowerCase(), isKamarBaru(h.tgl), false));
 
                     var arrPayO = [];
-                    // 🔥 FIX 1 VD: Jika Kamar Kotor berasal dari Check-In hari ini, gabungkan semua tanpa "ext"
                     if (isBaruVD) {
-                        var totCo = pCo + eCo, totTfo = pTfo + eTfo, totDbo = pDbo + eDbo;
-                        if (totCo > 0) arrPayO.push((totCo/1000) + " cash");
-                        if (totTfo > 0) arrPayO.push((totTfo/1000) + " tf");
-                        if (totDbo > 0) arrPayO.push((totDbo/1000) + " db");
+                        var totalLlamaOut = pCo + pTfo + pDbo + pLlo + eLlo;
+                        if (totalLlamaOut > 0) arrPayO.push((totalLlamaOut/1000) + "L.lama");
+                        
+                        if (eCo > 0) arrPayO.push((eCo/1000) + " cash");
+                        if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf");
+                        if (eDbo > 0) arrPayO.push((eDbo/1000) + " db");
                     } else {
-                        if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); 
-                        if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); 
-                        if (pDbo > 0) arrPayO.push((pDbo/1000) + " db");
-                        if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); 
-                        if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); 
-                        if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext");
+                        if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); if (pDbo > 0) arrPayO.push((pDbo/1000) + " db"); if (pLlo > 0) arrPayO.push((pLlo/1000) + " L.lama");
+                        if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext"); if (eLlo > 0) arrPayO.push((eLlo/1000) + " L.lama ext");
                     }
 
                     var payStrOut = arrPayO.length > 0 ? arrPayO.join(" ") : "0";
                     var sisaTagihanOut = (parseInt(lastT.total_tagihan) || 0) - (parseInt(lastT.sudah_dibayar) || 0);
                     var statusBayarTextOut = sisaTagihanOut > 0 ? "pending" : "lunas";
-
                     var dayKeOut = hitungDayKe(lastT.tgl_hotel || lastT.tgl, dOp);
-                    
-                    // 🔥 FIX 2 VD: Sembunyikan "nyb day X" untuk tamu kotor 1 malam standar
                     var totalMalamOut = parseInt(lastT.malam) || 1;
-                    var adaTambahanExtO = (eCo > 0 || eTfo > 0 || eDbo > 0);
+                    var adaTambahanExtO = (eCo > 0 || eTfo > 0 || eDbo > 0 || eLlo > 0);
                     var prefixNybOut = "nyb day " + dayKeOut + " ";
-                    if (totalMalamOut <= 1 && !adaTambahanExtO) {
-                        prefixNybOut = ""; 
-                    }
+                    if (totalMalamOut <= 1 && !adaTambahanExtO) prefixNybOut = ""; 
 
                     ketOut = isBaruVD ? (payStrOut + " " + statusBayarTextOut) : prefixNybOut + payStrOut + " " + statusBayarTextOut;
                     jOut = (lastT.tgl && lastT.tgl.includes(",")) ? lastT.tgl.split(",")[1].trim() : "";
-
                 }
 
                 var isVDBaru = lastT && lastT.jam_out_aktual ? isKamarBaru(lastT.jam_out_aktual) : false;
