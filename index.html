@@ -1291,14 +1291,14 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     var arrPay = [];
                     if (baru) {
                         var totalLlama = pC + pTf + pDb + pLl + eLl;
-                        if (totalLlama > 0) arrPay.push((totalLlama/1000) + "L.lama");
+                        if (totalLlama > 0) arrPay.push((totalLlama/1000) + "J.DP");
                         
                         if (eC > 0) arrPay.push((eC/1000) + " cash");
                         if (eTf > 0) arrPay.push((eTf/1000) + " tf");
                         if (eDb > 0) arrPay.push((eDb/1000) + " db");
                     } else {
-                        if (pC > 0) arrPay.push((pC/1000) + " cash"); if (pTf > 0) arrPay.push((pTf/1000) + " tf"); if (pDb > 0) arrPay.push((pDb/1000) + " db"); if (pLl > 0) arrPay.push((pLl/1000) + " L.lama");
-                        if (eC > 0) arrPay.push((eC/1000) + " cash ext"); if (eTf > 0) arrPay.push((eTf/1000) + " tf ext"); if (eDb > 0) arrPay.push((eDb/1000) + " db ext"); if (eLl > 0) arrPay.push((eLl/1000) + " L.lama ext");
+                        if (pC > 0) arrPay.push((pC/1000) + " cash"); if (pTf > 0) arrPay.push((pTf/1000) + " tf"); if (pDb > 0) arrPay.push((pDb/1000) + " db"); if (pLl > 0) arrPay.push((pLl/1000) + " J.DP");
+                        if (eC > 0) arrPay.push((eC/1000) + " cash ext"); if (eTf > 0) arrPay.push((eTf/1000) + " tf ext"); if (eDb > 0) arrPay.push((eDb/1000) + " db ext"); if (eLl > 0) arrPay.push((eLl/1000) + " J.DP ext");
                     }
 
                     var payStr = arrPay.length > 0 ? arrPay.join(" ") : "0";
@@ -1361,13 +1361,13 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         var arrPayO = [];
                         if (isBaruVD) {
                             var totalLlamaOut = pCo + pTfo + pDbo + pLlo + eLlo;
-                            if (totalLlamaOut > 0) arrPayO.push((totalLlamaOut/1000) + "L.lama");
+                            if (totalLlamaOut > 0) arrPayO.push((totalLlamaOut/1000) + "J.DP");
                             if (eCo > 0) arrPayO.push((eCo/1000) + " cash");
                             if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf");
                             if (eDbo > 0) arrPayO.push((eDbo/1000) + " db");
                         } else {
-                            if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); if (pDbo > 0) arrPayO.push((pDbo/1000) + " db"); if (pLlo > 0) arrPayO.push((pLlo/1000) + " L.lama");
-                            if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext"); if (eLlo > 0) arrPayO.push((eLlo/1000) + " L.lama ext");
+                            if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); if (pDbo > 0) arrPayO.push((pDbo/1000) + " db"); if (pLlo > 0) arrPayO.push((pLlo/1000) + " J.DP");
+                            if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext"); if (eLlo > 0) arrPayO.push((eLlo/1000) + " J.DP ext");
                         }
 
                         var payStrOut = arrPayO.length > 0 ? arrPayO.join(" ") : "0";
@@ -2760,14 +2760,14 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 var arrPay = [];
                 if (baru) {
                     var totalLlama = pC + pTf + pDb + pLl + eLl;
-                    if (totalLlama > 0) arrPay.push((totalLlama/1000) + "L.lama");
+                    if (totalLlama > 0) arrPay.push((totalLlama/1000) + "J.DP");
                     
                     if (eC > 0) arrPay.push((eC/1000) + " cash");
                     if (eTf > 0) arrPay.push((eTf/1000) + " tf");
                     if (eDb > 0) arrPay.push((eDb/1000) + " db");
                 } else {
-                    if (pC > 0) arrPay.push((pC/1000) + " cash"); if (pTf > 0) arrPay.push((pTf/1000) + " tf"); if (pDb > 0) arrPay.push((pDb/1000) + " db"); if (pLl > 0) arrPay.push((pLl/1000) + " L.lama");
-                    if (eC > 0) arrPay.push((eC/1000) + " cash ext"); if (eTf > 0) arrPay.push((eTf/1000) + " tf ext"); if (eDb > 0) arrPay.push((eDb/1000) + " db ext"); if (eLl > 0) arrPay.push((eLl/1000) + " L.lama ext");
+                    if (pC > 0) arrPay.push((pC/1000) + " cash"); if (pTf > 0) arrPay.push((pTf/1000) + " tf"); if (pDb > 0) arrPay.push((pDb/1000) + " db"); if (pLl > 0) arrPay.push((pLl/1000) + " J.DP");
+                    if (eC > 0) arrPay.push((eC/1000) + " cash ext"); if (eTf > 0) arrPay.push((eTf/1000) + " tf ext"); if (eDb > 0) arrPay.push((eDb/1000) + " db ext"); if (eLl > 0) arrPay.push((eLl/1000) + " J.DP ext");
                 }
 
                 var payStr = arrPay.length > 0 ? arrPay.join(" ") : "0";
@@ -2827,14 +2827,14 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     var arrPayO = [];
                     if (isBaruVD) {
                         var totalLlamaOut = pCo + pTfo + pDbo + pLlo + eLlo;
-                        if (totalLlamaOut > 0) arrPayO.push((totalLlamaOut/1000) + "L.lama");
+                        if (totalLlamaOut > 0) arrPayO.push((totalLlamaOut/1000) + "J.DP");
                         
                         if (eCo > 0) arrPayO.push((eCo/1000) + " cash");
                         if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf");
                         if (eDbo > 0) arrPayO.push((eDbo/1000) + " db");
                     } else {
-                        if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); if (pDbo > 0) arrPayO.push((pDbo/1000) + " db"); if (pLlo > 0) arrPayO.push((pLlo/1000) + " L.lama");
-                        if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext"); if (eLlo > 0) arrPayO.push((eLlo/1000) + " L.lama ext");
+                        if (pCo > 0) arrPayO.push((pCo/1000) + " cash"); if (pTfo > 0) arrPayO.push((pTfo/1000) + " tf"); if (pDbo > 0) arrPayO.push((pDbo/1000) + " db"); if (pLlo > 0) arrPayO.push((pLlo/1000) + " J.DP");
+                        if (eCo > 0) arrPayO.push((eCo/1000) + " cash ext"); if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf ext"); if (eDbo > 0) arrPayO.push((eDbo/1000) + " db ext"); if (eLlo > 0) arrPayO.push((eLlo/1000) + " J.DP ext");
                     }
 
                     var payStrOut = arrPayO.length > 0 ? arrPayO.join(" ") : "0";
