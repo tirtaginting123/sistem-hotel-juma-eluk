@@ -1218,7 +1218,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
         }
 
               
-        else if (state === "TOTAL_KAMAR") {
+                else if (state === "TOTAL_KAMAR") {
             var dOp = new Date(); if (dOp.getHours() < 7) dOp.setDate(dOp.getDate() - 1);
             var headerTgl = String(dOp.getDate()).padStart(2, '0') + " " + ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][dOp.getMonth()] + " " + dOp.getFullYear();
 
@@ -1227,11 +1227,11 @@ let tempIndex = -1; window.isCheckInNormal = true;
             
             htmlUtama += `🔥 ${headerTgl} 🔥\n\n`;
 
-            var hitungPagi = 0, hitungMalam = 0, hitungVD = 0;
+            var hitungPagi = 0, hitungMalam = 0, hitungVD = 0, hitungVR = 0; 
             var vdPagi = 0, vdMalam = 0; 
             var cMerah = 0, cUngu = 0;
 
-                        var arrPagiIn = [], arrPagiNyb = [], arrPagiVD = [];
+            var arrPagiIn = [], arrPagiNyb = [], arrPagiVD = [];
             var arrMalamIn = [], arrMalamVD = [];
 
             var dNow = new Date();
@@ -1247,7 +1247,6 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 if (ix !== iy) return ix - iy; return nx - ny;
             });
 
-                        // 🛠️ FUNGSI PINTAR PENGHITUNG HARI INAP (MENU 7)
             var dOpMenu7 = new Date(); if (dOpMenu7.getHours() < 7) dOpMenu7.setDate(dOpMenu7.getDate() - 1);
             function hitungDayKeM7(tglString, dateAcuan) {
                 if (!tglString || tglString === "-") return 1;
@@ -1265,6 +1264,14 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 var t = tamuIn.find(x => x.room === kmr);
                 var isKotor = kamarKotor.includes(kmr);
 
+                var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
+                var isOutHariIniM7 = false;
+                if (lastT) {
+                    var cinHariIni = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
+                    var coutHariIni = lastT.jam_out_aktual ? isKmrBaruGlobal(lastT.jam_out_aktual) : cinHariIni;
+                    isOutHariIniM7 = cinHariIni && coutHariIni;
+                }
+
                 if (t) {
                     var baru = isKmrBaruGlobal(t.tgl_hotel || t.tgl);
                     var shiftKamar = (t.shift || "pagi").toLowerCase(); 
@@ -1279,6 +1286,13 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     function kumpulUangM7(nom, via, isToday, isBase) {
                         if (nom <= 0) return;
                         var v = via.toLowerCase();
+                        var mB = (t.bayar || "").toLowerCase();
+
+                        // 🔥 SINKRONISASI TAMPILAN TEKS DENGAN UBAH PEMBAYARAN 🔥
+                        if (mB.includes('tf') || mB.includes('transfer')) { if (v.includes('cash') || v.includes('db') || v === "") v = 'tf'; } 
+                        else if (mB.includes('db') || mB.includes('debit')) { if (v.includes('cash') || v.includes('tf') || v === "") v = 'db'; } 
+                        else if (mB.includes('cash')) { if (v.includes('tf') || v.includes('db') || v === "") v = 'cash'; }
+
                         if (isToday && !isBase) { 
                             if (v.includes('tf') || v.includes('transfer')) eTf += nom; else if (v.includes('db') || v.includes('debit')) eDb += nom; else if (v.includes('lunas lama')) eLl += nom; else eC += nom;
                         } else { 
@@ -1330,15 +1344,16 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         }
                     }
                 } 
-                else if (isKotor) {
-                    var lastT = [...tamuOut].reverse().find(x => String(x.room) === String(kmr));
-                    hitungVD++;
-                    var sOut = "pagi"; var ketOut = "KOTOR"; var invOut = "-";
+                else if (isKotor || isOutHariIniM7) {
+                    if (isKotor) { hitungVD++; } else { hitungVR++; }
+                    
+                    var sOut = "pagi"; var ketOut = isKotor ? "KOTOR" : "BERSIH"; var invOut = "-";
+                    var labelKamarM7 = isKotor ? "(OUT-VD)" : "(OUT-VR)";
 
                     if (lastT) {
                         sOut = (lastT.shift || "pagi").toLowerCase();
                         invOut = lastT.inv || "-";
-                        var isBaruVD = lastT.jam_out_aktual ? isKmrBaruGlobal(lastT.jam_out_aktual) : isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
+                        var isBaruVD = isKmrBaruGlobal(lastT.tgl_hotel || lastT.tgl);
                         if (!isBaruVD) sOut = "pagi"; 
 
                         var pCo = 0, pTfo = 0, pDbo = 0, pLlo = 0; var eCo = 0, eTfo = 0, eDbo = 0, eLlo = 0; var histTotalO = 0;
@@ -1349,6 +1364,13 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         function kumpulUangOM7(nom, via, isToday, isBase) {
                             if (nom <= 0) return;
                             var v = via.toLowerCase();
+                            var mB = (lastT.bayar || "").toLowerCase();
+
+                            // 🔥 SINKRONISASI TAMPILAN TEKS DENGAN UBAH PEMBAYARAN 🔥
+                            if (mB.includes('tf') || mB.includes('transfer')) { if (v.includes('cash') || v.includes('db') || v === "") v = 'tf'; } 
+                            else if (mB.includes('db') || mB.includes('debit')) { if (v.includes('cash') || v.includes('tf') || v === "") v = 'db'; } 
+                            else if (mB.includes('cash')) { if (v.includes('tf') || v.includes('db') || v === "") v = 'cash'; }
+
                             if (isToday && !isBase) { 
                                 if (v.includes('tf') || v.includes('transfer')) eTfo += nom; else if (v.includes('db') || v.includes('debit')) eDbo += nom; else if (v.includes('lunas lama')) eLlo += nom; else eCo += nom;
                             } else { 
@@ -1387,15 +1409,12 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     var invNoOut = parseInt(String(invOut||"0").replace(/\D/g, '')) || 0;
                     var isVDBaru = lastT && lastT.jam_out_aktual ? isKmrBaruGlobal(lastT.jam_out_aktual) : false;
                     
-                    if ((isVDBaru && sOut === "malam" && shiftKamar === "malam")) { vdMalam++; arrMalamVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ❤️ ${jOut || '07.00'} (OUT-VD)`, inv: invNoOut }); } 
-                    else if (isVDBaru && sOut === "malam") { vdMalam++; arrMalamVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ❤️ ${jOut || '07.00'} (OUT-VD)`, inv: invNoOut }); } 
-                    else { vdPagi++; arrPagiVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 ${jOut || '07.00'} (OUT-VD)`, inv: invNoOut }); }
+                    if ((isVDBaru && sOut === "malam" && shiftKamar === "malam")) { vdMalam++; arrMalamVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ❤️ ${jOut || '07.00'} ${labelKamarM7}`, inv: invNoOut }); } 
+                    else if (isVDBaru && sOut === "malam") { vdMalam++; arrMalamVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ❤️ ${jOut || '07.00'} ${labelKamarM7}`, inv: invNoOut }); } 
+                    else { vdPagi++; arrPagiVD.push({ text: kmr + ` ✅ ${ketOut} ${invOut} 👍🏽 ${jOut || '07.00'} ${labelKamarM7}`, inv: invNoOut }); }
                 }
             });
 
-
-
-            // 🔥 LOGIKA PENGURUTAN (SORTING) BILL TERBARU -> TERLAMA 🔥
             var urutkan = function(a, b) { return b.inv - a.inv; };
             
             var listPagiIn = arrPagiIn.sort(urutkan).map(x => x.text).join("\n") + (arrPagiIn.length > 0 ? "\n" : "");
@@ -1405,13 +1424,12 @@ let tempIndex = -1; window.isCheckInNormal = true;
             var listMalamIn = arrMalamIn.sort(urutkan).map(x => x.text).join("\n") + (arrMalamIn.length > 0 ? "\n" : "");
             var listMalamVD = arrMalamVD.sort(urutkan).map(x => x.text).join("\n") + (arrMalamVD.length > 0 ? "\n" : "");
 
-
             var htmlPagi = "";
             if (listPagiIn || listPagiNyb || listPagiVD) {
                 htmlPagi += "<b>☀️ ------------- SHIFT PAGI -------------</b>\n";
                 if (listPagiIn) htmlPagi += "<b>🔴 KAMAR CHECK IN:</b>\n" + listPagiIn + "\n";
                 if (listPagiNyb) htmlPagi += "<b>🟣 KAMAR NYAMBUNG:</b>\n" + listPagiNyb + "\n";
-                if (listPagiVD) htmlPagi += "<b>⚪ KAMAR KOTOR (VD):</b>\n" + listPagiVD + "\n";
+                if (listPagiVD) htmlPagi += "<b>⚪ KAMAR OUT (VD/VR):</b>\n" + listPagiVD + "\n";
                 htmlPagi += `<b>➡️ Total Kamar Pagi: ${hitungPagi + vdPagi} Kamar</b>\n\n`;
             }
 
@@ -1419,16 +1437,17 @@ let tempIndex = -1; window.isCheckInNormal = true;
             if (listMalamIn || listMalamVD) {
                 htmlMalam += "<b>🌙 ------------- SHIFT MALAM -------------</b>\n";
                 if (listMalamIn) htmlMalam += "<b>🔴 KAMAR CHECK IN:</b>\n" + listMalamIn + "\n";
-                if (listMalamVD) htmlMalam += "<b>⚪ KAMAR KOTOR (VD):</b>\n" + listMalamVD + "\n";
+                if (listMalamVD) htmlMalam += "<b>⚪ KAMAR OUT (VD/VR):</b>\n" + listMalamVD + "\n";
                 htmlMalam += `<b>➡️ Total Kamar Malam: ${hitungMalam + vdMalam} Kamar</b>\n\n`;
             }
 
             htmlUtama += (!htmlPagi && !htmlMalam) ? "<i>Belum ada data kamar terjual hari ini.</i>\n\n" : (htmlPagi + htmlMalam);
-            htmlUtama += `<hr style="border:1px dashed #ccc;"><b>🏨 Total Keseluruhan: ${hitungPagi + hitungMalam + hitungVD} Kamar</b>\n<b>🔴 Total Check in: ${cMerah}</b>\n<b>🟣 Total Nyambung: ${cUngu}</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD}</b>`;
+            htmlUtama += `<hr style="border:1px dashed #ccc;"><b>🏨 Total Keseluruhan: ${hitungPagi + hitungMalam + hitungVD + hitungVR} Kamar</b>\n<b>🔴 Total Check in: ${cMerah}</b>\n<b>🟣 Total Nyambung: ${cUngu}</b>\n<b>🧹 Total Kamar Kotor (VD): ${hitungVD}</b>\n<b>✨ Total Kamar Bersih (VR): ${hitungVR}</b>`;
             htmlUtama += `<br><button onclick="navigator.clipboard.writeText(this.parentElement.innerText.replace(/🔙 Kembali/g, '')); alert('✅ Rekap Ter-Copy!')" style="margin-top:10px; padding:12px; background:#27ae60; color:#fff; border:none; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">📋 COPY REKAP KE WA</button></div>`;
             htmlUtama += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali</div></div>`;
             out += htmlUtama;
         }
+
 
 
         else if (state === "TUTUP_BUKU") {
@@ -2726,9 +2745,17 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             return diffDays > 0 ? diffDays : 1; 
         }
 
-                semuaKamar.forEach(function(kmr) {
+                                semuaKamar.forEach(function(kmr) {
             var t = safeTamuIn.find(x => x.room === kmr);
             var isKotor = safeKamarKotor.includes(kmr);
+            
+            var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
+            var isOutHariIni = false;
+            if (lastT) {
+                var cinHariIni = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
+                var coutHariIni = lastT.jam_out_aktual ? isKamarBaru(lastT.jam_out_aktual) : cinHariIni;
+                isOutHariIni = cinHariIni && coutHariIni;
+            }
 
             if (t) {
                 var baru = isKamarBaru(t.tgl_hotel || t.tgl);
@@ -2747,6 +2774,13 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 function kumpulUang(nom, via, isToday, isBase) {
                     if (nom <= 0) return;
                     var v = via.toLowerCase();
+                    var mB = (t.bayar || "").toLowerCase();
+
+                    // 🔥 SINKRONISASI TAMPILAN TEKS DENGAN UBAH PEMBAYARAN 🔥
+                    if (mB.includes('tf') || mB.includes('transfer')) { if (v.includes('cash') || v.includes('db') || v === "") v = 'tf'; } 
+                    else if (mB.includes('db') || mB.includes('debit')) { if (v.includes('cash') || v.includes('tf') || v === "") v = 'db'; } 
+                    else if (mB.includes('cash')) { if (v.includes('tf') || v.includes('db') || v === "") v = 'cash'; }
+
                     if (isToday && !isBase) { 
                         if (v.includes('tf') || v.includes('transfer')) eTf += nom; else if (v.includes('db') || v.includes('debit')) eDb += nom; else if (v.includes('lunas lama')) eLl += nom; else eC += nom;
                     } else { 
@@ -2797,14 +2831,16 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     }
                 }
             } 
-            else if (isKotor) {
-                var lastT = [...safeTamuOut].reverse().find(x => String(x.room) === String(kmr));
-                var sOut = "pagi"; var ketOut = "KOTOR"; var invOut = "-"; var jOut = "-";
+            else if (isKotor || isOutHariIni) {
+                var sOut = "pagi"; 
+                var ketOut = isKotor ? "KOTOR" : "BERSIH"; 
+                var invOut = "-"; var jOut = "-";
+                var labelKamar = isKotor ? "(OUT-VD)" : "(OUT-VR)"; 
 
                 if (lastT) {
                     sOut = (lastT.shift || "pagi").toLowerCase();
                     invOut = lastT.inv || "-";
-                    var isBaruVD = lastT.jam_out_aktual ? isKamarBaru(lastT.jam_out_aktual) : isKamarBaru(lastT.tgl_hotel || lastT.tgl);
+                    var isBaruVD = isKamarBaru(lastT.tgl_hotel || lastT.tgl);
                     if (!isBaruVD) sOut = "pagi";
 
                     var pCo = 0, pTfo = 0, pDbo = 0, pLlo = 0; var eCo = 0, eTfo = 0, eDbo = 0, eLlo = 0; var histTotalO = 0;
@@ -2815,6 +2851,13 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     function kumpulUangO(nom, via, isToday, isBase) {
                         if (nom <= 0) return;
                         var v = via.toLowerCase();
+                        var mB = (lastT.bayar || "").toLowerCase();
+
+                        // 🔥 SINKRONISASI TAMPILAN TEKS DENGAN UBAH PEMBAYARAN 🔥
+                        if (mB.includes('tf') || mB.includes('transfer')) { if (v.includes('cash') || v.includes('db') || v === "") v = 'tf'; } 
+                        else if (mB.includes('db') || mB.includes('debit')) { if (v.includes('cash') || v.includes('tf') || v === "") v = 'db'; } 
+                        else if (mB.includes('cash')) { if (v.includes('tf') || v.includes('db') || v === "") v = 'cash'; }
+
                         if (isToday && !isBase) { 
                             if (v.includes('tf') || v.includes('transfer')) eTfo += nom; else if (v.includes('db') || v.includes('debit')) eDbo += nom; else if (v.includes('lunas lama')) eLlo += nom; else eCo += nom;
                         } else { 
@@ -2828,7 +2871,6 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                     if (isBaruVD) {
                         var totalLlamaOut = pCo + pTfo + pDbo + pLlo + eLlo;
                         if (totalLlamaOut > 0) arrPayO.push((totalLlamaOut/1000) + "L.lama");
-                        
                         if (eCo > 0) arrPayO.push((eCo/1000) + " cash");
                         if (eTfo > 0) arrPayO.push((eTfo/1000) + " tf");
                         if (eDbo > 0) arrPayO.push((eDbo/1000) + " db");
@@ -2854,12 +2896,12 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 if ((isVDBaru && sOut === s) || (!isVDBaru && s === "pagi")) {
                     var labelJam = jOut ? jOut : "07.00";
                     var labelShiftIkon = (s === "pagi") ? "👍🏽" : "❤️";
-                    listAbu.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ${labelShiftIkon} ${labelJam} (OUT-VD)`, inv: parseInt(String(invOut||"0").replace(/\D/g, '')) || 0 });
+                    
+                    listAbu.push({ text: kmr + ` ✅ ${ketOut} ${invOut} ${labelShiftIkon} ${labelJam} ${labelKamar}`, inv: parseInt(String(invOut||"0").replace(/\D/g, '')) || 0 });
                     if (lastT && sisaTagihanOut > 0) { if (!kamarBB.includes(kmr)) kamarBB.push(kmr); }
                 }
             } 
         });
-
 
 
         // 🔥 LOGIKA PENGURUTAN (SORTING) DARI BILL TERBESAR KE TERKECIL 🔥
@@ -2873,9 +2915,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         listAbu = listAbu.map(function(x) { return x.text; });
 
         var finalCIN = listMerah.length + listUngu.length; 
-        var finalVD = listAbu.length;   
-
         
+        // 🔥 PERBAIKAN: Hitung pisah mana yang VD dan mana yang VR di Laporan WA 🔥
+        var finalVD = listAbu.filter(x => x.includes("(OUT-VD)")).length;
+        var finalVR = listAbu.filter(x => x.includes("(OUT-VR)")).length;
+
         var gabunganKamarVisual = [];
         if (listMerah.length > 0) { gabunganKamarVisual.push("🔴 *TAMU BARU (C.IN):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listMerah); }
         if (listUngu.length > 0) { gabunganKamarVisual.push("🟣 *TAMU NYAMBUNG (STAY):*"); gabunganKamarVisual = gabunganKamarVisual.concat(listUngu); }
@@ -2953,8 +2997,8 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var valDepPending = bShift ? (bShift.dep_pending || 0) : 0;
         var valDepJaminan = bShift ? (bShift.dep_jaminan || 0) : 0;
 
-        var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽0<br>total uang extrabat 👉🏽Rp " + safeFormatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto_c) + " cash / Rp " + safeFormatRp(resto_t) + " tf<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill_c) + " cash / Rp " + safeFormatRp(jBill_t) + " tf<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) +
-  "<br>ttl uang deposit/jaminan👉🏽Rp " + safeFormatRp(valDepJaminan) + "<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(displayTotalCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast + "<br><br>Deposit pending👉🏽Rp " + safeFormatRp(valDepPending) + "<br>Catatan:<br>" + textCatatan;
+                var textBlock = "laporan tgl " + tStr.split(" ")[0] + " shf " + shiftLabel.toLowerCase() + "<br><br>LAPORAN SHIFT " + shiftLabel.toUpperCase() + "<br>Tanggal: " + tStr + "<br><br>Kamar Terjual/Dijaga:" + finalKamarStr + "<br><br>total room c in 👉🏽" + finalCIN + "<br>room c out yg vd 👉🏽" + finalVD + "<br>room c out yg vr👉🏽" + finalVR + "<br>total uang extrabat 👉🏽Rp " + safeFormatRp(uangExtBed) + "<br>room yg bb👉🏽" + bbStr + "<br>total uang room cash👉🏽Rp " + safeFormatRp(rCash) + "<br>ttl uang room tf👉🏽Rp " + safeFormatRp(rTf) + "<br>ttl uang room debit👉🏽Rp " + safeFormatRp(rDb) + "<br>ttl uang resto👉🏽Rp " + safeFormatRp(resto_c) + " cash / Rp " + safeFormatRp(resto_t) + " tf<br>ttl uang jual bill👉🏽Rp " + safeFormatRp(jBill_c) + " cash / Rp " + safeFormatRp(jBill_t) + " tf<br>ttl uang charge👉🏽Rp " + safeFormatRp(charge) + "<br>ttl uang deposit/jaminan👉🏽Rp " + safeFormatRp(valDepJaminan) + "<br>ttl uang panjar👉🏽Rp " + safeFormatRp(pnjr) + "<br>ttl pembayaran bb👉🏽Rp 0<br><br>- *TOTAL UANG CASH :* Rp " + safeFormatRp(displayTotalCash) + "<br>- *TOTAL UANG TRANSFER :* Rp " + safeFormatRp(totalUangTf) + "<br><br>ttl uang keluar👉🏽Rp " + safeFormatRp(uangKeluarShift) + "<br>Jenis uang keluar:<br>" + (teksKeluarShift || "-") + "<br>sisa stor uang cash 👉🏽Rp " + safeFormatRp(sisaLaci) + "<br>no bill terakhir 👉🏽" + noBillLast + "<br>no bill resto terakhir👉🏽" + noBillRestoLast + "<br><br>Deposit pending👉🏽Rp " + safeFormatRp(valDepPending) + "<br>Catatan:<br>" + textCatatan;
+
 
         if(isForArsip) return textBlock;
 
