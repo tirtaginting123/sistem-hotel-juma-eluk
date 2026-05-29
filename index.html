@@ -183,14 +183,15 @@ let tempIndex = -1; window.isCheckInNormal = true;
                         var oldResto = toArr(oldBukuKas.harian.transaksiResto);
                         if(oldResto.length > 0) arsipResto.push({ tgl: oldBukuKas.harian.tgl, data: oldResto });
 
-                        // Gabungkan omset hari terakhir ini ke Laporan Bulanan
-                        var h = oldBukuKas.harian; var b = oldBukuKas.bulanan || {};
-                        var fields = ["uang", "uangCash", "uangTransfer", "uangDebit", "keluar", "kamar", "room_cash", "room_tf", "room_db", "resto_cash", "resto_tf", "resto_db", "charge_cash", "charge_tf", "charge_db", "panjar_cash", "panjar_tf", "panjar_db", "jual_bill_cash"];
-                        fields.forEach(function(f) { b[f] = (b[f] || 0) + (h[f] || 0); });
+                        // 🔥 PERBAIKAN: Tidak perlu menggabungkan omset harian ke bulanan saat reset, 
+                        // karena sistem sudah otomatis memasukkannya secara LIVE setiap kali ada transaksi! 
+                        var h = oldBukuKas.harian; 
+                        var b = oldBukuKas.bulanan || {};
                         
                         if(h.uang > 0) { riwayatHarian.push({ tgl: h.tgl, uang: h.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
 
-                        oldBukuKas.bulanan = b; // Titip sementara
+                        oldBukuKas.bulanan = b; // Biarkan utuh apa adanya (aman dari reset)
+
 
                         var defShift = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
                         bukuKas.harian = { 
@@ -2082,13 +2083,13 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
                 if(oldResto.length > 0) arsipResto.push({ tgl: oldBukuKas.harian.tgl, data: oldResto });
 
 
-                var h = oldBukuKas.harian; var b = bukuKas.bulanan;
-                var fields = ["uang", "uangCash", "uangTransfer", "uangDebit", "keluar", "kamar", "room_cash", "room_tf", "room_db", "resto_cash", "resto_tf", "resto_db", "charge_cash", "charge_tf", "charge_db", "panjar_cash", "panjar_tf", "panjar_db", "jual_bill_cash"];
-                fields.forEach(function(f) { b[f] = (b[f] || 0) + (h[f] || 0); });
-
+                                var h = oldBukuKas.harian; 
+                // 🔥 PERBAIKAN: Uang Harian TIDAK DITAMBAHKAN lagi ke Bulanan saat Tutup Buku, karena sudah otomatis masuk LIVE.
+                
                 if(h.uang > 0) { riwayatHarian.push({ tgl: h.tgl, uang: h.uang }); if(riwayatHarian.length > 30) riwayatHarian.shift(); }
 
                 var def = { cash:0, tf:0, db:0, keluar:0, room_cash:0, room_tf:0, room_db:0, resto_cash:0, resto_tf:0, resto_db:0, charge_cash:0, charge_tf:0, charge_db:0, panjar_cash:0, panjar_tf:0, panjar_db:0, jual_bill_cash:0, kamar_in:0, extrabed_in:0 };
+
                 
                                 bukuKas.harian = { 
                     tgl: getTanggalHarian(), uang: 0, uangCash: 0, uangTransfer: 0, uangDebit: 0, keluar: 0, 
@@ -2641,20 +2642,34 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var p = bukuKas.harian.pagi;
         var m = bukuKas.harian.malam;
 
-        bukuKas.harian.uangCash = p.cash + m.cash;
-        bukuKas.harian.uangTransfer = p.tf + m.tf;
-        bukuKas.harian.uangDebit = p.db + m.db;
-        bukuKas.harian.keluar = p.keluar + m.keluar;
-        bukuKas.harian.uang = bukuKas.harian.uangCash + bukuKas.harian.uangTransfer + bukuKas.harian.uangDebit;
+        var newCash = p.cash + m.cash;
+        var newTf = p.tf + m.tf;
+        var newDb = p.db + m.db;
+        var newKeluar = p.keluar + m.keluar;
+        var newUang = newCash + newTf + newDb;
 
-        // Copy data harian ke bulanan biar ikut sinkron otomatis
-        bukuKas.bulanan.uang = bukuKas.harian.uang;
-        bukuKas.bulanan.uangCash = bukuKas.harian.uangCash;
-        bukuKas.bulanan.uangTransfer = bukuKas.harian.uangTransfer;
-        bukuKas.bulanan.uangDebit = bukuKas.harian.uangDebit;
-        bukuKas.bulanan.keluar = bukuKas.harian.keluar;
+        // 🔥 PERBAIKAN: Hitung selisihnya saja untuk ditambahkan ke Laporan Bulanan (Mencegah reset sebulan jadi sehari)
+        var selisihUang = newUang - (bukuKas.harian.uang || 0);
+        var selisihCash = newCash - (bukuKas.harian.uangCash || 0);
+        var selisihTf = newTf - (bukuKas.harian.uangTransfer || 0);
+        var selisihDb = newDb - (bukuKas.harian.uangDebit || 0);
+        var selisihKeluar = newKeluar - (bukuKas.harian.keluar || 0);
+
+        bukuKas.harian.uangCash = newCash;
+        bukuKas.harian.uangTransfer = newTf;
+        bukuKas.harian.uangDebit = newDb;
+        bukuKas.harian.keluar = newKeluar;
+        bukuKas.harian.uang = newUang;
+
+        // Terapkan selisih ke tabungan bulanan (Agar tabungan bulanannya terus utuh dan akurat!)
+        bukuKas.bulanan.uang = (bukuKas.bulanan.uang || 0) + selisihUang;
+        bukuKas.bulanan.uangCash = (bukuKas.bulanan.uangCash || 0) + selisihCash;
+        bukuKas.bulanan.uangTransfer = (bukuKas.bulanan.uangTransfer || 0) + selisihTf;
+        bukuKas.bulanan.uangDebit = (bukuKas.bulanan.uangDebit || 0) + selisihDb;
+        bukuKas.bulanan.keluar = (bukuKas.bulanan.keluar || 0) + selisihKeluar;
 
         simpanKeCloud();
+
         alert("✅ REKAYASA FINANSIAL BERHASIL!\nBrankas database, Buku Kas, Laci Fisik, dan Laporan WA telah disinkronkan mengikuti kuasa Bosku.");
         
         // 🔥 PELATUK REFRESH AGAR LAYAR LANGSUNG BERUBAH 🔥
