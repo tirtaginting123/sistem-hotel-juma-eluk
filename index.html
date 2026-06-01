@@ -241,15 +241,17 @@ let tempIndex = -1; window.isCheckInNormal = true;
             return;
         }
         // >>> AKHIR FITUR ROBOT <<<
-
-            // >>> AKHIR FITUR ROBOT <<<
-
             // Jika bukan jam 7 pagi, Muat Data Normal:
             tamuIn = toArr(cloudData.checkin); tamuOut = toArr(cloudData.checkout); tamuPending = toArr(cloudData.pending); 
-            kamarRusak = toArr(cloudData.maintenance); kamarKotor = toArr(cloudData.kamarKotor); arsipTamu = toArr(cloudData.arsip); arsipLaporanHarian = toArr(cloudData.arsipLaporanHarian); arsipResto = toArr(cloudData.arsipResto);
+            kamarRusak = toArr(cloudData.maintenance); kamarKotor = toArr(cloudData.kamarKotor); arsipTamu = toArr(cloudData.arsip); 
+            arsipLaporanHarian = toArr(cloudData.arsipLaporanHarian); arsipResto = toArr(cloudData.arsipResto);
+            
+            // 🔥 INI OBATNYA BOSKU: Memaksa mesin menarik Arsip Bulanan dari Cloud saat loading normal! 🔥
+            arsipLaporanBulanan = toArr(cloudData.arsipLaporanBulanan); 
+            
             lastInv = cloudData.last_inv || 0; lastRestoInv = cloudData.last_resto_inv || 0; riwayatHarian = toArr(cloudData.riwayatHarian);
             catatanHotel = cloudData.catatan || "";
-            
+
             bukuKas = { 
                 harian: { 
                     tgl: realTglHarian, 
