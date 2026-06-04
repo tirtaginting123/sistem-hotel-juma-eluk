@@ -94,6 +94,20 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const dataRef = db.ref('hotel_data');
+    
+        // 🔥 TAMBAHKAN KODE PELINDUNG ANTI-BENTROK DI SINI 🔥
+    firebase.database().ref('.info/connected').on('value', function(snap) {
+        var elScreen = document.getElementById('screen');
+        var elLoad = document.getElementById('loadingBar');
+        if (snap.val() === false) {
+            if(elScreen) { elScreen.style.pointerEvents = "none"; elScreen.style.opacity = "0.4"; }
+            if(elLoad) { elLoad.innerText = "⚠️ MENGHUBUNGKAN ULANG... (JANGAN KLIK APAPUN)"; elLoad.style.display = "block"; }
+        } else {
+            if(elScreen) { elScreen.style.pointerEvents = "auto"; elScreen.style.opacity = "1"; }
+            if(elLoad) { elLoad.style.display = "none"; }
+        }
+    });
+
 
     const dataHotel = [
         {tipe: "Single", kelas: "Standard", nomor: ["2a","3a","4a","5a","6a","7a","8a","9a","10a","11a","11b"], harga: 300000},
