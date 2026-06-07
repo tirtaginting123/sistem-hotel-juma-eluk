@@ -1579,8 +1579,10 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 var styleBayar = t.bayar === "D.Pending" ? "color:white; background:var(--red); padding:2px 5px; border-radius:3px;" : "color:var(--primary);";
                 var sisa = (t.total_tagihan||0) - (t.sudah_dibayar||0);
 
-                var html = `<div style="border-bottom: 1px solid #eee; padding-bottom:12px; margin-bottom:12px;">
+                                // 🔥 TAHAP 1: Tambahkan ID target dan transisi warna 🔥
+                var html = `<div id="baris_tamu_${t.room}" style="border-bottom: 1px solid #eee; padding-bottom:12px; margin-bottom:12px; transition: all 0.5s ease;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+
                                 <div style="flex:1;">
                                     <b>🚪 ${t.room}</b> - 👤 ${t.nama} <span style="font-size:10px; font-weight:800; color:var(--red);">[#${t.inv}]</span>
                                     ${t.minta_bersih ? `<span style="background:#7f8c8d; color:#fff; font-size:9px; padding:3px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🧹 MINTA BERSIHKAN!</span>` : ""}
@@ -1816,7 +1818,8 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 out += `<div class="btn-mewah" onclick="tampilkanInfoTamu('${tempRoom}')">ℹ️ Lihat Detail Lengkap</div>`;
                 if(tamuIsi.minta_bersih) { out += `<div class="btn-mewah" onclick="setMintaBersih('${tempRoom}', false)" style="color:white; background:var(--green); border-color:var(--green); justify-content:center;">✨ Selesai Dibersihkan</div>`; } 
                 else { out += `<div class="btn-mewah" onclick="setMintaBersih('${tempRoom}', true)" style="color:white; background:var(--gray); border-color:var(--gray); justify-content:center;">🧹 Kamar Minta Dibersihkan</div>`; }
-                out += `<div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')">🏃 Pergi Ke Menu Check-Out</div>`;
+                                // 🔥 TAHAP 2: Ubah perintah tombol jadi pindah dan scroll 🔥
+                out += `<div class="btn-mewah" onclick="pindahDanScroll('${tempRoom}')">🏃 Pergi Ke Menu Check-Out</div>`;
             }
             else if (isKotor) {
                 out += `<div style="background:#f4f6f7; padding:12px; border-radius:8px; margin-bottom:15px; font-size:12px; border:1px solid var(--gray);"><b>Kamar berstatus KOTOR (VD)</b><br>Harus dibersihkan sebelum bisa Check-In.</div>`;
@@ -2519,6 +2522,33 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             simpanKeCloud();
             renderScreen();
         }
+    };
+    // 🔥 TAHAP 3: Fungsi peluncur rudal pintar ke target kamar 🔥
+    window.pindahDanScroll = function(kamar) {
+        pindahHalaman('DAFTAR_TAMU'); // Pindah halaman dulu
+        
+        // Beri jeda 0.1 detik agar mesin selesai memuat daftar tamu
+        setTimeout(function() {
+            var target = document.getElementById('baris_tamu_' + kamar);
+            if (target) {
+                // Meluncur dengan mulus, posisikan kamar tepat di tengah layar
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Beri efek highlight menyala agar resepsionis langsung melihat
+                target.style.backgroundColor = "#fef9e7"; 
+                target.style.border = "2px dashed #f39c12";
+                target.style.padding = "10px";
+                target.style.borderRadius = "8px";
+                
+                // Kembalikan ke warna asli setelah 2.5 detik
+                setTimeout(function() { 
+                    target.style.backgroundColor = "transparent"; 
+                    target.style.border = "none";
+                    target.style.borderBottom = "1px solid #eee";
+                    target.style.padding = "0";
+                }, 2500); 
+            }
+        }, 100);
     };
 
 
