@@ -756,10 +756,22 @@ let tempIndex = -1; window.isCheckInNormal = true;
             if(tamuIn.some(x => x.room === newRoom)) { alert("Kamar terisi!"); return; }
         }
 
-        // Hitung selisih harga kamar dan extra bed
-        var selisihKamar = (getHarga(newRoom) * (oldMalam + addMalamInput)) - (getHarga(oldRoom) * oldMalam);
+        // 🔥 PERBAIKAN LOGIKA PINDAH KAMAR TENGAH INAP 🔥
+        var manualUpgrade = document.getElementById('e_selisih_pindah').value;
+        var selisihKamar = 0;
+
+        if (manualUpgrade !== "") {
+            // Jika bosku ketik angka selisihnya manual (Misal: 250000), ikuti angka itu mutlak!
+            // Lalu ditambah biaya kamar BARU jika tamunya juga sekalian tambah malam (Extend)
+            selisihKamar = (parseInt(manualUpgrade) || 0) + (getHarga(newRoom) * addMalamInput);
+        } else {
+            // Logika lawas: Jika dibiarkan kosong, pukul rata otomatis dari hari ke-1
+            selisihKamar = (getHarga(newRoom) * (oldMalam + addMalamInput)) - (getHarga(oldRoom) * oldMalam);
+        }
+
         var selisihExtrabed = addExtrabedInput * 150000;
         var totalSelisih = selisihKamar + selisihExtrabed;
+
 
         if(totalSelisih !== 0) {
             tamuIn[editIndex].total_tagihan = (t.total_tagihan||0) + totalSelisih;
@@ -1666,12 +1678,18 @@ let tempIndex = -1; window.isCheckInNormal = true;
             </div>`;
         }
 
-        else if (state === "FORM_EDIT_TAMU") {
+                else if (state === "FORM_EDIT_TAMU") {
             var t = tamuIn[editIndex]; var curDep = t.jenis_deposit || 'Uang 100k';
             out += `<div class="card"><span class="section-title" style="color:var(--blue);">✏️ Edit / Pindah Kamar Tamu</span>
                 <p style="font-size:12px; margin-top:0; background:#eaf2f8; padding:10px; border-radius:5px; border:1px solid var(--blue);">👤 <b>${t.nama}</b><br>🚪 Kamar Saat Ini: <b>${t.room}</b><br>🛏️ Menginap: <b>${t.malam} Malam</b></p>
                 <div class="form-group"><label class="form-label">Pindah Ke Nomor Kamar Baru</label><input type="text" id="e_room" class="form-control" value="${t.room}" placeholder="Ketik nomor kamar..."><small style="color:#777; font-size:10px;">(Biarkan jika tidak ingin pindah kamar)</small></div>
+                
+                <div style="background:#fff3e0; padding:10px; border-radius:8px; border:1px dashed #e67e22; margin-bottom:15px;">
+                    <div class="form-group" style="margin-bottom:0;"><label class="form-label" style="color:#d35400;">💰 Biaya Upgrade Pindah Kamar (Rp)</label><input type="number" id="e_selisih_pindah" class="form-control" placeholder="Ketik selisih manual (Misal: 250000)..."><small style="color:#d35400; font-size:10px; font-weight:bold;">Isi manual jika pindah di TENGAH INAP. Kosongkan jika ingin dihitung otomatis dari awal masuk.</small></div>
+                </div>
+
                 <div class="form-group"><label class="form-label">Tambah Extra Malam (Extend)</label><input type="number" id="e_malam" class="form-control" value="0" placeholder="0"><small style="color:#777; font-size:10px;">(Ketik angka 1, 2, dst. Biarkan 0 jika tidak ada)</small></div>
+
 
                 <div class="form-group"><label class="form-label">Tambah Extra Bed (Di Tengah Inap)</label><select id="e_extrabed" class="form-control"><option value="0">Tidak Tambah</option><option value="1">+ 1 Kasur (Rp 150.000)</option><option value="2">+ 2 Kasur (Rp 300.000)</option></select></div>
                 <div class="form-group"><label class="form-label">Jenis Deposit (Jaminan)</label>
