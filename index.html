@@ -599,14 +599,14 @@ let tempIndex = -1; window.isCheckInNormal = true;
         pindahHalaman("FORM_EDIT_PEMBAYARAN");
     };
 
-        window.prosesUbahPembayaran = function() {
+            window.prosesUbahPembayaran = function() {
         var t = tamuIn[tempIndex];
         var opsiBaru = document.getElementById('ubah_bayar_baru').value;
         var jamAsli = new Date().getHours();
         var shiftSekarang = (jamAsli >= 7 && jamAsli < 17) ? "pagi" : "malam";
 
         if (opsiBaru !== t.bayar) {
-            // 🔥 FUNGSI DETEKTOR HARI INI (Agar tidak bentrok scope)
+            // 🔥 FUNGSI DETEKTOR HARI INI
             function cekHariIni(tglStr) {
                 if (!tglStr || tglStr === "-") return false;
                 var op = new Date(); if (op.getHours() < 7) op.setDate(op.getDate() - 1);
@@ -624,23 +624,45 @@ let tempIndex = -1; window.isCheckInNormal = true;
             }
 
             var isBaru = cekHariIni(t.tgl_hotel || t.tgl);
-            
-            // Cari index history bayar khusus perpanjangan HARI INI
             var indexHistHariIni = -1;
             if (t.history_bayar) {
                 for (var i = 0; i < t.history_bayar.length; i++) {
-                    if (cekHariIni(t.history_bayar[i].tgl)) {
-                        indexHistHariIni = i; break;
-                    }
+                    if (cekHariIni(t.history_bayar[i].tgl)) { indexHistHariIni = i; break; }
                 }
             }
 
-            // --- STRATEGI 1: TAMU BARU (Ubah pembayaran utama) ---
-            if (isBaru) {
+            // 🔥 KASUS SPESIAL: PELUNASAN TAMU BB (D.Pending -> CASH/TF/DEBIT) 🔥
+            var isPelunasanBaru = (t.bayar === "D.Pending" || t.bayar === "BELUM BAYAR") && (opsiBaru === "CASH" || opsiBaru === "TRANSFER" || opsiBaru === "DEBIT");
+
+            if (isPelunasanBaru) {
+                var sisaTagihan = (parseInt(t.total_tagihan) || 0) - (parseInt(t.sudah_dibayar) || 0);
+                if (sisaTagihan > 0) {
+                    // Masukkan SELURUH uang sisa ke Laci petugas yang memencet tombol detik ini juga!
+                    bukuKas.harian.uang += sisaTagihan; bukuKas.bulanan.uang += sisaTagihan;
+                    if (opsiBaru === "CASH") { bukuKas.harian.uangCash += sisaTagihan; bukuKas.bulanan.uangCash += sisaTagihan; bukuKas.harian[shiftSekarang].cash += sisaTagihan; bukuKas.harian[shiftSekarang].room_cash += sisaTagihan; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) + sisaTagihan; }
+                    else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += sisaTagihan; bukuKas.bulanan.uangTransfer += sisaTagihan; bukuKas.harian[shiftSekarang].tf += sisaTagihan; bukuKas.harian[shiftSekarang].room_tf += sisaTagihan; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) + sisaTagihan; }
+                    else if (opsiBaru === "DEBIT") { bukuKas.harian.uangDebit += sisaTagihan; bukuKas.bulanan.uangDebit += sisaTagihan; bukuKas.harian[shiftSekarang].db += sisaTagihan; bukuKas.harian[shiftSekarang].room_db += sisaTagihan; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) + sisaTagihan; }
+
+                    tamuIn[tempIndex].sudah_dibayar = t.total_tagihan; // Tandai lunas mutlak
+                    
+                    // Catat ke riwayat agar Laporan WA membaca ini uang masuk shift sekarang (seperti Extend)
+                    if(!tamuIn[tempIndex].history_bayar) tamuIn[tempIndex].history_bayar = [];
+                    var waktuAsli = new Date();
+                    var mmArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+                    var tglAkuratC = String(waktuAsli.getDate()).padStart(2, '0') + "-" + mmArr[waktuAsli.getMonth()] + "-" + waktuAsli.getFullYear() + ", " + String(waktuAsli.getHours()).padStart(2, '0') + "." + String(waktuAsli.getMinutes()).padStart(2, '0');
+                    tamuIn[tempIndex].history_bayar.push({ nominal: sisaTagihan, via: opsiBaru, shift: shiftSekarang.charAt(0).toUpperCase() + shiftSekarang.slice(1), tgl: tglAkuratC });
+
+                    // Pindahkan status kamar ke shift petugas agar tercetak di WA laporannya!
+                    if (isBaru) { tamuIn[tempIndex].shift = shiftSekarang; }
+                }
+                tamuIn[tempIndex].bayar = opsiBaru;
+            }
+            // --- STRATEGI 1: KOREKSI KESALAHAN TAMU BARU (Misal Cash -> Transfer) ---
+            else if (isBaru) {
                 var sub = t.sudah_dibayar || 0;
                 var ts = t.shift ? t.shift.toLowerCase() : shiftSekarang;
 
-                // Tarik uang lama dari laci
+                // Tarik uang lama
                 if(sub > 0 && t.bayar !== "LUNAS LAMA" && t.bayar !== "D.Pending" && t.bayar !== "BELUM BAYAR") {
                     if (t.bayar === "CASH") { bukuKas.harian.uangCash -= sub; bukuKas.bulanan.uangCash -= sub; bukuKas.harian[ts].cash -= sub; bukuKas.harian[ts].room_cash -= sub; bukuKas.bulanan.room_cash -= sub; }
                     else if (t.bayar === "TRANSFER") { bukuKas.harian.uangTransfer -= sub; bukuKas.bulanan.uangTransfer -= sub; bukuKas.harian[ts].tf -= sub; bukuKas.harian[ts].room_tf -= sub; bukuKas.bulanan.room_tf -= sub; }
@@ -648,7 +670,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                     bukuKas.harian.uang -= sub; bukuKas.bulanan.uang -= sub;
                 }
 
-                // Masukkan uang baru ke laci
+                // Masukkan uang baru
                 if(sub > 0 && opsiBaru !== "LUNAS LAMA" && opsiBaru !== "D.Pending") {
                     if (opsiBaru === "CASH") { bukuKas.harian.uangCash += sub; bukuKas.bulanan.uangCash += sub; bukuKas.harian[ts].cash += sub; bukuKas.harian[ts].room_cash += sub; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) + sub; }
                     else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += sub; bukuKas.bulanan.uangTransfer += sub; bukuKas.harian[ts].tf += sub; bukuKas.harian[ts].room_tf += sub; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) + sub; }
@@ -657,44 +679,39 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 }
                 tamuIn[tempIndex].bayar = opsiBaru;
             } 
-            // --- STRATEGI 2: TAMU LAMA / EXTEND (Ubah history_bayar khusus HARI INI) ---
+            // --- STRATEGI 2: KOREKSI EXTEND/CICILAN ---
             else if (indexHistHariIni !== -1) {
                 var histObj = t.history_bayar[indexHistHariIni];
                 var nominalExt = parseInt(histObj.nominal) || 0;
                 var viaLama = (histObj.via || "").toUpperCase();
                 var tsExt = (histObj.shift || shiftSekarang).toLowerCase();
 
-                // Tarik uang lama dari laci
                 if (nominalExt > 0) {
                     if (viaLama === "CASH") { bukuKas.harian.uangCash -= nominalExt; bukuKas.bulanan.uangCash -= nominalExt; bukuKas.harian[tsExt].cash -= nominalExt; bukuKas.harian[tsExt].room_cash -= nominalExt; bukuKas.bulanan.room_cash -= nominalExt; }
                     else if (viaLama === "TRANSFER") { bukuKas.harian.uangTransfer -= nominalExt; bukuKas.bulanan.uangTransfer -= nominalExt; bukuKas.harian[tsExt].tf -= nominalExt; bukuKas.harian[tsExt].room_tf -= nominalExt; bukuKas.bulanan.room_tf -= nominalExt; }
                     else if (viaLama === "DEBIT") { bukuKas.harian.uangDebit -= nominalExt; bukuKas.bulanan.uangDebit -= nominalExt; bukuKas.harian[tsExt].db -= nominalExt; bukuKas.harian[tsExt].room_db -= nominalExt; bukuKas.bulanan.room_db -= nominalExt; }
                     bukuKas.harian.uang -= nominalExt; bukuKas.bulanan.uang -= nominalExt;
                 }
-
-                // Masukkan uang baru ke laci
                 if (nominalExt > 0 && opsiBaru !== "LUNAS LAMA" && opsiBaru !== "D.Pending") {
                     if (opsiBaru === "CASH") { bukuKas.harian.uangCash += nominalExt; bukuKas.bulanan.uangCash += nominalExt; bukuKas.harian[tsExt].cash += nominalExt; bukuKas.harian[tsExt].room_cash += nominalExt; bukuKas.bulanan.room_cash = (bukuKas.bulanan.room_cash||0) + nominalExt; }
                     else if (opsiBaru === "TRANSFER") { bukuKas.harian.uangTransfer += nominalExt; bukuKas.bulanan.uangTransfer += nominalExt; bukuKas.harian[tsExt].tf += nominalExt; bukuKas.harian[tsExt].room_tf += nominalExt; bukuKas.bulanan.room_tf = (bukuKas.bulanan.room_tf||0) + nominalExt; }
                     else if (opsiBaru === "DEBIT") { bukuKas.harian.uangDebit += nominalExt; bukuKas.bulanan.uangDebit += nominalExt; bukuKas.harian[tsExt].db += nominalExt; bukuKas.harian[tsExt].room_db += nominalExt; bukuKas.bulanan.room_db = (bukuKas.bulanan.room_db||0) + nominalExt; }
                     bukuKas.harian.uang += nominalExt; bukuKas.bulanan.uang += nominalExt;
                 }
-
-                // SINKRONKAN TEKS KE LAPORAN WA
                 tamuIn[tempIndex].history_bayar[indexHistHariIni].via = opsiBaru;
                 tamuIn[tempIndex].bayar = opsiBaru; 
             } else {
-                // Jika tidak ada uang masuk hari ini (cuma salah klik), cukup ubah teks metodenya saja
                 tamuIn[tempIndex].bayar = opsiBaru;
             }
 
             simpanKeCloud(); 
-            alert("✅ SUKSES: Pembayaran kamar " + t.room + " diubah jadi " + opsiBaru + " dan laporan WA otomatis ikut sinkron!");
+            alert("✅ SUKSES: Pembayaran kamar diubah jadi " + opsiBaru + "\nLaci Kasir dan Laporan WA sudah sinkron!");
             pindahHalaman("DAFTAR_TAMU");
         } else {
             pindahHalaman("DAFTAR_TAMU");
         }
     };
+
 
 
         window.bayarCicilan = function(index) {
@@ -2319,10 +2336,11 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             }
         }
         
-        var waktuAsli = new Date();
+              var waktuAsli = new Date();
         var mmArr = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-        var tglAkuratC = String(waktuAsli.getDate()).padStart(2, '0') + " " + mmArr[waktuAsli.getMonth()] + " " + waktuAsli.getFullYear();
         var tglInFormat = String(waktuAsli.getDate()).padStart(2, '0') + "-" + mmArr[waktuAsli.getMonth()] + "-" + waktuAsli.getFullYear() + ", " + String(waktuAsli.getHours()).padStart(2, '0') + "." + String(waktuAsli.getMinutes()).padStart(2, '0');
+        var tglAkuratC = tglInFormat; // 🔥 OBATNYA: Samakan format waktunya 100% lengkap dengan Jam
+
         var dateOut = new Date(waktuAsli); if (waktuAsli.getHours() >= 0 && waktuAsli.getHours() < 7) { dateOut.setDate(dateOut.getDate() - 1); }
         dateOut.setDate(dateOut.getDate() + malam);
         var tglOutFormat = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
