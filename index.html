@@ -581,7 +581,9 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 
                 if (kamarKotor.indexOf(tamuIn[index].room) === -1) { kamarKotor.push(tamuIn[index].room); }
 
-                arsipTamu.push({ room: tamuIn[index].room, nama: tamuIn[index].nama, inv: tamuIn[index].inv, jam_in: tamuIn[index].tgl, jam_out: tamuIn[index].jam_out_aktual, vit: sisaVit, charge: tamuIn[index].charge });
+                                // 🔥 SUNTIKAN HP: Tambahkan data hp ke dalam arsip permanen
+                arsipTamu.push({ room: tamuIn[index].room, nama: tamuIn[index].nama, hp: tamuIn[index].hp, inv: tamuIn[index].inv, jam_in: tamuIn[index].tgl, jam_out: tamuIn[index].jam_out_aktual, vit: sisaVit, charge: tamuIn[index].charge });
+
                 tamuOut.push(tamuIn[index]); tamuIn.splice(index, 1); 
                 simpanKeCloud(); renderScreen();
             } else { alert("❌ Masukkan angka 2, 1, atau 0 saja untuk sisa Vit."); }
@@ -1132,18 +1134,20 @@ let tempIndex = -1; window.isCheckInNormal = true;
             out += `<div class="btn-mewah" onclick="pindahHalaman('ARSIP')" style="margin-top:15px; justify-content:center;">🔙 Kembali</div></div>`;
         }
 
-        else if (state === "ARSIP_TAMU") {
+                else if (state === "ARSIP_TAMU") {
+            // 🔥 OBATNYA: Tambah <th>No. HP</th> dan cetak ${a.hp || '-'}
             out += `<div class="card"><span class="section-title" style="color:#34495e;">👥 Arsip Tamu Check-Out</span><div style="overflow-x:auto;">
-                    <table class="arsip-table" style="width:100%;"><tr><th>Kamar</th><th>Nama</th><th>Bill</th><th>In</th><th>Out</th><th>Sisa Vit</th><th>Charge</th></tr>`;
+                    <table class="arsip-table" style="width:100%;"><tr><th>Kamar</th><th>Nama</th><th>No. HP</th><th>Bill</th><th>In</th><th>Out</th><th>Sisa Vit</th><th>Charge</th></tr>`;
             
             // 🔥 Urutkan arsip murni berdasarkan Nomor Bill dari yang paling besar (terbaru) ke terkecil (terlama)
             var sortedArsip = arsipTamu.slice().sort(function(a, b) { 
                 return (parseInt(String(b.inv).replace(/\D/g, '')) || 0) - (parseInt(String(a.inv).replace(/\D/g, '')) || 0); 
             });
             
-            sortedArsip.forEach(function(a) { out += `<tr><td><b>${a.room||'-'}</b></td><td>${a.nama}</td><td>${a.inv}</td><td>${a.jam_in}</td><td>${a.jam_out}</td><td>${a.vit}</td><td>${a.charge}</td></tr>`; });
+            sortedArsip.forEach(function(a) { out += `<tr><td><b>${a.room||'-'}</b></td><td>${a.nama}</td><td>${a.hp || '-'}</td><td>${a.inv}</td><td>${a.jam_in}</td><td>${a.jam_out}</td><td>${a.vit}</td><td>${a.charge}</td></tr>`; });
             out += `</table></div><div class="btn-mewah" onclick="pindahHalaman('ARSIP')" style="margin-top:15px; justify-content:center;">🔙 Kembali</div></div>`;
         }
+
 
                 else if (state === "ARSIP_LAPORAN") {
             out += `<div class="card"><span class="section-title" style="color:#34495e;">📋 Arsip Laporan Harian Permanen</span>`;
@@ -2475,10 +2479,20 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
         var tglJam = String(dateObj.getHours()).padStart(2, '0'); var tglMnt = String(dateObj.getMinutes()).padStart(2, '0');
         d.tgl = tglHari + "-" + tglBln + "-" + tglThn + ", " + tglJam + "." + tglMnt;
 
-        lastInv++; d.inv = String(lastInv).padStart(4, '0');
-        var dateOut = new Date(dateObj); if (dateObj.getHours() >= 0 && dateObj.getHours() < 7) { dateOut.setDate(dateOut.getDate() - 1); }
+                lastInv++; d.inv = String(lastInv).padStart(4, '0');
+        
+        // 🔥 DETEKSI APAKAH KOTAK EARLY CHECK-IN DICENTANG 🔥
+        var isEarlyChecked = document.getElementById('f_early') && document.getElementById('f_early').checked;
+        
+        var dateOut = new Date(dateObj); 
+        // Jika BUKAN early check-in dan masuk sebelum jam 7 pagi, barulah dipotong 1 hari (dianggap tamu kemarin)
+        if (dateObj.getHours() >= 0 && dateObj.getHours() < 7 && !isEarlyChecked) { 
+            dateOut.setDate(dateOut.getDate() - 1); 
+        }
+        
         dateOut.setDate(dateOut.getDate() + parseInt(d.malam)); 
         d.tgl_out = dateOut.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
 
         if(d.shift === "Pagi") { if(!bukuKas.harian.billPagi.awal) bukuKas.harian.billPagi.awal = d.inv; bukuKas.harian.billPagi.akhir = d.inv; bukuKas.harian.billPagi.count++; } 
         else { if(!bukuKas.harian.billMalam.awal) bukuKas.harian.billMalam.awal = d.inv; bukuKas.harian.billMalam.akhir = d.inv; bukuKas.harian.billMalam.count++; }
