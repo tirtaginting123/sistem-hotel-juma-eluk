@@ -1000,8 +1000,9 @@ let tempIndex = -1; window.isCheckInNormal = true;
         }
 
 
-        if (state === "MENU") {
-            out += `<div class="card"><span class="section-title">🏠 Reception Dashboard</span>
+                if (state === "MENU") {
+            // 🔥 Mengaktifkan sensor ketukan rahasia pada tulisan judul Dashboard
+            out += `<div class="card"><span class="section-title" onclick="klikRahasiaPrint()" style="cursor:default;">🏠 Reception Dashboard</span>
                 <div class="btn-mewah" onclick="isPendingMode=false; isJualBillMode=false; pindahHalaman('PILIH_KELAS')"><span>🛏️ 1.Check-In Kamar Baru</span><span>➔</span></div>
               
 <div class="btn-mewah" onclick="pindahHalaman('FORM_ROMBONGAN')" style="border-left: 4px solid #9b59b6;"><span>🚌 #. Booking & Check-In Rombongan</span><span>➔</span></div>
@@ -1737,6 +1738,7 @@ let tempIndex = -1; window.isCheckInNormal = true;
                 <div class="btn-mewah" onclick="pindahHalaman('DAFTAR_TAMU')" style="margin-top:10px; justify-content:center;">🔙 Batal</div>
             </div>`;
         }
+        
 
                 else if (state === "FORM_EDIT_TAMU") {
             var t = tamuIn[editIndex]; var curDep = t.jenis_deposit || 'Uang 100k';
@@ -1767,6 +1769,30 @@ let tempIndex = -1; window.isCheckInNormal = true;
             ["Standard", "Deluxe", "Suite", "VIP"].forEach(function(c, i) { out += `<div class="btn-mewah" onclick="isJualBillMode=false; klikMenu('KLS_${i+1}')">💎 ${c}</div>`; });
             out += `<div class="btn-mewah" onclick="isJualBillMode=false; pindahHalaman('MENU')" style="color:var(--red); justify-content:center;">🔙 Batal</div></div>`;
         }
+        
+                else if (state === "FORM_CETAK_BILL_MASTER") {
+            out += `<div class="card"><span class="section-title" style="color:#c0392b;">🖨️ 👑 Cetak Ulang Bill (Mode Admin)</span>
+                    <p style="font-size:12px; background:#fdf2e9; padding:10px; border-radius:5px; border:1px solid #e67e22; color:#d35400;"><b>JALUR VVIP:</b> Bosku bisa mencetak ulang Invoice/Bill semua tamu yang masih menginap di bawah ini. Data invoice 100% akurat sesuai sistem.</p>`;
+            
+            if(tamuIn.length === 0) {
+                out += `<p style="text-align:center; opacity:0.5; font-size:12px; margin:20px 0;">Belum ada tamu yang Check-In saat ini.</p>`;
+            } else {
+                out += `<div style="display:flex; flex-direction:column; gap:10px;">`;
+                tamuIn.forEach(function(t, i) {
+                    out += `<div style="border:1px solid #ddd; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; background:#fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <div>
+                                    <b style="color:var(--primary); font-size:14px;">🚪 Kamar ${t.room}</b><br>
+                                    <span style="font-size:12px;">👤 ${t.nama}</span><br>
+                                    <span style="font-size:10px; font-weight:bold; color:var(--red);">Bill: #${t.inv} | Masuk: ${t.tgl}</span>
+                                </div>
+                                <div class="btn-mewah" style="margin-bottom:0; padding:10px 15px; background:#c0392b; color:white; border:none; border-radius:5px; font-size:11px;" onclick="prosesCetakBillMaster(${i})">🖨️ Cetak Bill</div>
+                            </div>`;
+                });
+                out += `</div>`;
+            }
+            out += `<div class="btn-mewah" onclick="pindahHalaman('MENU')" style="margin-top:20px; justify-content:center;">🔙 Kembali ke Dashboard</div></div>`;
+        }
+
 
         else if (state === "PILIH_BED") {
             out += `<div class="card"><span class="section-title">🛏️ Pilih Tipe Kasur</span><div class="btn-mewah" onclick="klikMenu('BED_1')">👤 Single Bed</div><div class="btn-mewah" onclick="klikMenu('BED_2')">👥 Twin Bed</div><div class="btn-mewah" onclick="pindahHalaman('PILIH_KELAS')" style="justify-content:center;">🔙 Kembali</div></div>`;
@@ -3266,6 +3292,56 @@ else if (kamarKotor.indexOf(no) !== -1) { sCari = "status-gray"; labelCari = "KO
             }
         }
     }, 10000); // Sistem mengecek jam komputer setiap 10 detik
+
+    // 🔥 MESIN CETAK BILL VVIP & SENSOR GAIB (ADMIN ONLY) 🔥
+    let rahasiaPrintCounter = 0;
+    window.targetWaktuResto = 0; // Memastikan variabel global aman
+    
+    window.klikRahasiaPrint = function() {
+        rahasiaPrintCounter++;
+        // Jika diketuk 5 kali berturut-turut secara cepat
+        if (rahasiaPrintCounter >= 5) {
+            rahasiaPrintCounter = 0; // Reset hitungan
+            var sandi = prompt("👑 KUNCI KEAMANAN ADMIN\nMasukkan Sandi Master untuk akses Cetak Ulang Bill:");
+            if (sandi === "vipjumaeluk1234") {
+                pindahHalaman("FORM_CETAK_BILL_MASTER");
+            } else if (sandi !== null) {
+                alert("❌ Sandi salah! Akses ditolak.");
+            }
+        }
+        // Jika dalam 2 detik tidak diketuk lagi, hitungan kembali ke 0
+        setTimeout(function() { rahasiaPrintCounter = 0; }, 2000); 
+    };
+
+    window.prosesCetakBillMaster = function(idx) {
+        var t = tamuIn[idx];
+        if(!t) return;
+        
+        // Memasukkan ulang data tamu ke mesin memori cetakan (Variabel 'd')
+        d = {
+            nama: t.nama || "-",
+            alamat: t.alamat || "-",
+            warga: t.warga || "Indonesia",
+            ktp: t.ktp || "-",
+            room: t.room,
+            malam: t.malam || "1",
+            extrabed: t.extrabed || "0",
+            transport: t.transport || "-",
+            trip: t.trip || "Travelling",
+            bayar: t.bayar || "CASH",
+            hp: t.hp || "-",
+            total_tagihan: t.total_tagihan || 0,
+            sudah_dibayar: t.sudah_dibayar || 0,
+            tgl: t.tgl || "-",
+            tgl_out: t.tgl_out || "-",
+            inv: t.inv || "-"
+        };
+
+        // Panggil fungsi cetak asli bawaan sistem
+        window.siapkanInvoice();
+        setTimeout(function() { window.print(); }, 500);
+    };
+
 
 
 </script>
